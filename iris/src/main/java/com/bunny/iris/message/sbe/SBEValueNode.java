@@ -1,42 +1,74 @@
 package com.bunny.iris.message.sbe;
 
+import java.nio.ByteOrder;
+
+import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
+
 import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
 import com.bunny.iris.message.FieldValue;
 
-public class SBEValueNode implements FieldValue {
+class SBEValueNode implements FieldValue {
 
-	private Field definition;
-
+	private AbstractSBEField definition;
 	private short arrayId;
-	private short parentArrayId;
-	private short claimedChildren;
-	private short[] childNodes;
 	
 	private int offset;
+	private int valueOffset;
 	private int size;
 	
-	private boolean isHeaderNode = false;
-	private int blockLength;
+	private short currentOccurrence;
+
+	private short numRows;
+	private int[] rowSize;
 	
 	public SBEValueNode() {
-		claimedChildren = 0;
-		childNodes = new short[2];
-		childNodes[0] = childNodes[1] = 0;
+		numRows = 0;
+		rowSize = new int[SBEMessage.MAX_FIELD_OCCURRENCE];
 	}
 	
-	protected void reset() {
-		claimedChildren = 0;
-		childNodes[0] = childNodes[1] = 0;		
+	void reset() {
+		numRows = 0;
 	}
 	
-	@Override
-	public short getNodeId() {
+	short getNumRows() {
+		return numRows;
+	}
+
+	void setNumRows(short numRows) {
+		this.numRows = numRows;
+	}
+
+	int getRowSize(short idx) {
+		return rowSize[idx];
+	}
+
+	void setRowSize(short idx, int rowSize) {
+		this.rowSize[idx] = rowSize;
+	}
+	
+	short getCurrentOccurrence() {
+		return currentOccurrence;
+	}
+
+	void setCurrentOccurrence(short currentOccurrence) {
+		this.currentOccurrence = currentOccurrence;
+	}
+	
+	int getOffset() {
+		return offset;
+	}
+	
+	void setOffset(int offset) {
+		this.offset = offset;
+		this.valueOffset = this.offset + definition.getHeaderSize();
+	}
+	
+	short getNodeId() {
 		return arrayId;
 	}
 
-	@Override
-	public void setNodeId(short id) {
+	void setNodeId(short id) {
 		this.arrayId = id;
 	}
 
@@ -47,7 +79,7 @@ public class SBEValueNode implements FieldValue {
 
 	@Override
 	public void setField(Field field) {
-		this.definition = field;
+		this.definition = (AbstractSBEField) field;
 	}
 
 	@Override
@@ -59,103 +91,84 @@ public class SBEValueNode implements FieldValue {
 	public void setSize(int size) {
 		this.size = size;
 	}
-
-	@Override
-	public FieldValue getParentNode() {
-		SBEField field = (SBEField) getField();
-		return field.getMessage().getValueNode(parentArrayId);
-	}
-
-	@Override
-	public void setParentNode(FieldValue parentNode) {
-		this.parentArrayId = parentNode.getNodeId();
-	}
-
-	@Override
-	public short getNumChildNodes() {
-		return (short) (childNodes[1]-childNodes[0]);
-	}
-
-	@Override
-	public FieldValue getChildNode(short index) {
-		AbstractSBECompositeField field = (AbstractSBECompositeField) getField();
-		short childNodeIdx = field.getChildNodeId((short) (index+childNodes[0]));
-		return field.getMessage().getValueNode(childNodeIdx);
-	}
-
-	protected void claimChildren(short num) {
-		claimedChildren = num;
-		childNodes[0] = childNodes[1] = ((AbstractSBECompositeField) getField()).claimChildren(num);
+	
+	void increaseSize(int size) {
+		this.size += size;
 	}
 	
 	@Override
-	public void addChildNode(FieldValue child) {
-		if( claimedChildren > 0 ) {
-			childNodes[1] = (short) (((AbstractSBECompositeField) getField()).updateChildNode(childNodes[1], child) + 1);
-		} else {
-			short numChildren = ((AbstractSBECompositeField) getField()).addChildNode(child);
-			if( 0 == (childNodes[1]-childNodes[0]) ) {
-				childNodes[0] = (short) (numChildren - 1);
-			}
-			childNodes[1] = numChildren;
+	public byte getByte(short index) {
+		return getBuffer().getByte(valueOffset+index*definition.getBlockSize());
+	}
+	
+	@Override
+	public int getU16(short index) {
+		return getBuffer().getShort(valueOffset+index*definition.getBlockSize(), getOrder());
+	}
+	
+	@Override
+	public int getInt(short index) {
+		return getBuffer().getInt(valueOffset+index*definition.getBlockSize(), getOrder());
+	}
+
+	@Override
+	public long getU64(short index) {
+		return getBuffer().getLong(valueOffset+index*definition.getBlockSize(), getOrder());
+	}
+	
+	@Override
+	public String getString(short index) {
+		switch(definition.getType()) {
+		case I8:
+		case U8:
+			long value = getByte(index);
+			return String.valueOf(value);
+		case U16:
+			value = getU16(index);
+			return String.valueOf(value);
+		case I32:
+			value = getInt(index);
+			return String.valueOf(value);
+		case U64:
+			value = getU64(index);
+			return String.valueOf(value);
+		case RAW:
+			int length = getSize() - definition.getHeaderSize();
+			byte[] dstBuffer = new byte[length];
+			getBuffer().getBytes(valueOffset, dstBuffer, 0, length);
+			return new String(dstBuffer).trim();
+		default:
+			return "opaque of type: "+definition.getType().name()+", of size: "+size;
 		}
 	}
 
-	@Override
-	public boolean isGroupHeadNode() {
-		return isHeaderNode;
+	void initCompositeNode() {
+		if( FieldType.GROUP == definition.getType() ) {
+			((SBECompositeField)definition).setBlockSize(getBuffer().getShort(offset,getOrder()));
+			this.setNumRows(getBuffer().getByte(offset+2));
+		} else if( FieldType.MESSAGE == definition.getType() ) {
+			this.setNumRows((short) 1);
+		}
+	}
+	
+	void initVarLengthNode() {
+		switch( definition.getHeaderSize() ) {
+		case 1:
+			definition.setBlockSize(getBuffer().getByte(offset));
+			break;
+		case 2:
+			definition.setBlockSize(getBuffer().getShort(offset,getOrder()));
+			break;
+		default:
+			throw new IllegalArgumentException("SBE VAR field header size can only be 1 or 2 (default)");
+		}
 	}
 
-	@Override
-	public void setGroupHeadNode(boolean isNode) {
-		this.isHeaderNode = isNode;
+	private UnsafeBuffer getBuffer() {
+		return ((SBEMessage)definition.getMessage()).getBuffer();
 	}
 	
-	public int getBlockLength() {
-		return blockLength;
-	}
-	
-	public void setBlockLength(int length) {
-		this.blockLength = length;
-	}
-	
-	public int getOffset() {
-		return offset;
-	}
-	
-	public void setOffset(int offset) {
-		this.offset = offset;
-	}
-
-	@Override
-	public String formattedString(String prefix) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(prefix).append(getField().getName()).append("={")
-			.append("id=").append(getField().getID())
-			.append(",parentId=").append(getField().getParent().getID())
-			.append(",nodeId=").append(getNodeId())
-			.append(",parentNodeId=").append(getParentNode().getNodeId())
-			.append(",numChildren=").append(getNumChildNodes())
-			.append(",offset=").append(getOffset())
-			.append(",totalSize=").append(getSize());
-		if( getField().getType() != FieldType.GROUP || isHeaderNode ) {
-			sb.append(",totalOccurrence=").append(getField().getTotalOccurrence())
-				.append(",blockLength=").append(getBlockLength());
-		}
-		sb.append("}\n");
-		
-		if( getField().getType() != FieldType.GROUP ) {
-			for( short i = 0; i < getField().getArraySize(); i ++ ) {
-				SBEField field = (SBEField) getField();
-				sb.append(prefix+"  value=").append(field.getMessage().getFieldOp().bind(this).getString(i)).append("\n");
-			}
-		}
-		
-		for( short i = 0; i < getNumChildNodes(); i ++ ) {
-			FieldValue value = getChildNode(i);
-			sb.append(value.formattedString("  "+prefix));
-		}
-		
-		return sb.toString();
+	private ByteOrder getOrder() {
+		return ((SBEMessage)definition.getMessage()).getByteOrder();
 	}
 }

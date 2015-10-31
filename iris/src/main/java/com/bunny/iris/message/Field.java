@@ -1,5 +1,8 @@
 package com.bunny.iris.message;
 
+import java.util.List;
+import java.util.function.Consumer;
+
 public interface Field {
 	public static final short DEFAULT_MAX_REPEATS = 256;
 
@@ -12,23 +15,26 @@ public interface Field {
 	public FieldType getType();
 	public Field setType(FieldType type);	
 		
-	/**
-	 * @return the array size of each occurrence in the message 
-	 */
 	public short getArraySize();
 	public Field setArraySize(short repeats);
 
-	public Field getChild(short id);
-	public Field addChild(FieldType type);
-	
 	public Field getParent();
 	public Field setParent(Field parent);
 	
+	public Field getMessage();
+	
+	public List<Field> getChildField();
 	/**
-	 * @param n nth occurrence.
-	 * @return the value of nth occurrence
+	 * Create a field that is a child field of this field.
+	 * 
+	 * @param type
+	 * @return The newly created child field.
 	 */
-	public FieldValue getOccurrence(short n);
-	public FieldValue allocateOccurrence(boolean isNode);
+	public Field addChildField(FieldType type);
+	
 	public short getTotalOccurrence();
+	public void getValues(Consumer<FieldValue> consumer);
+	
+	public void getChildValues(Consumer<FieldValue> consumer);
+	public void getChildValues(short occurrence, Consumer<FieldValue> consumer);
 }

@@ -29,7 +29,6 @@ import java.nio.channels.FileChannel;
 import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
 import com.bunny.iris.message.sbe.SBEMessage;
-import com.bunny.iris.message.sbe.SBEField;
 
 public class ExampleUsingGeneratedStub
 {
@@ -260,32 +259,53 @@ public class ExampleUsingGeneratedStub
 			final int schemaId,
 			final int actingVersion
 			) {
-		SBEMessage message = new SBEMessage();
-		message.addChild(FieldType.U64).setName("serialNumber").setID((short)1);
-		message.addChild(FieldType.U16).setName("modelYear").setID((short)2);
-		message.addChild(FieldType.U8).setName("available").setID((short)3);
-		message.addChild(FieldType.BYTE).setName("code").setID((short)4);
-		message.addChild(FieldType.I32).setName("someNumber").setID((short)5).setArraySize((short)5);
+		SBEMessage message = new SBEMessage()
+				.setBlockSize(actingBlockLength)
+				.setByteOrder(ByteOrder.LITTLE_ENDIAN)
+				.setMessageHeaderSize((short)8)
+				.setGroupHeaderSize((short) 3)
+				.setVarDataHeaderSize((short) 1);
+		message.addChildField(FieldType.U64).setName("serialNumber").setID((short)1);
+		message.addChildField(FieldType.U16).setName("modelYear").setID((short)2);
+		message.addChildField(FieldType.U8).setName("available").setID((short)3);
+		message.addChildField(FieldType.BYTE).setName("code").setID((short)4);
+		Field someNumbers = message.addChildField(FieldType.I32).setName("someNumber").setID((short)5).setArraySize((short)5);
 		
-		Field fuelFigure = message.addChild(FieldType.GROUP).setName("fuelFigures").setID((short) 9);
-		fuelFigure.addChild(FieldType.U16).setName("speed").setID((short) 10);
+		Field fuelFigure = message.addChildField(FieldType.GROUP).setName("fuelFigures").setID((short) 9);
+		fuelFigure.addChildField(FieldType.U16).setName("speed").setID((short) 10);
 		
-		Field performanceFigures = message.addChild(FieldType.GROUP).setName("performanceFigures").setID((short) 12);
-		performanceFigures.addChild(FieldType.U8).setName("octaneRating").setID((short)13);
-		Field acceleration = performanceFigures.addChild(FieldType.GROUP).setName("acceleration").setID((short) 14);
-		Field mph = acceleration.addChild(FieldType.U16).setName("mph").setID((short) 15);
+		Field performanceFigures = message.addChildField(FieldType.GROUP).setName("performanceFigures").setID((short) 12);
+		performanceFigures.addChildField(FieldType.U8).setName("octaneRating").setID((short)13);
+		Field acceleration = performanceFigures.addChildField(FieldType.GROUP).setName("acceleration").setID((short) 14);
+		Field mph = acceleration.addChildField(FieldType.U16).setName("mph").setID((short) 15);
 		
-//		Field make = message.addChild(FieldType.RAW).setName("make").setID((short) 17).setHeaderSize(1);
-//		Field model = message.addChild(FieldType.RAW).setName("model").setID((short) 18).setHeaderSize(1);
-//		Field activationCode = message.addChild(FieldType.RAW).setName("activationCode").setID((short) 17).setHeaderSize(1);
-		message.wrapForRead(directBuffer, bufferOffset-8, actingBlockLength, ByteOrder.LITTLE_ENDIAN);
+		Field make = message.addChildField(FieldType.RAW).setName("make").setID((short) 17);
+		Field model = message.addChildField(FieldType.RAW).setName("model").setID((short) 18);
+		Field activationCode = message.addChildField(FieldType.RAW).setName("activationCode").setID((short) 17);
+		long currentTime = System.currentTimeMillis();
+		int count = 10000000;
+		for( int i = 0; i < count; i ++ )
+			message.wrapForRead(directBuffer, bufferOffset-8);
+		long diff = System.currentTimeMillis() - currentTime;
+		System.out.println("Performance = "+diff + "/" +count+" ms");
 		
 		short occurrence = mph.getTotalOccurrence();
-		for( short i = 0; i < occurrence; i ++ ) 
-			System.out.println("mph = "+message.getFieldOp().bind(mph.getOccurrence(i)).getU16((short)0));
-			
+		mph.getValues(value -> System.out.println("mph="+value.getString((short) 0)));
 		System.out.println("Total message size= "+message.getSize());
-
-		message.printClaims();
+		
+		someNumbers.getValues(value -> {
+			Field field = value.getField();
+			for( short i = 0; i < field.getArraySize(); i ++ ) {
+				System.out.println("someNumbers="+value.getString(i));
+			}
+		});
+		
+		performanceFigures.getChildValues(value -> {
+			System.out.println("name="+value.getField().getName()+", value="+value.getString((short)0));
+		});
+		
+		make.getValues(value->{
+			System.out.println("name="+value.getField().getName()+", value="+value.getString((short)0));			
+		});
 	}
 }

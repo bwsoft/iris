@@ -23,4 +23,15 @@ public enum FieldType {
 	public int size() {
 		return length;
 	}
+	
+	public static FieldType getType(String name) {
+		switch(name.toLowerCase()) {
+		case "int8":
+			return FieldType.I8;
+		case "uint8":
+			return FieldType.U8;
+		default:
+			throw new IllegalArgumentException("unrecognized field type: "+name);
+		}
+	}
 }

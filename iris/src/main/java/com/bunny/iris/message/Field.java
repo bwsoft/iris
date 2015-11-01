@@ -34,6 +34,7 @@ public interface Field {
 	
 	public short getTotalOccurrence();
 	public void getValues(Consumer<FieldValue> consumer);
+	public FieldValue getFieldValue(short i);
 	
 	public void getChildValues(Consumer<FieldValue> consumer);
 	public void getChildValues(short occurrence, Consumer<FieldValue> consumer);

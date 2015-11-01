@@ -97,6 +97,11 @@ class SBEValueNode implements FieldValue {
 	}
 	
 	@Override
+	public char getChar(short index) {
+		return getBuffer().getChar(valueOffset+index*definition.getBlockSize());
+	}
+
+	@Override
 	public byte getByte(short index) {
 		return getBuffer().getByte(valueOffset+index*definition.getBlockSize());
 	}
@@ -117,8 +122,21 @@ class SBEValueNode implements FieldValue {
 	}
 	
 	@Override
+	public int getBytes(byte[] dst, int offset) {
+		if( dst.length - offset < this.getSize() ) {
+			throw new ArrayIndexOutOfBoundsException("destination array size if less than the field size of: "+getSize());
+		}
+		getBuffer().getBytes(valueOffset, dst, offset, this.getSize());
+		return this.getSize();
+	}
+	
+	@Override
 	public String getString(short index) {
 		switch(definition.getType()) {
+		case CHAR:
+			return Character.toString(getChar(index));
+		case BYTE:
+			return Byte.toString(getByte(index));
 		case I8:
 		case U8:
 			long value = getByte(index);
@@ -141,10 +159,32 @@ class SBEValueNode implements FieldValue {
 			return "opaque of type: "+definition.getType().name()+", of size: "+size;
 		}
 	}
+	
+	@Override
+	public String getEnumName() {
+		if( definition instanceof SBEField ) {
+			SBEField field = (SBEField) definition;
+			return field.getEnumName(getString((short)0));
+		} else {
+			throw new UnsupportedOperationException("no enum conversion for type: "+definition.getType());
+		}
+	}
 
+	@Override
+	public boolean isSet(String bitName) {
+		if( definition instanceof SBEField ) {
+			SBEField field = (SBEField) definition;
+			int bitIndex = field.getSetBit(bitName);
+			long value = getU64((short) 0);
+			return 0 != (value & (1 << bitIndex));
+		} else {
+			throw new UnsupportedOperationException("no bit set conversion for type: "+definition.getType());			
+		}
+	}
+	
 	void initCompositeNode() {
 		if( FieldType.GROUP == definition.getType() ) {
-			((SBECompositeField)definition).setBlockSize(getBuffer().getShort(offset,getOrder()));
+			((SBEGroup)definition).setBlockSize(getBuffer().getShort(offset,getOrder()));
 			this.setNumRows(getBuffer().getByte(offset+2));
 		} else if( FieldType.MESSAGE == definition.getType() ) {
 			this.setNumRows((short) 1);

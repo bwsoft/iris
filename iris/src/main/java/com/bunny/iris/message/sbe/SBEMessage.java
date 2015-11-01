@@ -8,7 +8,7 @@ import com.bunny.iris.message.FieldType;
 import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
-public class SBEMessage extends SBECompositeField {
+public class SBEMessage extends SBEGroup {
 	public static final short MAX_FIELD_OCCURRENCE=128;
 	
 	private short groupHeaderSize = 3;
@@ -22,6 +22,8 @@ public class SBEMessage extends SBECompositeField {
 	private UnsafeBuffer buffer = new UnsafeBuffer(new byte[0]);
 	private ByteOrder order;
 	
+	private short schemaId;
+		
 	public SBEMessage() {
 		super(null);
 		setType(FieldType.MESSAGE);
@@ -35,6 +37,7 @@ public class SBEMessage extends SBECompositeField {
 		valueCount = 0;
 		
 		order = ByteOrder.nativeOrder();
+		this.setMessageHeaderSize((short) 8);
 	}
 	
 	SBEValueNode allocate() {
@@ -61,6 +64,29 @@ public class SBEMessage extends SBECompositeField {
 		return this;
 	}
 
+	public SBEMessage setByteOrder(String order) {
+		switch(order.toLowerCase()) {
+		case "littleendian":
+			this.order = ByteOrder.LITTLE_ENDIAN;
+			break;
+		case "bigendian":
+			this.order = ByteOrder.BIG_ENDIAN;
+			break;
+		default:
+			throw new IllegalArgumentException("unrecognized byte order: "+order);
+		}
+		return this;
+	}
+	
+	public SBEMessage setSchemaId(short id) {
+		this.schemaId = id;
+		return this;
+	}
+	
+	public short getSchemaId() {
+		return schemaId;
+	}
+	
 	@Override
 	public SBEMessage setBlockSize(int length) {
 		return (SBEMessage) super.setBlockSize(length);
@@ -114,5 +140,16 @@ public class SBEMessage extends SBECompositeField {
 		
 		size = this.wrapForRead(offset);
 		return this;
+	}
+	
+	public Field getField(short id) {
+		return super.getField(id);
+	}
+	
+	public void finalizeDefinition() {
+		this.finalized();
+		for( Field field : getChildField() ) {
+			((AbstractSBEField) field).finalized();
+		}		
 	}
 }

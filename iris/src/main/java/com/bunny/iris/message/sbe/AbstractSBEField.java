@@ -5,7 +5,7 @@ import com.bunny.iris.message.FieldType;
 
 abstract class AbstractSBEField implements Field {
 	private SBEMessage message;	
-	private SBECompositeField parent;
+	private AbstractSBEField parent;
 
 	private short id;
 	private String name;
@@ -15,6 +15,7 @@ abstract class AbstractSBEField implements Field {
 	private int blockSize;
 	
 	private short repeat = 1;	
+	private boolean finalized = false;
 
 	public AbstractSBEField(SBEMessage message) {
 		this.message = message;
@@ -22,8 +23,17 @@ abstract class AbstractSBEField implements Field {
 	}
 	
 	void reset() {
+		
 	}
-
+	
+	void finalized() {
+		finalized = true;
+	}
+	
+	boolean isFinalized() {
+		return finalized;
+	}
+	
 	short getHeaderSize() {
 		return headerSize;
 	}
@@ -93,13 +103,13 @@ abstract class AbstractSBEField implements Field {
 	}
 
 	@Override
-	public SBECompositeField getParent() {
+	public AbstractSBEField getParent() {
 		return parent;
 	}
 
 	@Override
 	public AbstractSBEField setParent(Field parent) {
-		this.parent = (SBECompositeField) parent;
+		this.parent = (SBEGroup) parent;
 		return this;
 	}
 }

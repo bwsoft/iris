@@ -1,6 +1,7 @@
 package com.bunny.iris.message.sbe;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -11,6 +12,9 @@ import com.bunny.iris.message.FieldValue;
 public class SBEField extends AbstractSBEField {
 	private SBEValueNode value;
 	private int relativeOffset = 0;
+	
+	private HashMap<String, String> enumLookup;
+	private HashMap<String, Integer> bitLookup;
 	
 	public SBEField(SBEMessage message) {
 		super(message);
@@ -42,7 +46,7 @@ public class SBEField extends AbstractSBEField {
 	@Override
 	public short getTotalOccurrence() {
 		short occurrence = 0;
-		SBECompositeField parent = (SBECompositeField) this.getParent();
+		AbstractSBEField parent = this.getParent();
 		short parentOccurrence = parent.getTotalOccurrence();
 		for( short i = 0; i < parentOccurrence; i ++ ) {
 			SBEValueNode value = (SBEValueNode) parent.getFieldValue(i);
@@ -55,7 +59,7 @@ public class SBEField extends AbstractSBEField {
 	public void getValues(Consumer<FieldValue> consumer) {
 		short currentOccurrence = 0;
 		value.setSize(this.getBlockSize()*this.getArraySize());
-		SBECompositeField parent = (SBECompositeField) this.getParent();
+		AbstractSBEField parent = this.getParent();
 		short parentOccurrence = parent.getTotalOccurrence();
 		for( short i = 0; i < parentOccurrence; i ++ ) {
 			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
@@ -71,10 +75,36 @@ public class SBEField extends AbstractSBEField {
 	}
 
 	@Override
+	public FieldValue getFieldValue(short i) {
+		return null;
+	}
+	
+	@Override
 	public void getChildValues(Consumer<FieldValue> consumer) {
 	}
 
 	@Override
 	public void getChildValues(short occurrence, Consumer<FieldValue> consumer) {
+	}
+	
+	void setEnumLookupTable(HashMap<String, String> lookupTable) {
+		this.enumLookup = lookupTable;
+	}
+	
+	String getEnumName(String value) {
+		if( this.enumLookup == null ) 
+			throw new UnsupportedOperationException("no enum conversion for type: "+this.getType());
+		return this.enumLookup.get(value);
+	}
+	
+	void setSetLookupTable(HashMap<String, Integer> lookupTable) {
+		this.bitLookup = lookupTable;
+	}
+	
+	int getSetBit(String bitName) {
+		if( this.bitLookup == null ) {
+			throw new UnsupportedOperationException("no bit selection is supported for type: "+this.getType());
+		}
+		return this.bitLookup.get(bitName);
 	}
 }

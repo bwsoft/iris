@@ -28,7 +28,7 @@ class SBEVarLengthField extends SBEField {
 		return totalOccurrence ++;
 	}
 		
-	SBEValueNode getFieldValue(short idx) {
+	public SBEValueNode getFieldValue(short idx) {
 		return getMessage().getValueNode(this.nodeIds[idx]);
 	}
 	

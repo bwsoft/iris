@@ -8,32 +8,50 @@ import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
 import com.bunny.iris.message.FieldValue;
 
-class SBECompositeField extends AbstractSBEField {
+public class SBECompositeField extends SBEField {
 	// child field definition
 	private List<Field> children = new ArrayList<>();
 	
-	private short totalOccurrence;
-	private short[] nodeIds;
-
-	// child value node
-	private SBEValueNode childValue;
-	
-	private short complextNodeStartingPoint;
-	
+	private SBEValueNode value;
+		
 	public SBECompositeField(SBEMessage message) {
 		super(message);
-		totalOccurrence = 0;
-		nodeIds = new short[SBEMessage.MAX_FIELD_OCCURRENCE];
-		childValue = new SBEValueNode();
-		complextNodeStartingPoint = 0;
+		
+		value = new SBEValueNode();
+		value.setNodeId((short) -1);
+		value.setField(this);
+		value.setNumRows((short) 1);
 	}
 	
-	void reset() {
-		super.reset();
-		totalOccurrence = 0;		
+	void finalized() {
+		int currentOffset = this.getHeaderSize();
 		for( Field field : children ) {
-			((AbstractSBEField) field).reset();
-		}
+			if( ! isFinalized() ) {
+				switch( field.getType() ) {
+				case U8:
+				case U16:
+				case U32:
+				case U64:
+				case I8:
+				case I16:
+				case I32:
+				case I64:
+				case BYTE:
+				case CHAR:
+					((SBEField) field).setRelativeOffset(currentOffset);
+					currentOffset += field.getArraySize()*((SBEField) field).getBlockSize();
+					value.setRowSize((short) 0, currentOffset);
+					value.setSize(currentOffset);
+					break;
+				}				
+			}
+			((AbstractSBEField) field).finalized();
+		}		
+	}
+
+	@Override
+	public List<Field> getChildField() {
+		return children;
 	}
 
 	@Override
@@ -50,25 +68,8 @@ class SBECompositeField extends AbstractSBEField {
 		case I32:
 		case I64:
 		case BYTE:
-			int currentOffset = this.getHeaderSize();
-			if( children.size() != 0 ) {
-				Field field = children.get(children.size()-1);
-				if( field.getType() == FieldType.GROUP || field.getType() == FieldType.RAW ) {
-					throw new IllegalArgumentException("regular field has to be ahead of complex field");
-				}
-				currentOffset = ((SBEField)field).getRelativeOffset() + ((SBEField) field).getBlockSize()*field.getArraySize();
-			}
-			newField = new SBEField(getMessage()).setRelativeOffset(currentOffset).setParent(this).setType(type);
-			children.add(newField);
-			currentOffset += newField.getBlockSize()*newField.getArraySize();
-			complextNodeStartingPoint ++;
-			break;
-		case GROUP:
-			newField = new SBECompositeField(getMessage()).setParent(this).setHeaderSize(getMessage().getGroupHeaderSize()).setType(FieldType.GROUP);
-			children.add(newField);
-			break;
-		case RAW:
-			newField = new SBEVarLengthField(getMessage()).setParent(this).setHeaderSize(getMessage().getVarDataHeaderSize()).setType(FieldType.RAW);
+		case CHAR:
+			newField = new SBEField(getMessage()).setParent(this).setType(type);
 			children.add(newField);
 			break;
 		default:
@@ -76,108 +77,43 @@ class SBECompositeField extends AbstractSBEField {
 		}
 		return newField;
 	}
-	
-	@Override
-	public List<Field> getChildField() {
-		return children;
-	};
-	
-	short addValue(SBEValueNode value) {
-		nodeIds[totalOccurrence] = value.getNodeId();
-		return totalOccurrence ++;
-	}
-		
-	SBEValueNode getFieldValue(short idx) {
-		return getMessage().getValueNode(this.nodeIds[idx]);
-	}
-	
+
 	@Override
 	public short getTotalOccurrence() {
-		return totalOccurrence;
+		short occurrence = 0;
+		AbstractSBEField parent = this.getParent();
+		short parentOccurrence = parent.getTotalOccurrence();
+		for( short i = 0; i < parentOccurrence; i ++ ) {
+			SBEValueNode value = (SBEValueNode) parent.getFieldValue(i);
+			occurrence += value.getNumRows();
+		}
+		return occurrence;
 	}
-	
+
 	@Override
 	public void getValues(Consumer<FieldValue> consumer) {
-		for( short i = 0; i < totalOccurrence; i ++ ) {
-			consumer.accept(getMessage().getValueNode(this.nodeIds[i]));
+		short currentOccurrence = 0;
+		value.setSize(this.getBlockSize()*this.getArraySize());
+		AbstractSBEField parent = this.getParent();
+		short parentOccurrence = parent.getTotalOccurrence();
+		for( short i = 0; i < parentOccurrence; i ++ ) {
+			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
+			int offset = parentValue.getOffset();
+			short numRows = parentValue.getNumRows();
+			for( short j = 0; j < numRows; j ++ ) {
+				value.setOffset(offset+this.getRelativeOffset());
+				value.setCurrentOccurrence(currentOccurrence++);
+				offset += parentValue.getRowSize(j);
+				consumer.accept(value);
+			}
 		}
 	}
-	
+
 	@Override
 	public void getChildValues(Consumer<FieldValue> consumer) {
-		short currentOccurrence = 0;
-		for( short i = 0; i < getTotalOccurrence(); i ++ ) {
-			SBEValueNode value = getFieldValue(i);
-			int offset = value.getOffset();
-			short numRows = value.getNumRows();
-			for( short j = 0; j < numRows; j ++ ) {
-				for( Field childField : children ) {
-					switch( childField.getType() ) {
-					case GROUP:
-						childValue.setField(childField);
-						consumer.accept(childValue);
-						break;
-					default:
-						childValue.setField(childField);
-						childValue.setOffset(offset+((SBEField) childField).getRelativeOffset()); 
-						childValue.setCurrentOccurrence(currentOccurrence);
-						consumer.accept(childValue);
-						break;
-					}
-				}
-				offset += value.getRowSize(j);
-			}
-		}
 	}
-	
+
 	@Override
 	public void getChildValues(short occurrence, Consumer<FieldValue> consumer) {
-		short currentOccurrence = 0;
-		SBEValueNode value = getFieldValue(occurrence);
-		int offset = value.getOffset();
-		short numRows = value.getNumRows();
-		for( short j = 0; j < numRows; j ++ ) {
-			for( Field childField : children ) {
-				switch( childField.getType() ) {
-				case GROUP:
-					childValue.setField(childField);
-					consumer.accept(childValue);
-					break;
-				default:
-					childValue.setField(childField);
-					childValue.setOffset(offset+((SBEField) childField).getRelativeOffset()); 
-					childValue.setCurrentOccurrence(currentOccurrence);
-					consumer.accept(childValue);
-					break;
-				}
-			}
-			offset += value.getRowSize(j);
-		}
 	}
-	
-	int wrapForRead(int offset) {		
-		SBEValueNode grpValue = getMessage().allocate();
-		grpValue.setField(this);
-		grpValue.setOffset(offset);
-		grpValue.initCompositeNode();		
-		grpValue.setSize(getHeaderSize());
-		grpValue.setCurrentOccurrence(addValue(grpValue));
-		
-		int currentOffset = offset + getHeaderSize();
-		for( short i = 0; i < grpValue.getNumRows(); i ++ ) {			
-			int startOffset = currentOffset;
-			currentOffset += getBlockSize();
-			for( int k = complextNodeStartingPoint; k < children.size(); k ++ ) {
-				Field field = children.get(k);
-				if( FieldType.GROUP == field.getType() ) {
-					currentOffset += ((SBECompositeField) field).wrapForRead(currentOffset);				
-				} else if( FieldType.RAW == field.getType() ) {
-					currentOffset += ((SBEVarLengthField) field).wrapForRead(currentOffset);
-				}
-			}
-			grpValue.setRowSize(i, currentOffset - startOffset);
-			grpValue.increaseSize(currentOffset - startOffset);
-		}
-		return grpValue.getSize();
-	}		
 }

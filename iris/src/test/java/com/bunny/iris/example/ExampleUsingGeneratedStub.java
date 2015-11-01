@@ -20,15 +20,20 @@ import baseline.*;
 import baseline.CarDecoder.PerformanceFiguresDecoder.AccelerationDecoder;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.HashMap;
+
+import javax.xml.bind.JAXBException;
 
 import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
 import com.bunny.iris.message.sbe.SBEMessage;
+import com.bunny.iris.message.sbe.SBESchemaLoader;
 
 public class ExampleUsingGeneratedStub
 {
@@ -112,6 +117,7 @@ public class ExampleUsingGeneratedStub
 
 		bufferOffset += MESSAGE_HEADER_DECODER.encodedLength();
 		decode(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
+		myDecoder2(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
 		myDecoder(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
 	}
 
@@ -282,6 +288,7 @@ public class ExampleUsingGeneratedStub
 		Field make = message.addChildField(FieldType.RAW).setName("make").setID((short) 17);
 		Field model = message.addChildField(FieldType.RAW).setName("model").setID((short) 18);
 		Field activationCode = message.addChildField(FieldType.RAW).setName("activationCode").setID((short) 17);
+		message.finalizeDefinition();
 		long currentTime = System.currentTimeMillis();
 		int count = 10000000;
 		for( int i = 0; i < count; i ++ )
@@ -306,6 +313,44 @@ public class ExampleUsingGeneratedStub
 		
 		make.getValues(value->{
 			System.out.println("name="+value.getField().getName()+", value="+value.getString((short)0));			
+		});
+	}
+	public static void myDecoder2(
+			final CarDecoder car,
+			final UnsafeBuffer directBuffer,
+			final int bufferOffset,
+			final int actingBlockLength,
+			final int schemaId,
+			final int actingVersion
+			) throws FileNotFoundException, JAXBException {
+		SBESchemaLoader loader = new SBESchemaLoader();
+		HashMap<Integer, SBEMessage> lookup = loader.loadSchema("/home/yzhou/Projects/iris/iris/src/test/resources/example-schema.xml");
+		SBEMessage sbeMessage = lookup.get(1);
+		
+		Field serialNumber = sbeMessage.getField((short) 1);
+		Field available = sbeMessage.getField((short) 3);
+		Field code = sbeMessage.getField((short) 4);
+		Field someNumbers = sbeMessage.getField((short) 5);
+		Field vehicleCode = sbeMessage.getField((short) 6);
+		Field extras = sbeMessage.getField((short) 7);
+		
+		sbeMessage.wrapForRead(directBuffer, bufferOffset-8);
+		serialNumber.getValues(v->System.out.println(v.getString((short) 0)));
+		someNumbers.getValues(v->{
+			System.out.println(someNumbers.getName()+":");
+			for( short i = 0; i < someNumbers.getArraySize(); i ++ ) {
+				System.out.println("    "+v.getString(i));
+			}
+		});
+		
+		available.getValues(v->System.out.println("available :"+v.getEnumName()));
+		code.getValues(v->System.out.println("car code: "+v.getEnumName()));
+		vehicleCode.getValues(v->{
+			byte[] values = new byte[v.getSize()];
+			System.out.println("Vehicle code: "+new String(values, 0, v.getBytes(values, 0)));
+		});
+		extras.getValues(v->{
+			System.out.println("Extra: is sunroof="+v.isSet("sunRoof")+", cruiseControl="+v.isSet("cruiseControl"));
 		});
 	}
 }

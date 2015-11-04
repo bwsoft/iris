@@ -148,7 +148,7 @@ public class SBESchemaLoader {
 						 
 						if( null != FieldType.getType(fieldType.getType()) ) {
 							// field of primitive type
-							sbeMessage.addChildField(FieldType.getType(fieldType.getType())).setID((short)fieldType.getId()).setName(fieldType.getName());
+							sbeMessage.addChildField(FieldType.getType(fieldType.getType()), (short)1).setID((short)fieldType.getId()).setName(fieldType.getName());
 						} else if( sbeTypes.containsKey(fieldType.getType())) {
 							// a simple type
 							EncodedDataType dataType = sbeTypes.get(fieldType.getType());
@@ -158,19 +158,19 @@ public class SBESchemaLoader {
 								if( primitiveType == null ) {
 									throw new IllegalArgumentException("unrecognized primitive type: "+dataType.getPrimitiveType());
 								}
-								sbeMessage.addChildField(primitiveType).setID((short)fieldType.getId()).setName(fieldType.getName()).setArraySize(dataType.getLength().shortValue());
+								sbeMessage.addChildField(primitiveType,dataType.getLength().shortValue()).setID((short)fieldType.getId()).setName(fieldType.getName());//.setArraySize(dataType.getLength().shortValue());
 							} else {
 								//TODO: handle constant simple field
 							}
 						} else if( sbeEnums.containsKey(fieldType.getType())) {
 							// an enum type
 							SBEEnum sbeEnum = sbeEnums.get(fieldType.getType());
-							SBEField enumField = (SBEField) sbeMessage.addChildField(sbeEnum.primitiveType).setID((short)fieldType.getId()).setName(fieldType.getName());
+							SBEField enumField = (SBEField) sbeMessage.addChildField(sbeEnum.primitiveType, (short) 1).setID((short)fieldType.getId()).setName(fieldType.getName());
 							enumField.setEnumLookupTable(sbeEnum.enumLookup);
 						} else if( sbeChoices.containsKey(fieldType.getType())) {
 							// a set bit field
 							SBESet sbeSet = sbeChoices.get(fieldType.getType());
-							SBEField choiceField = (SBEField) sbeMessage.addChildField(sbeSet.primitiveType).setID((short)fieldType.getId()).setName(fieldType.getName());
+							SBEField choiceField = (SBEField) sbeMessage.addChildField(sbeSet.primitiveType, (short) 1).setID((short)fieldType.getId()).setName(fieldType.getName());
 							choiceField.setSetLookupTable(sbeSet.bitLookup);
 						}
 					} else if( content instanceof GroupType ) {
@@ -178,7 +178,7 @@ public class SBESchemaLoader {
 					}
 				}
 			}
-			sbeMessage.finalizeDefinition();
+//			sbeMessage.finalizeDefinition();
 		}
 		return lookupTable;
 	}

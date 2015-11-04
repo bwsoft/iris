@@ -12,26 +12,20 @@ abstract class AbstractSBEField implements Field {
 	private FieldType type;
 	
 	private short headerSize;
-	private int blockSize;
+	private int blockSize;	
+	private short repeat = 1;
 	
-	private short repeat = 1;	
-	private boolean finalized = false;
-
-	public AbstractSBEField(SBEMessage message) {
+	public AbstractSBEField(SBEMessage message, short dimmension) {
 		this.message = message;
 		this.headerSize = 0;
+		this.repeat = dimmension;
 	}
 	
-	void reset() {
-		
+	public AbstractSBEField(SBEMessage message) {
+		this(message, (short) 1);
 	}
 	
-	void finalized() {
-		finalized = true;
-	}
-	
-	boolean isFinalized() {
-		return finalized;
+	void reset() {		
 	}
 	
 	short getHeaderSize() {
@@ -53,8 +47,8 @@ abstract class AbstractSBEField implements Field {
 	}
 	
 	@Override
-	public SBEMessage getMessage() {
-		return message;
+	public short getDimension() {
+		return this.repeat;
 	}
 	
 	@Override
@@ -92,24 +86,18 @@ abstract class AbstractSBEField implements Field {
 	}
 
 	@Override
-	public short getArraySize() {
-		return this.repeat;
-	}
-
-	@Override
-	public AbstractSBEField setArraySize(short repeats) {
-		this.repeat = repeats;
-		return this;
-	}
-
-	@Override
 	public AbstractSBEField getParent() {
 		return parent;
 	}
 
 	@Override
 	public AbstractSBEField setParent(Field parent) {
-		this.parent = (SBEGroup) parent;
+		this.parent = (AbstractSBEField) parent;
 		return this;
 	}
+	
+	@Override
+	public SBEMessage getMessage() {
+		return message;
+	}	
 }

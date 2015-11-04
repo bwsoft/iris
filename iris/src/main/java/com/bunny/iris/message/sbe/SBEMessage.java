@@ -130,9 +130,6 @@ public class SBEMessage extends SBEGroup {
 	
 	public SBEMessage wrapForRead(DirectBuffer buffer, int offset) {
 		this.reset();
-		for( Field field : getChildField() ) {
-			((AbstractSBEField) field).reset();
-		}
 		
 		this.buffer.wrap(buffer);
 		
@@ -144,12 +141,5 @@ public class SBEMessage extends SBEGroup {
 	
 	public Field getField(short id) {
 		return super.getField(id);
-	}
-	
-	public void finalizeDefinition() {
-		this.finalized();
-		for( Field field : getChildField() ) {
-			((AbstractSBEField) field).finalized();
-		}		
 	}
 }

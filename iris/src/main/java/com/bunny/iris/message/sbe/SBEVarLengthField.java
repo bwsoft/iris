@@ -11,7 +11,7 @@ class SBEVarLengthField extends SBEField {
 	private short[] nodeIds;
 
 	public SBEVarLengthField(SBEMessage message) {
-		super(message);
+		super(message, (short) 1);
 		setType(FieldType.RAW);
 		
 		totalOccurrence = 0;
@@ -19,8 +19,8 @@ class SBEVarLengthField extends SBEField {
 	}
 
 	void reset() {
+		totalOccurrence = 0;	
 		super.reset();
-		totalOccurrence = 0;		
 	}
 
 	short addValue(SBEValueNode value) {

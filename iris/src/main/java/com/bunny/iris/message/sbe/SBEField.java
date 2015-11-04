@@ -16,19 +16,20 @@ public class SBEField extends AbstractSBEField {
 	private HashMap<String, String> enumLookup;
 	private HashMap<String, Integer> bitLookup;
 	
-	public SBEField(SBEMessage message) {
-		super(message);
+	public SBEField(SBEMessage message, short dimmension) {
+		super(message, dimmension);
 		value = new SBEValueNode();
 		value.setNodeId((short) -1);
 		value.setField(this);
 		value.setNumRows((short) 0);
+		value.setSize(this.getBlockSize()*this.getDimension());
 	}
 	
 	int getRelativeOffset() {
 		return relativeOffset;
 	}
 	
-	AbstractSBEField setRelativeOffset(int offset) {
+	SBEField setRelativeOffset(int offset) {
 		this.relativeOffset = offset;
 		return this;
 	}
@@ -39,7 +40,7 @@ public class SBEField extends AbstractSBEField {
 	}
 
 	@Override
-	public Field addChildField(FieldType type) {
+	public Field addChildField(FieldType type, short dimmension) {
 		throw new UnsupportedOperationException("cannot add child for field type: "+getType());
 	}
 
@@ -58,7 +59,6 @@ public class SBEField extends AbstractSBEField {
 	@Override
 	public void getValues(Consumer<FieldValue> consumer) {
 		short currentOccurrence = 0;
-		value.setSize(this.getBlockSize()*this.getArraySize());
 		AbstractSBEField parent = this.getParent();
 		short parentOccurrence = parent.getTotalOccurrence();
 		for( short i = 0; i < parentOccurrence; i ++ ) {
@@ -75,18 +75,32 @@ public class SBEField extends AbstractSBEField {
 	}
 
 	@Override
-	public FieldValue getFieldValue(short i) {
-		return null;
+	public FieldValue getFieldValue(short occurrence) {
+		short currentOccurrence = 0;
+		value.setSize(this.getBlockSize()*this.getDimension());
+		AbstractSBEField parent = this.getParent();
+		short parentOccurrence = parent.getTotalOccurrence();
+		for( short i = 0; i < parentOccurrence; i ++ ) {
+			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
+			int offset = parentValue.getOffset();
+			short numRows = parentValue.getNumRows();
+			for( short j = 0; j < numRows; j ++ ) {
+				if( occurrence == currentOccurrence ) {
+					value.setOffset(offset+this.getRelativeOffset());
+					value.setCurrentOccurrence(currentOccurrence);
+					return value;
+				}
+				currentOccurrence ++;
+				offset += parentValue.getRowSize(j);
+			}
+		}
+		throw new ArrayIndexOutOfBoundsException(occurrence+" exceeds the maximum occurrence: "+getTotalOccurrence());
 	}
 	
 	@Override
 	public void getChildValues(Consumer<FieldValue> consumer) {
 	}
 
-	@Override
-	public void getChildValues(short occurrence, Consumer<FieldValue> consumer) {
-	}
-	
 	void setEnumLookupTable(HashMap<String, String> lookupTable) {
 		this.enumLookup = lookupTable;
 	}

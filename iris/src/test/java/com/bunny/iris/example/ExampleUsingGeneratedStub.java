@@ -271,24 +271,29 @@ public class ExampleUsingGeneratedStub
 				.setMessageHeaderSize((short)8)
 				.setGroupHeaderSize((short) 3)
 				.setVarDataHeaderSize((short) 1);
-		message.addChildField(FieldType.U64).setName("serialNumber").setID((short)1);
-		message.addChildField(FieldType.U16).setName("modelYear").setID((short)2);
-		message.addChildField(FieldType.U8).setName("available").setID((short)3);
-		message.addChildField(FieldType.BYTE).setName("code").setID((short)4);
-		Field someNumbers = message.addChildField(FieldType.I32).setName("someNumber").setID((short)5).setArraySize((short)5);
+		message.addChildField(FieldType.U64, (short) 1).setName("serialNumber").setID((short)1);
+		message.addChildField(FieldType.U16, (short) 1).setName("modelYear").setID((short)2);
+		message.addChildField(FieldType.U8, (short) 1).setName("available").setID((short)3);
+		message.addChildField(FieldType.BYTE, (short) 1).setName("code").setID((short)4);
+		Field someNumbers = message.addChildField(FieldType.I32, (short) 5).setName("someNumber").setID((short)5);
+		message.addChildField(FieldType.CHAR, (short) 6).setName("vehicleCode").setID((short) 6);
+		message.addChildField(FieldType.U8, (short) 1).setName("extras").setID((short) 7);
+		Field engine = message.addChildField(FieldType.COMPOSITE, (short) 1).setName("Engine").setID((short) 8);
+		engine.addChildField(FieldType.U16, (short) 1).setName("capacity");
+		engine.addChildField(FieldType.U8, (short) 1).setName("numCylinders");
 		
-		Field fuelFigure = message.addChildField(FieldType.GROUP).setName("fuelFigures").setID((short) 9);
-		fuelFigure.addChildField(FieldType.U16).setName("speed").setID((short) 10);
+		Field fuelFigure = message.addChildField(FieldType.GROUP, (short) 1).setName("fuelFigures").setID((short) 9);
+		fuelFigure.addChildField(FieldType.U16, (short) 1).setName("speed").setID((short) 10);
 		
-		Field performanceFigures = message.addChildField(FieldType.GROUP).setName("performanceFigures").setID((short) 12);
-		performanceFigures.addChildField(FieldType.U8).setName("octaneRating").setID((short)13);
-		Field acceleration = performanceFigures.addChildField(FieldType.GROUP).setName("acceleration").setID((short) 14);
-		Field mph = acceleration.addChildField(FieldType.U16).setName("mph").setID((short) 15);
+		Field performanceFigures = message.addChildField(FieldType.GROUP, (short) 1).setName("performanceFigures").setID((short) 12);
+		performanceFigures.addChildField(FieldType.U8, (short) 1).setName("octaneRating").setID((short)13);
+		Field acceleration = performanceFigures.addChildField(FieldType.GROUP, (short) 1).setName("acceleration").setID((short) 14);
+		Field mph = acceleration.addChildField(FieldType.U16, (short) 1).setName("mph").setID((short) 15);
 		
-		Field make = message.addChildField(FieldType.RAW).setName("make").setID((short) 17);
-		Field model = message.addChildField(FieldType.RAW).setName("model").setID((short) 18);
-		Field activationCode = message.addChildField(FieldType.RAW).setName("activationCode").setID((short) 17);
-		message.finalizeDefinition();
+		Field make = message.addChildField(FieldType.RAW, (short) 1).setName("make").setID((short) 17);
+		Field model = message.addChildField(FieldType.RAW, (short) 1).setName("model").setID((short) 18);
+		Field activationCode = message.addChildField(FieldType.RAW, (short) 1).setName("activationCode").setID((short) 17);
+//		message.finalizeDefinition();
 		long currentTime = System.currentTimeMillis();
 		int count = 10000000;
 		for( int i = 0; i < count; i ++ )
@@ -302,7 +307,7 @@ public class ExampleUsingGeneratedStub
 		
 		someNumbers.getValues(value -> {
 			Field field = value.getField();
-			for( short i = 0; i < field.getArraySize(); i ++ ) {
+			for( short i = 0; i < field.getDimension(); i ++ ) {
 				System.out.println("someNumbers="+value.getString(i));
 			}
 		});
@@ -314,7 +319,17 @@ public class ExampleUsingGeneratedStub
 		make.getValues(value->{
 			System.out.println("name="+value.getField().getName()+", value="+value.getString((short)0));			
 		});
+		
+		engine.getChildValues(v->{
+			System.out.println(v.getField().getName()+"="+v.getString((short)0));
+		});
+		
+		System.out.println();
+		message.getChildValues(v->{
+			System.out.println(v.getField().getName()+"="+v.getString((short)0));
+		});
 	}
+	
 	public static void myDecoder2(
 			final CarDecoder car,
 			final UnsafeBuffer directBuffer,
@@ -338,7 +353,7 @@ public class ExampleUsingGeneratedStub
 		serialNumber.getValues(v->System.out.println(v.getString((short) 0)));
 		someNumbers.getValues(v->{
 			System.out.println(someNumbers.getName()+":");
-			for( short i = 0; i < someNumbers.getArraySize(); i ++ ) {
+			for( short i = 0; i < someNumbers.getDimension(); i ++ ) {
 				System.out.println("    "+v.getString(i));
 			}
 		});

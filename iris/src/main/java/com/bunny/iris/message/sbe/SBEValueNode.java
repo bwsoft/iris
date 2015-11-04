@@ -84,7 +84,7 @@ class SBEValueNode implements FieldValue {
 
 	@Override
 	public int getSize() {
-		return this.size;
+		return size == 0 ? definition.getBlockSize()*definition.getDimension() : this.size;
 	}
 
 	@Override

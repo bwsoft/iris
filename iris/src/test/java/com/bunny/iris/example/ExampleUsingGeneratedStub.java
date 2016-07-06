@@ -32,8 +32,18 @@ import javax.xml.bind.JAXBException;
 
 import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
+import com.bunny.iris.message.aField;
+import com.bunny.iris.message.aGroup;
+import com.bunny.iris.message.aGroupArray;
+import com.bunny.iris.message.sbe.SBEGroupHeader;
 import com.bunny.iris.message.sbe.SBEMessage;
+import com.bunny.iris.message.sbe.SBEMessageHeader;
+import com.bunny.iris.message.sbe.SBEMessageSchema;
+import com.bunny.iris.message.sbe.SBEObject;
+import com.bunny.iris.message.sbe.SBEObjectArray;
 import com.bunny.iris.message.sbe.SBESchemaLoader;
+import com.bunny.iris.message.sbe.SBEVarLengthFieldHeader;
+import com.bunny.iris.message.sbe.aSBEMessage;
 
 public class ExampleUsingGeneratedStub
 {
@@ -117,8 +127,15 @@ public class ExampleUsingGeneratedStub
 
 		bufferOffset += MESSAGE_HEADER_DECODER.encodedLength();
 		decode(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
+		long starttime = System.currentTimeMillis();
+		int count = 1000000;
+		for( int i = 0; i < count; i ++ )
+			decode2(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
+		long diff = System.currentTimeMillis() - starttime;
+		System.out.println("RL performance: "+diff+"/"+count+" ms");
 		myDecoder2(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
-		myDecoder(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
+//		myDecoder(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
+		myDecoder3(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
 	}
 
 	public static int encode(final CarEncoder car, final UnsafeBuffer directBuffer, final int bufferOffset)
@@ -257,6 +274,81 @@ public class ExampleUsingGeneratedStub
 		System.out.println(sb);
 	}
 	
+	public static void decode2(
+			final CarDecoder car,
+			final UnsafeBuffer directBuffer,
+			final int bufferOffset,
+			final int actingBlockLength,
+			final int schemaId,
+			final int actingVersion)
+					throws Exception
+	{
+		final byte[] buffer = new byte[128];
+
+		car.wrap(directBuffer, bufferOffset, actingBlockLength, actingVersion);
+
+		car.sbeTemplateId();
+		car.sbeSchemaVersion();
+		car.serialNumber();
+		car.modelYear();
+		car.available();
+		car.code();
+
+		for (int i = 0, size = CarEncoder.someNumbersLength(); i < size; i++)
+		{
+			car.someNumbers(i);
+		}
+
+		for (int i = 0, size = CarEncoder.vehicleCodeLength(); i < size; i++)
+		{
+			car.vehicleCode(i);
+		}
+
+		final OptionalExtrasDecoder extras = car.extras();
+		extras.cruiseControl();
+		extras.sportsPack();
+		extras.sunRoof();
+
+		final EngineDecoder engine = car.engine();
+		engine.capacity();
+		engine.numCylinders();
+		engine.maxRpm();
+		for (int i = 0, size = EngineEncoder.manufacturerCodeLength(); i < size; i++)
+		{
+			engine.manufacturerCode(i);
+		}
+
+		new String(buffer, 0, engine.getFuel(buffer, 0, buffer.length), "ASCII");
+
+		for (final CarDecoder.FuelFiguresDecoder fuelFigures : car.fuelFigures())
+		{
+			fuelFigures.speed();
+			fuelFigures.mpg();
+		}
+
+		for (final CarDecoder.PerformanceFiguresDecoder performanceFigures : car.performanceFigures())
+		{
+			performanceFigures.octaneRating();
+
+			for (final AccelerationDecoder acceleration : performanceFigures.acceleration())
+			{
+				acceleration.mph();
+				acceleration.seconds();
+			}
+		}
+
+		CarEncoder.makeMetaAttribute(MetaAttribute.SEMANTIC_TYPE);
+		car.make();
+
+		new String(buffer, 0, car.getModel(buffer, 0, buffer.length), CarEncoder.modelCharacterEncoding());
+
+		final UnsafeBuffer tempBuffer = new UnsafeBuffer(buffer);
+		final int tempBufferLength = car.getActivationCode(tempBuffer, 0, tempBuffer.capacity());
+		new String(buffer, 0, tempBufferLength);
+
+		car.encodedLength();
+	}
+
 	public static void myDecoder(
 			final CarDecoder car,
 			final UnsafeBuffer directBuffer,
@@ -265,12 +357,7 @@ public class ExampleUsingGeneratedStub
 			final int schemaId,
 			final int actingVersion
 			) {
-		SBEMessage message = new SBEMessage()
-				.setBlockSize(actingBlockLength)
-				.setByteOrder(ByteOrder.LITTLE_ENDIAN)
-				.setMessageHeaderSize((short)8)
-				.setGroupHeaderSize((short) 3)
-				.setVarDataHeaderSize((short) 1);
+		SBEMessage message = new SBEMessage();
 		message.addChildField(FieldType.U64, (short) 1).setName("serialNumber").setID((short)1);
 		message.addChildField(FieldType.U16, (short) 1).setName("modelYear").setID((short)2);
 		message.addChildField(FieldType.U8, (short) 1).setName("available").setID((short)3);
@@ -292,10 +379,11 @@ public class ExampleUsingGeneratedStub
 		
 		Field make = message.addChildField(FieldType.RAW, (short) 1).setName("make").setID((short) 17);
 		Field model = message.addChildField(FieldType.RAW, (short) 1).setName("model").setID((short) 18);
-		Field activationCode = message.addChildField(FieldType.RAW, (short) 1).setName("activationCode").setID((short) 17);
+		Field activationCode = message.addChildField(FieldType.RAW, (short) 1).setName("activationCode").setID((short) 19);
 //		message.finalizeDefinition();
 		long currentTime = System.currentTimeMillis();
-		int count = 10000000;
+//		int count = 10000000;
+		int count = 1;
 		for( int i = 0; i < count; i ++ )
 			message.wrapForRead(directBuffer, bufferOffset-8);
 		long diff = System.currentTimeMillis() - currentTime;
@@ -329,7 +417,57 @@ public class ExampleUsingGeneratedStub
 			System.out.println(v.getField().getName()+"="+v.getString((short)0));
 		});
 	}
-	
+
+	public static void myDecoder3(
+			final CarDecoder car,
+			final UnsafeBuffer directBuffer,
+			final int bufferOffset,
+			final int actingBlockLength,
+			final int schemaId,
+			final int actingVersion
+			) {
+
+		SBEMessageSchema schema = new SBEMessageSchema("", 0, "", "LITTLEENDIAN");
+		SBEMessageHeader msgHeader = new SBEMessageHeader(FieldType.U16, FieldType.U16, FieldType.U16, FieldType.U16);
+		SBEGroupHeader groupHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
+		SBEVarLengthFieldHeader varLengthFieldHeader = new SBEVarLengthFieldHeader(FieldType.U8);
+
+		aSBEMessage message = new aSBEMessage(schema, msgHeader, groupHeader, varLengthFieldHeader);
+		message.addChildField((short)1,FieldType.U64, (short) 1).setName("serialNumber");
+		message.addChildField((short)2,FieldType.U16, (short) 1).setName("modelYear");
+		message.addChildField((short)3,FieldType.U8, (short) 1).setName("available");
+		message.addChildField((short)4, FieldType.BYTE, (short) 1).setName("code");
+		message.addChildField((short)5,FieldType.I32, (short) 5).setName("someNumber");
+		message.addChildField((short) 6,FieldType.CHAR, (short) 6).setName("vehicleCode");
+		message.addChildField((short) 7,FieldType.U8, (short) 1).setName("extras");
+		aGroup engine = (aGroup) message.addChildField((short) 8,FieldType.COMPOSITE, (short) 1).setName("Engine");
+		engine.addChildField((short) 8,FieldType.U16, (short) 1).setName("capacity");
+		engine.addChildField((short) 8, FieldType.U8, (short) 1).setName("numCylinders");
+		
+		aGroup fuelFigure = (aGroup) message.addChildField((short) 9,FieldType.GROUP, (short) 1).setName("fuelFigures");
+		fuelFigure.addChildField((short) 10,FieldType.U16, (short) 1).setName("speed");
+		
+		aGroup performanceFigures = (aGroup) message.addChildField((short) 12,FieldType.GROUP, (short) 1).setName("performanceFigures");
+		performanceFigures.addChildField((short)13,FieldType.U8, (short) 1).setName("octaneRating");
+		aGroup acceleration = (aGroup) performanceFigures.addChildField((short) 14,FieldType.GROUP, (short) 1).setName("acceleration");
+		acceleration.addChildField((short) 15,FieldType.U16, (short) 1).setName("mph");
+		
+		message.addChildField((short) 17,FieldType.RAW, (short) 1).setName("make");
+		message.addChildField((short) 18,FieldType.RAW, (short) 1).setName("model");
+		message.addChildField((short) 19,FieldType.RAW, (short) 1).setName("activationCode");
+		long currentTime = System.currentTimeMillis();
+		int count = 1000000;
+//		int count = 1;
+		
+		SBEObject obj = null;
+		for( int i = 0; i < count; i ++ )
+			obj = message.parse(directBuffer, bufferOffset-8);
+		long diff = System.currentTimeMillis() - currentTime;
+		System.out.println("Performance = "+diff + "/" +count+" ms");
+		System.out.println(obj.toString());
+		System.out.println("mph: "+obj.getGroupArray((short)12).getGroupObject(1).getGroupArray((short)14).getGroupObject(1).getU16((short) 15));
+	}
+
 	public static void myDecoder2(
 			final CarDecoder car,
 			final UnsafeBuffer directBuffer,
@@ -339,33 +477,18 @@ public class ExampleUsingGeneratedStub
 			final int actingVersion
 			) throws FileNotFoundException, JAXBException {
 		SBESchemaLoader loader = new SBESchemaLoader();
-		HashMap<Integer, SBEMessage> lookup = loader.loadSchema("/home/yzhou/Projects/iris/iris/src/test/resources/example-schema.xml");
-		SBEMessage sbeMessage = lookup.get(1);
+		HashMap<Integer, aSBEMessage> lookup = loader.loadSchema("/home/yzhou/Projects/iris/iris/src/test/resources/example-schema.xml");
+		aSBEMessage sbeMessage = lookup.get(1);
 		
-		Field serialNumber = sbeMessage.getField((short) 1);
-		Field available = sbeMessage.getField((short) 3);
-		Field code = sbeMessage.getField((short) 4);
-		Field someNumbers = sbeMessage.getField((short) 5);
-		Field vehicleCode = sbeMessage.getField((short) 6);
-		Field extras = sbeMessage.getField((short) 7);
-		
-		sbeMessage.wrapForRead(directBuffer, bufferOffset-8);
-		serialNumber.getValues(v->System.out.println(v.getString((short) 0)));
-		someNumbers.getValues(v->{
-			System.out.println(someNumbers.getName()+":");
-			for( short i = 0; i < someNumbers.getDimension(); i ++ ) {
-				System.out.println("    "+v.getString(i));
-			}
-		});
-		
-		available.getValues(v->System.out.println("available :"+v.getEnumName()));
-		code.getValues(v->System.out.println("car code: "+v.getEnumName()));
-		vehicleCode.getValues(v->{
-			byte[] values = new byte[v.getSize()];
-			System.out.println("Vehicle code: "+new String(values, 0, v.getBytes(values, 0)));
-		});
-		extras.getValues(v->{
-			System.out.println("Extra: is sunroof="+v.isSet("sunRoof")+", cruiseControl="+v.isSet("cruiseControl"));
-		});
+		System.out.println(sbeMessage);
+		int count = 1000000;
+		SBEObject obj = null;
+		long currentTime = System.currentTimeMillis();
+		for( int i = 0; i < count; i ++ )
+			obj = sbeMessage.parse(directBuffer, bufferOffset-8);
+		long diff = System.currentTimeMillis() - currentTime;
+		System.out.println("Performance = "+diff + "/" +count+" ms");
+		System.out.println(obj.toString());
+		System.out.println("mph: "+obj.getGroupArray((short)12).getGroupObject((short) 1).getGroupArray((short)14).getGroupObject(1).getNumber((short) 15, Integer.class));
 	}
 }

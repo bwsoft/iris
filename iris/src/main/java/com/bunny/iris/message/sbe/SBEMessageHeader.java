@@ -4,9 +4,10 @@ import java.nio.ByteOrder;
 
 import com.bunny.iris.message.FieldType;
 
+import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
-public class SBEMessageHeader implements aSBEHeader {
+public class SBEMessageHeader implements SBEHeader {
 	private final FieldType templateIdType;
 	private final FieldType schemaIdType;
 	private final FieldType blockSizeType;
@@ -27,7 +28,7 @@ public class SBEMessageHeader implements aSBEHeader {
 		return this.headerSize;
 	}
 
-	public int getBlockSize(UnsafeBuffer buffer, int offset, ByteOrder order) {
+	public int getBlockSize(DirectBuffer buffer, int offset, ByteOrder order) {
 		switch( this.blockSizeType ) {
 		case U8:
 		case I8:

@@ -3,11 +3,12 @@ package com.bunny.iris.message.sbe;
 import java.nio.ByteOrder;
 import java.util.List;
 
-import com.bunny.iris.message.aField;
-import com.bunny.iris.message.aGroup;
-import com.bunny.iris.message.aGroupArray;
-import com.bunny.iris.message.aGroupObject;
+import com.bunny.iris.message.Field;
+import com.bunny.iris.message.Group;
+import com.bunny.iris.message.GroupObjectArray;
+import com.bunny.iris.message.GroupObject;
 
+import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
@@ -23,17 +24,17 @@ import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
  * @author yzhou
  *
  */
-public class SBEObjectArray implements aGroupArray {
+public class SBEObjectArray implements GroupObjectArray {
 	private final static int OPTIMIZED_DIMMENSION = 8;
-	private aSBEField definition; // Field definition, name, id, etc.
+	private SBEField definition; // Field definition, name, id, etc.
 
-	private final UnsafeBuffer buffer;
+	private final DirectBuffer buffer;
 	private final ByteOrder order;
 	
 	private short dimmension;
 	private SBEObject[] attrs;
 
-	public SBEObjectArray(UnsafeBuffer buffer, ByteOrder order) {
+	public SBEObjectArray(DirectBuffer buffer, ByteOrder order) {
 		this.buffer = buffer;
 		this.order = order;
 		this.dimmension = 0;
@@ -52,8 +53,8 @@ public class SBEObjectArray implements aGroupArray {
 		this.dimmension = 0;
 	}
 
-	public void setDefinition(aField definition) {
-		this.definition = (aSBEField) definition;
+	public void setDefinition(Field definition) {
+		this.definition = (SBEField) definition;
 	}
 	
 	public SBEObject addObject(short index) {
@@ -73,7 +74,7 @@ public class SBEObjectArray implements aGroupArray {
 		}
 	}
 	
-	UnsafeBuffer getBuffer() {
+	DirectBuffer getBuffer() {
 		return buffer;
 	}
 
@@ -111,15 +112,15 @@ public class SBEObjectArray implements aGroupArray {
 			else	addComma = true;
 			sb.append("{name:").append(this.definition.getName()).append(",");
 			sb.append("id:").append(this.definition.getID());
-			if( definition instanceof aGroup ) {
-				List<aField> childFields = ((aGroup) definition).getChildFields();
-				for( aField childField : childFields ) {
-					if( childField instanceof aSBEGroup || childField instanceof aSBEVarLengthField ) 
+			if( definition instanceof Group ) {
+				List<Field> childFields = ((Group) definition).getChildFields();
+				for( Field childField : childFields ) {
+					if( childField instanceof SBEGroup || childField instanceof SBEVarLengthField ) 
 						break;
 					sb.append(",");
-					if( childField.getDimension() > 1 ) sb.append("[");
+					if( childField.length() > 1 ) sb.append("[");
 					boolean addComma2 = false;
-					for( int j = 0; j < childField.getDimension(); j++ ) {
+					for( int j = 0; j < childField.length(); j++ ) {
 						if( addComma2 ) sb.append(",");
 						else addComma2 = true;
 						sb.append("{");
@@ -141,12 +142,12 @@ public class SBEObjectArray implements aGroupArray {
 	}
 
 	@Override
-	public aSBEField getDefinition() {
+	public SBEField getDefinition() {
 		return definition;
 	}
 
 	@Override
-	public aGroupObject getGroupObject(int index) {
+	public GroupObject getGroupObject(int index) {
 		if( index < dimmension ) 
 			return attrs[index];
 		else 

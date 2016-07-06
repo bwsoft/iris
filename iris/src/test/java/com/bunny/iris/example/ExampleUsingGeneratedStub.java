@@ -24,26 +24,20 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 
 import javax.xml.bind.JAXBException;
 
-import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
-import com.bunny.iris.message.aField;
-import com.bunny.iris.message.aGroup;
-import com.bunny.iris.message.aGroupArray;
+import com.bunny.iris.message.Group;
 import com.bunny.iris.message.sbe.SBEGroupHeader;
-import com.bunny.iris.message.sbe.SBEMessage;
 import com.bunny.iris.message.sbe.SBEMessageHeader;
 import com.bunny.iris.message.sbe.SBEMessageSchema;
 import com.bunny.iris.message.sbe.SBEObject;
-import com.bunny.iris.message.sbe.SBEObjectArray;
 import com.bunny.iris.message.sbe.SBESchemaLoader;
 import com.bunny.iris.message.sbe.SBEVarLengthFieldHeader;
-import com.bunny.iris.message.sbe.aSBEMessage;
+import com.bunny.iris.message.sbe.SBEMessage;
 
 public class ExampleUsingGeneratedStub
 {
@@ -134,7 +128,6 @@ public class ExampleUsingGeneratedStub
 		long diff = System.currentTimeMillis() - starttime;
 		System.out.println("RL performance: "+diff+"/"+count+" ms");
 		myDecoder2(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
-//		myDecoder(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
 		myDecoder3(CAR_DECODER, directBuffer, bufferOffset, actingBlockLength, schemaId, actingVersion);
 	}
 
@@ -349,74 +342,6 @@ public class ExampleUsingGeneratedStub
 		car.encodedLength();
 	}
 
-	public static void myDecoder(
-			final CarDecoder car,
-			final UnsafeBuffer directBuffer,
-			final int bufferOffset,
-			final int actingBlockLength,
-			final int schemaId,
-			final int actingVersion
-			) {
-		SBEMessage message = new SBEMessage();
-		message.addChildField(FieldType.U64, (short) 1).setName("serialNumber").setID((short)1);
-		message.addChildField(FieldType.U16, (short) 1).setName("modelYear").setID((short)2);
-		message.addChildField(FieldType.U8, (short) 1).setName("available").setID((short)3);
-		message.addChildField(FieldType.BYTE, (short) 1).setName("code").setID((short)4);
-		Field someNumbers = message.addChildField(FieldType.I32, (short) 5).setName("someNumber").setID((short)5);
-		message.addChildField(FieldType.CHAR, (short) 6).setName("vehicleCode").setID((short) 6);
-		message.addChildField(FieldType.U8, (short) 1).setName("extras").setID((short) 7);
-		Field engine = message.addChildField(FieldType.COMPOSITE, (short) 1).setName("Engine").setID((short) 8);
-		engine.addChildField(FieldType.U16, (short) 1).setName("capacity");
-		engine.addChildField(FieldType.U8, (short) 1).setName("numCylinders");
-		
-		Field fuelFigure = message.addChildField(FieldType.GROUP, (short) 1).setName("fuelFigures").setID((short) 9);
-		fuelFigure.addChildField(FieldType.U16, (short) 1).setName("speed").setID((short) 10);
-		
-		Field performanceFigures = message.addChildField(FieldType.GROUP, (short) 1).setName("performanceFigures").setID((short) 12);
-		performanceFigures.addChildField(FieldType.U8, (short) 1).setName("octaneRating").setID((short)13);
-		Field acceleration = performanceFigures.addChildField(FieldType.GROUP, (short) 1).setName("acceleration").setID((short) 14);
-		Field mph = acceleration.addChildField(FieldType.U16, (short) 1).setName("mph").setID((short) 15);
-		
-		Field make = message.addChildField(FieldType.RAW, (short) 1).setName("make").setID((short) 17);
-		Field model = message.addChildField(FieldType.RAW, (short) 1).setName("model").setID((short) 18);
-		Field activationCode = message.addChildField(FieldType.RAW, (short) 1).setName("activationCode").setID((short) 19);
-//		message.finalizeDefinition();
-		long currentTime = System.currentTimeMillis();
-//		int count = 10000000;
-		int count = 1;
-		for( int i = 0; i < count; i ++ )
-			message.wrapForRead(directBuffer, bufferOffset-8);
-		long diff = System.currentTimeMillis() - currentTime;
-		System.out.println("Performance = "+diff + "/" +count+" ms");
-		
-		short occurrence = mph.getTotalOccurrence();
-		mph.getValues(value -> System.out.println("mph="+value.getString((short) 0)));
-		System.out.println("Total message size= "+message.getSize());
-		
-		someNumbers.getValues(value -> {
-			Field field = value.getField();
-			for( short i = 0; i < field.getDimension(); i ++ ) {
-				System.out.println("someNumbers="+value.getString(i));
-			}
-		});
-		
-		performanceFigures.getChildValues(value -> {
-			System.out.println("name="+value.getField().getName()+", value="+value.getString((short)0));
-		});
-		
-		make.getValues(value->{
-			System.out.println("name="+value.getField().getName()+", value="+value.getString((short)0));			
-		});
-		
-		engine.getChildValues(v->{
-			System.out.println(v.getField().getName()+"="+v.getString((short)0));
-		});
-		
-		System.out.println();
-		message.getChildValues(v->{
-			System.out.println(v.getField().getName()+"="+v.getString((short)0));
-		});
-	}
 
 	public static void myDecoder3(
 			final CarDecoder car,
@@ -432,7 +357,7 @@ public class ExampleUsingGeneratedStub
 		SBEGroupHeader groupHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
 		SBEVarLengthFieldHeader varLengthFieldHeader = new SBEVarLengthFieldHeader(FieldType.U8);
 
-		aSBEMessage message = new aSBEMessage(schema, msgHeader, groupHeader, varLengthFieldHeader);
+		SBEMessage message = new SBEMessage(schema, msgHeader, groupHeader, varLengthFieldHeader);
 		message.addChildField((short)1,FieldType.U64, (short) 1).setName("serialNumber");
 		message.addChildField((short)2,FieldType.U16, (short) 1).setName("modelYear");
 		message.addChildField((short)3,FieldType.U8, (short) 1).setName("available");
@@ -440,16 +365,16 @@ public class ExampleUsingGeneratedStub
 		message.addChildField((short)5,FieldType.I32, (short) 5).setName("someNumber");
 		message.addChildField((short) 6,FieldType.CHAR, (short) 6).setName("vehicleCode");
 		message.addChildField((short) 7,FieldType.U8, (short) 1).setName("extras");
-		aGroup engine = (aGroup) message.addChildField((short) 8,FieldType.COMPOSITE, (short) 1).setName("Engine");
+		Group engine = (Group) message.addChildField((short) 8,FieldType.COMPOSITE, (short) 1).setName("Engine");
 		engine.addChildField((short) 8,FieldType.U16, (short) 1).setName("capacity");
 		engine.addChildField((short) 8, FieldType.U8, (short) 1).setName("numCylinders");
 		
-		aGroup fuelFigure = (aGroup) message.addChildField((short) 9,FieldType.GROUP, (short) 1).setName("fuelFigures");
+		Group fuelFigure = (Group) message.addChildField((short) 9,FieldType.GROUP, (short) 1).setName("fuelFigures");
 		fuelFigure.addChildField((short) 10,FieldType.U16, (short) 1).setName("speed");
 		
-		aGroup performanceFigures = (aGroup) message.addChildField((short) 12,FieldType.GROUP, (short) 1).setName("performanceFigures");
+		Group performanceFigures = (Group) message.addChildField((short) 12,FieldType.GROUP, (short) 1).setName("performanceFigures");
 		performanceFigures.addChildField((short)13,FieldType.U8, (short) 1).setName("octaneRating");
-		aGroup acceleration = (aGroup) performanceFigures.addChildField((short) 14,FieldType.GROUP, (short) 1).setName("acceleration");
+		Group acceleration = (Group) performanceFigures.addChildField((short) 14,FieldType.GROUP, (short) 1).setName("acceleration");
 		acceleration.addChildField((short) 15,FieldType.U16, (short) 1).setName("mph");
 		
 		message.addChildField((short) 17,FieldType.RAW, (short) 1).setName("make");
@@ -477,8 +402,8 @@ public class ExampleUsingGeneratedStub
 			final int actingVersion
 			) throws FileNotFoundException, JAXBException {
 		SBESchemaLoader loader = new SBESchemaLoader();
-		HashMap<Integer, aSBEMessage> lookup = loader.loadSchema("/home/yzhou/Projects/iris/iris/src/test/resources/example-schema.xml");
-		aSBEMessage sbeMessage = lookup.get(1);
+		HashMap<Integer, SBEMessage> lookup = loader.loadSchema("/home/yzhou/Projects/iris/iris/src/test/resources/example-schema.xml");
+		SBEMessage sbeMessage = lookup.get(1);
 		
 		System.out.println(sbeMessage);
 		int count = 1000000;

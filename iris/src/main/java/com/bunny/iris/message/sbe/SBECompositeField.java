@@ -1,143 +1,93 @@
 package com.bunny.iris.message.sbe;
 
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
-import com.bunny.iris.message.FieldValue;
+import com.bunny.iris.message.Field;
+import com.bunny.iris.message.Group;
 
-public class SBECompositeField extends AbstractSBEParentField {
-	private SBEValueNode value, childValue;
-	private int relativeOffset;
-		
-	public SBECompositeField(SBEMessage message) {
-		super(message);
-		
-		value = new SBEValueNode();
-		value.setNodeId((short) -1);
-		value.setField(this);
-		value.setNumRows((short) 1);
-		
-		childValue = new SBEValueNode();
-		childValue.setNodeId((short) -1);
-		childValue.setNumRows((short) 0);
-	}
+/**
+ * Represents a composite field in SBE message. The subfield is retrieved by its 
+ * sequence in the definition with the first one starting at the index zero.
+ * 
+ * @author yzhou
+ *
+ */
+public class SBECompositeField extends SBEField implements Group {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-	int getRelativeOffset() {
-		return relativeOffset;
-	}
+	private final SBEHeader header = new SBEHeader() {
+		@Override
+		public short getHeaderSize() {
+			return 0;
+		}		
+	};
 	
-	SBECompositeField setRelativeOffset(int offset) {
-		this.relativeOffset = offset;
-		return this;
+	// child field definition
+	private final List<Field> children = new ArrayList<>();
+
+	SBECompositeField(SBEGroup parent, short dimension) {
+		super(parent, FieldType.COMPOSITE, dimension);
 	}
 	
 	@Override
-	public Field addChildField(FieldType type, short dimmension) {
-		if( type == FieldType.GROUP || type == FieldType.COMPOSITE || type == FieldType.RAW ) {
+	public List<Field> getChildFields() {
+		return children;
+	}
+
+	@Override 
+	public Field getChildField(short id) {
+		return children.get(id);
+	}
+	
+	@Override
+	public Field addChildField(short id, FieldType type, short arrayLength) {
+		if( arrayLength < 1 ) {
+			throw new IllegalArgumentException("zero length is not allowed");
+		}
+		SBEField newField = null;
+		int currentOffset = header.getHeaderSize();
+		
+		switch( type ) {
+		case U8:
+		case U16:
+		case U32:
+		case U64:
+		case I8:
+		case I16:
+		case I32:
+		case I64:
+		case BYTE:
+		case CHAR:
+			if( children.size() > 0 ) {
+				SBEField lastField = (SBEField) children.get(children.size()-1);
+				currentOffset = lastField.getBlockSize() + lastField.getRelativeOffset(); 
+			}
+			newField = new SBEField(this, type, arrayLength).setRelativeOffset(currentOffset);
+			this.setBlockSize(this.getBlockSize()+newField.getBlockSize()*newField.length());
+			children.add(newField);
+			break;
+		default:
 			throw new IllegalArgumentException("composite field does not accept the child field of type: "+type);
 		}
-		SBEField field = (SBEField) super.addChildField(type, dimmension);
-		value.setRowSize((short) 0, field.getBlockSize()*field.getDimension()+field.getRelativeOffset());
-		value.setSize(field.getBlockSize()*field.getDimension()+field.getRelativeOffset());
-		return field;
+		return newField;
 	}
 
 	@Override
-	public short getTotalOccurrence() {
-		short occurrence = 0;
-		AbstractSBEField parent = this.getParent();
-		short parentOccurrence = parent.getTotalOccurrence();
-		for( short i = 0; i < parentOccurrence; i ++ ) {
-			SBEValueNode value = (SBEValueNode) parent.getFieldValue(i);
-			occurrence += value.getNumRows();
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		sb.append("name:").append(getName());
+		sb.append(",id:").append(this.getID());
+		sb.append(",type:").append(this.getType());
+		for( Field field : this.children ) {
+			sb.append(",").append(field);
 		}
-		return occurrence;
-	}
-
-	@Override
-	public void getValues(Consumer<FieldValue> consumer) {
-		short currentOccurrence = 0;
-		AbstractSBEField parent = this.getParent();
-		short parentOccurrence = parent.getTotalOccurrence();
-		for( short i = 0; i < parentOccurrence; i ++ ) {
-			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
-			int offset = parentValue.getOffset();
-			short numRows = parentValue.getNumRows();
-			for( short j = 0; j < numRows; j ++ ) {
-				value.setOffset(offset+this.getRelativeOffset());
-				value.setCurrentOccurrence(currentOccurrence++);
-				offset += parentValue.getRowSize(j);
-				consumer.accept(value);
-			}
-		}
-	}
-
-	@Override
-	public FieldValue getFieldValue(short occurrence) {
-		short currentOccurrence = 0;
-		AbstractSBEField parent = this.getParent();
-		short parentOccurrence = parent.getTotalOccurrence();
-		for( short i = 0; i < parentOccurrence; i ++ ) {
-			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
-			int offset = parentValue.getOffset();
-			short numRows = parentValue.getNumRows();
-			for( short j = 0; j < numRows; j ++ ) {
-				if( currentOccurrence == occurrence ) {
-					value.setOffset(offset+this.getRelativeOffset());
-					value.setCurrentOccurrence(currentOccurrence);
-					return value;
-				}
-				currentOccurrence ++;
-				offset += parentValue.getRowSize(j);
-			}
-		}
-		throw new ArrayIndexOutOfBoundsException(occurrence+" exceeds the maximum occurrence: "+getTotalOccurrence());
-	}
-
-	SBEValueNode getFieldValue(SBEValueNode parentValue, short numRow) {
-		int offset = parentValue.getOffset();
-		short numRows = parentValue.getNumRows();
-		for( short j = 0; j < numRows; j ++ ) {
-			if( numRow == j ) {
-				value.setOffset(offset+this.getRelativeOffset());
-				value.setCurrentOccurrence((short)(parentValue.getCurrentOccurrence()+j));
-				return value;
-			}
-			offset += parentValue.getRowSize(j);
-		}
-		throw new ArrayIndexOutOfBoundsException((parentValue.getCurrentOccurrence()+numRow)+" exceeds the maximum occurrence: "+getTotalOccurrence());		
-	}
-
-	@Override
-	public void getChildValues(Consumer<FieldValue> consumer) {
-		short currentOccurrence = 0;
-		AbstractSBEField parent = this.getParent();
-		short parentOccurrence = parent.getTotalOccurrence();
-		for( short i = 0; i < parentOccurrence; i ++ ) {
-			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
-			int offset = parentValue.getOffset();
-			short numRows = parentValue.getNumRows();
-			for( short j = 0; j < numRows; j ++ ) {
-				for( Field childField : getChildField() ) {
-					childValue.setField(childField);
-					childValue.setOffset(offset+this.getRelativeOffset()+((SBEField) childField).getRelativeOffset());
-					childValue.setCurrentOccurrence(currentOccurrence);
-					consumer.accept(childValue);
-				}
-				currentOccurrence ++;
-				offset += parentValue.getRowSize(j);
-			}
-		}
-	}
-	
-	@Override
-	void getChildValues(SBEValueNode myCurrentValue, Consumer<FieldValue> consumer) {
-		for( Field childField : getChildField() ) {
-			childValue.setField(childField);
-			childValue.setOffset(myCurrentValue.getOffset()+((SBEField) childField).getRelativeOffset());
-			childValue.setCurrentOccurrence(myCurrentValue.getCurrentOccurrence());
-			consumer.accept(childValue);
-		}
+		sb.append("}");
+		return sb.toString();
 	}
 }

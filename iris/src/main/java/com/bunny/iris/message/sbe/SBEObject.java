@@ -6,12 +6,12 @@ import java.util.Map;
 import javax.naming.NameNotFoundException;
 
 import com.bunny.iris.message.FieldType;
-import com.bunny.iris.message.aField;
-import com.bunny.iris.message.aGroup;
-import com.bunny.iris.message.aGroupArray;
-import com.bunny.iris.message.aGroupObject;
+import com.bunny.iris.message.Field;
+import com.bunny.iris.message.Group;
+import com.bunny.iris.message.GroupObjectArray;
+import com.bunny.iris.message.GroupObject;
 
-public class SBEObject implements aGroupObject {
+public class SBEObject implements GroupObject {
 	private int offset; // relative to the start byte of the message.
 	private int valueOffset; // offset + headersize
 	private int blockSize; // size to contain the root element
@@ -61,8 +61,8 @@ public class SBEObject implements aGroupObject {
 		this.blockSize = blockSize;
 	}
 
-	private aSBEField getField(short fieldId) {
-		aSBEField field = (aSBEField) ((aSBEGroup) getDefinition()).getChildField(fieldId);
+	private SBEField getField(short fieldId) {
+		SBEField field = (SBEField) ((SBEGroup) getDefinition()).getChildField(fieldId);
 		if( null != field ) 
 			return field;
 		else
@@ -79,25 +79,25 @@ public class SBEObject implements aGroupObject {
 	}
 
 	@Override
-	public aSBEField getDefinition() {
+	public SBEField getDefinition() {
 		return array.getDefinition();
 	}
 
 	@Override
 	public char getChar(short fieldId) {
-		aSBEField field = getField(fieldId);
+		SBEField field = getField(fieldId);
 		return array.getBuffer().getChar(valueOffset+field.getRelativeOffset());
 	}
 
 	@Override
 	public byte getByte(short fieldId) {
-		aSBEField field = getField(fieldId);
+		SBEField field = getField(fieldId);
 		return array.getBuffer().getByte(valueOffset+field.getRelativeOffset());
 	}
 
 	@Override
 	public <T extends Number> T getNumber(short fieldId, Class<T> type) {
-		aSBEField field = getField(fieldId);
+		SBEField field = getField(fieldId);
 		switch(field.getType()) {
 		case BYTE:
 		case U8:
@@ -132,26 +132,26 @@ public class SBEObject implements aGroupObject {
 
 	@Override
 	public int getU16(short fieldId) {
-		aSBEField field = getField(fieldId);
+		SBEField field = getField(fieldId);
 		return array.getBuffer().getShort(valueOffset+field.getRelativeOffset(), array.getOrder());
 	}
 
 	@Override
 	public int getInt(short fieldId) {
-		aSBEField field = getField(fieldId);
+		SBEField field = getField(fieldId);
 		return array.getBuffer().getInt(valueOffset+field.getRelativeOffset(), array.getOrder());
 	}
 
 	@Override
 	public long getLong(short fieldId) {
-		aSBEField field = getField(fieldId);
+		SBEField field = getField(fieldId);
 		return array.getBuffer().getLong(valueOffset+field.getRelativeOffset(), array.getOrder());
 	}
 
 	@Override
 	public int getChars(short fieldId, char[] dest, int destOffset, int length) {
-		aSBEField field = getField(fieldId);
-		int len = length > field.getDimension() ? field.getDimension() : length;
+		SBEField field = getField(fieldId);
+		int len = length > field.length() ? field.length() : length;
 		for( int i = 0; i < len; i ++ ) {
 			dest[destOffset+i] = array.getBuffer().getChar(valueOffset+field.getRelativeOffset()+i*field.getBlockSize());
 		}		
@@ -165,8 +165,8 @@ public class SBEObject implements aGroupObject {
 			array.getBuffer().getBytes(offset, dest, destOffset, length);
 			return length;
 		} else  {
-			aSBEField field = getField(fieldId);
-			length = length > field.getDimension()*field.getBlockSize() ? field.getDimension()*field.getBlockSize() : length;		
+			SBEField field = getField(fieldId);
+			length = length > field.length()*field.getBlockSize() ? field.length()*field.getBlockSize() : length;		
 			array.getBuffer().getBytes(offset, dest, destOffset, length);
 			return length;			
 		}
@@ -174,8 +174,8 @@ public class SBEObject implements aGroupObject {
 
 	@Override
 	public int getU16Array(short fieldId, int[] dest, int destOffset, int length) {
-		aSBEField field = getField(fieldId);
-		int len = length > field.getDimension() ? field.getDimension() : length;
+		SBEField field = getField(fieldId);
+		int len = length > field.length() ? field.length() : length;
 		for( int i = 0; i < len; i ++ ) {
 			dest[destOffset+i] = array.getBuffer().getShort(valueOffset+field.getRelativeOffset()+i*field.getBlockSize(), array.getOrder());
 		}		
@@ -184,8 +184,8 @@ public class SBEObject implements aGroupObject {
 
 	@Override
 	public int getIntArray(short fieldId, int[] dest, int destOffset, int length) {
-		aSBEField field = getField(fieldId);
-		int len = length > field.getDimension() ? field.getDimension() : length;
+		SBEField field = getField(fieldId);
+		int len = length > field.length() ? field.length() : length;
 		for( int i = 0; i < len; i ++ ) {
 			dest[destOffset+i] = array.getBuffer().getInt(valueOffset+field.getRelativeOffset()+i*field.getBlockSize(), array.getOrder());
 		}		
@@ -194,8 +194,8 @@ public class SBEObject implements aGroupObject {
 
 	@Override
 	public int getLongArray(short fieldId, long[] dest, int destOffset, int length) {
-		aSBEField field = getField(fieldId);
-		int len = length > field.getDimension() ? field.getDimension() : length;
+		SBEField field = getField(fieldId);
+		int len = length > field.length() ? field.length() : length;
 		for( int i = 0; i < len; i ++ ) {
 			dest[destOffset+i] = array.getBuffer().getLong(valueOffset+field.getRelativeOffset()+i*field.getBlockSize(), array.getOrder());
 		}		
@@ -221,7 +221,7 @@ public class SBEObject implements aGroupObject {
 	}
 
 	@Override
-	public aGroupArray getGroupArray(short fieldId) {
+	public GroupObjectArray getGroupArray(short fieldId) {
 		return childFields.get(fieldId);
 	}
 	

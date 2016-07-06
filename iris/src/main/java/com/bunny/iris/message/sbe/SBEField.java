@@ -1,106 +1,101 @@
 package com.bunny.iris.message.sbe;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.function.Consumer;
 
-import com.bunny.iris.message.Field;
 import com.bunny.iris.message.FieldType;
-import com.bunny.iris.message.FieldValue;
+import com.bunny.iris.message.Field;
+import com.bunny.iris.message.Group;
 
-public class SBEField extends AbstractSBEField {
-	private SBEValueNode value;
-	private int relativeOffset = 0;
+/**
+ * A SBEField in the message. It can be a group field, variable length field, a composite 
+ * field, and/or a fixed size field. 
+ * 
+ * @author yzhou
+ *
+ */
+public class SBEField implements Field {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	private short id;
+	private String name;
+	private FieldType type;
+	
+	private int blockSize;	
+	private short arrayLength = 1;
+	
+	private int offset; 
 	
 	private HashMap<String, String> enumLookup;
 	private HashMap<String, Integer> bitLookup;
-	
-	public SBEField(SBEMessage message, short dimmension) {
-		super(message, dimmension);
-		value = new SBEValueNode();
-		value.setNodeId((short) -1);
-		value.setField(this);
-		value.setNumRows((short) 0);
-		value.setSize(this.getBlockSize()*this.getDimension());
+
+	private Group parent;
+
+	// can only be created by its parent and hence package scope
+	SBEField(Group parent, FieldType type, short arrayLength) {
+		this.parent = parent;
+		this.type = type;
+		this.arrayLength = arrayLength;
+		this.blockSize = type.size();
 	}
 	
-	int getRelativeOffset() {
-		return relativeOffset;
-	}
-	
-	SBEField setRelativeOffset(int offset) {
-		this.relativeOffset = offset;
+	/**
+	 * It is the size to contain one element of this object. The total storage size of this 
+	 * object is its block size multiplied by its array length.  
+	 * 
+	 * @param blockSize
+	 * @return
+	 */
+	public SBEField setBlockSize(int blockSize) {
+		this.blockSize = blockSize;
 		return this;
 	}
 	
-	@Override
-	public List<Field> getChildField() {
-		return new ArrayList<Field>();
-	}
-
-	@Override
-	public Field addChildField(FieldType type, short dimmension) {
-		throw new UnsupportedOperationException("cannot add child for field type: "+getType());
-	}
-
-	@Override
-	public short getTotalOccurrence() {
-		short occurrence = 0;
-		AbstractSBEField parent = this.getParent();
-		short parentOccurrence = parent.getTotalOccurrence();
-		for( short i = 0; i < parentOccurrence; i ++ ) {
-			SBEValueNode value = (SBEValueNode) parent.getFieldValue(i);
-			occurrence += value.getNumRows();
-		}
-		return occurrence;
-	}
-
-	@Override
-	public void getValues(Consumer<FieldValue> consumer) {
-		short currentOccurrence = 0;
-		AbstractSBEField parent = this.getParent();
-		short parentOccurrence = parent.getTotalOccurrence();
-		for( short i = 0; i < parentOccurrence; i ++ ) {
-			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
-			int offset = parentValue.getOffset();
-			short numRows = parentValue.getNumRows();
-			for( short j = 0; j < numRows; j ++ ) {
-				value.setOffset(offset+this.getRelativeOffset());
-				value.setCurrentOccurrence(currentOccurrence++);
-				offset += parentValue.getRowSize(j);
-				consumer.accept(value);
-			}
-		}
-	}
-
-	@Override
-	public FieldValue getFieldValue(short occurrence) {
-		short currentOccurrence = 0;
-		value.setSize(this.getBlockSize()*this.getDimension());
-		AbstractSBEField parent = this.getParent();
-		short parentOccurrence = parent.getTotalOccurrence();
-		for( short i = 0; i < parentOccurrence; i ++ ) {
-			SBEValueNode parentValue = (SBEValueNode) parent.getFieldValue(i);
-			int offset = parentValue.getOffset();
-			short numRows = parentValue.getNumRows();
-			for( short j = 0; j < numRows; j ++ ) {
-				if( occurrence == currentOccurrence ) {
-					value.setOffset(offset+this.getRelativeOffset());
-					value.setCurrentOccurrence(currentOccurrence);
-					return value;
-				}
-				currentOccurrence ++;
-				offset += parentValue.getRowSize(j);
-			}
-		}
-		throw new ArrayIndexOutOfBoundsException(occurrence+" exceeds the maximum occurrence: "+getTotalOccurrence());
+	/**
+	 * It is the size to contain one element of this object. The total storage size of this 
+	 * object is its block size multiplied by its array length.  
+	 * 
+	 * @return 
+	 */
+	public int getBlockSize() {
+		return this.blockSize;
 	}
 	
-	@Override
-	public void getChildValues(Consumer<FieldValue> consumer) {
+	/**
+	 * An offset relative to the value starting position of its parent group. 
+	 *  
+	 * @param offset
+	 * @return
+	 */
+	public SBEField setRelativeOffset(int offset) {
+		this.offset = offset;
+		return this;
 	}
-
+	
+	/**
+	 * An offset relative to the value starting position of its parent group. 
+	 *  
+	 * @return
+	 */
+	public int getRelativeOffset() {
+		return offset;
+	}
+	
+	public SBEMessage getMessage() {
+		Group grp = this.parent; 		
+		if( grp == null ) {
+			return (SBEMessage) this;
+		} else {
+			while( grp.getParent() != null ) {
+				grp = grp.getParent();
+			}
+			return (SBEMessage) grp;
+		}
+	}
+	
 	void setEnumLookupTable(HashMap<String, String> lookupTable) {
 		this.enumLookup = lookupTable;
 	}
@@ -120,5 +115,54 @@ public class SBEField extends AbstractSBEField {
 			throw new UnsupportedOperationException("no bit selection is supported for type: "+this.getType());
 		}
 		return this.bitLookup.get(bitName);
+	}
+
+	@Override
+	public short getID() {
+		return id;
+	}
+
+	@Override
+	public Field setID(short id) {
+		this.id = id;
+		return this;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public Field setName(String name) {
+		this.name = name;
+		return this;
+	}
+
+	@Override
+	public FieldType getType() {
+		return type;
+	}
+
+	@Override
+	public short length() {
+		return arrayLength;
+	}
+
+	@Override
+	public Group getParent() {
+		return parent;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		sb.append("name:").append(name);
+		sb.append(",id:").append(id);
+		sb.append(",type:").append(type.name());
+		sb.append(",dimension:").append(length());
+		sb.append("}");
+		return sb.toString();
 	}
 }

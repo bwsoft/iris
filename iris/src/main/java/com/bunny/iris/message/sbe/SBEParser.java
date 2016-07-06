@@ -4,26 +4,23 @@ import java.nio.ByteOrder;
 import java.util.List;
 
 import com.bunny.iris.message.FieldType;
-import com.bunny.iris.message.aField;
+import com.bunny.iris.message.Field;
 
 import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 public class SBEParser {
 	
-	private final aSBEMessage message;
+	private final SBEMessage message;
 	private final SBEObjectFactory sbeObjFactory;
-	private final UnsafeBuffer buffer;
+	private final DirectBuffer buffer;
 	private final ByteOrder order;
 	
 	private int messageHeaderSize;
 	private int groupHeaderSize;
 	private int varFieldHeaderSize;
 	
-	private long resetTime;
-	private long wrapTime;
-	
-	public SBEParser(aSBEMessage message) {
+	public SBEParser(SBEMessage message) {
 		this.message = message;
 		this.buffer = new UnsafeBuffer(new byte[0]);
 		this.order = message.getByteOrder();
@@ -35,10 +32,7 @@ public class SBEParser {
 	}
 	
 	public SBEObjectArray parse(DirectBuffer buffer, int offset) {
-//		long startTime = System.nanoTime();
 		sbeObjFactory.returnAll();
-//		long endTime = System.nanoTime();
-//		resetTime += (endTime - startTime);
 		this.buffer.wrap(buffer);
 
 		SBEObjectArray rowObj = sbeObjFactory.get();
@@ -52,15 +46,15 @@ public class SBEParser {
 		rowAttr.setBlockSize(blockSize);
 		message.setBlockSize(blockSize);
 
-		List<aField> fieldList = message.getChildFields();
+		List<Field> fieldList = message.getChildFields();
 		int numFixedSizeFields = message.getNumFixedSizeFields();
 		int currentOffset = rowAttr.getValueOffset()+rowAttr.getBlockSize();
 		for( int k = numFixedSizeFields; k < fieldList.size(); k ++ ) {
-			aField subfield = fieldList.get(k);
+			Field subfield = fieldList.get(k);
 			if( FieldType.GROUP == subfield.getType() ) {
-				currentOffset += wrapGroupRead(currentOffset,(aSBEGroup) subfield, rowObj, 0);				
+				currentOffset += wrapGroupRead(currentOffset,(SBEGroup) subfield, rowObj, 0);				
 			} else if( FieldType.RAW == subfield.getType() ) {
-				currentOffset += wrapVarRead(currentOffset, (aSBEVarLengthField) subfield, rowObj, 0);
+				currentOffset += wrapVarRead(currentOffset, (SBEVarLengthField) subfield, rowObj, 0);
 			}
 		}
 
@@ -70,17 +64,7 @@ public class SBEParser {
 		return rowObj;		
 	}
 	
-	public void startStat() {
-		resetTime = 0;
-		wrapTime = 0;
-	}
-	
-	public void reportTime() {
-		System.out.println("total reset time: "+resetTime);
-		System.out.println("Total wrap time: "+wrapTime);
-	}
-	
-	private int wrapGroupRead(int offset, aSBEGroup field, SBEObjectArray parent, int parentIndex) {			
+	private int wrapGroupRead(int offset, SBEGroup field, SBEObjectArray parent, int parentIndex) {			
 		SBEGroupHeader header = (SBEGroupHeader) field.getHeader();
 		int numRows = header.getNumRows(buffer, offset, order);
 		int blockSize = header.getBlockSize(buffer, offset, order);
@@ -92,7 +76,7 @@ public class SBEParser {
 			rowObj.setDefinition(field);
 			parent.addObject((short) parentIndex).addChildObject(field.getID(), rowObj);
 
-			List<aField> fieldList = field.getChildFields();
+			List<Field> fieldList = field.getChildFields();
 			int numFixedSizeFields = field.getNumFixedSizeFields();
 
 			for( short i = 0; i < numRows; i ++ ) {	
@@ -104,11 +88,11 @@ public class SBEParser {
 				
 				currentOffset += blockSize;
 				for( int k = numFixedSizeFields; k < fieldList.size(); k ++ ) {
-					aField subfield = fieldList.get(k);
+					Field subfield = fieldList.get(k);
 					if( FieldType.GROUP == subfield.getType() ) {
-						currentOffset += wrapGroupRead(currentOffset,(aSBEGroup) subfield, rowObj, i);				
+						currentOffset += wrapGroupRead(currentOffset,(SBEGroup) subfield, rowObj, i);				
 					} else if( FieldType.RAW == subfield.getType() ) {
-						currentOffset += wrapVarRead(currentOffset, (aSBEVarLengthField) subfield, rowObj, i);
+						currentOffset += wrapVarRead(currentOffset, (SBEVarLengthField) subfield, rowObj, i);
 					}
 				}
 
@@ -119,7 +103,7 @@ public class SBEParser {
 		return size;
 	}
 
-	private int wrapVarRead(int offset, aSBEVarLengthField field, SBEObjectArray parent, int parentIndex) {
+	private int wrapVarRead(int offset, SBEVarLengthField field, SBEObjectArray parent, int parentIndex) {
 		SBEObjectArray sbeObj = sbeObjFactory.get();
 		sbeObj.setDefinition(field);
 		SBEObject attr = sbeObj.addObject((short) 0);

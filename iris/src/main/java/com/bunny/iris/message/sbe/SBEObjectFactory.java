@@ -4,6 +4,7 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
@@ -22,10 +23,10 @@ public class SBEObjectFactory {
 	private int currentCount;
 	private SBEObjectArray[] pool;
 	
-	private final UnsafeBuffer buffer;
+	private final DirectBuffer buffer;
 	private final ByteOrder order;
 	
-	public SBEObjectFactory(UnsafeBuffer buffer, ByteOrder order) {
+	public SBEObjectFactory(DirectBuffer buffer, ByteOrder order) {
 		this.buffer = buffer;
 		this.order = order;
 		

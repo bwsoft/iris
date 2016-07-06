@@ -1,58 +1,21 @@
 package com.bunny.iris.message.sbe;
 
-import java.util.function.Consumer;
-
 import com.bunny.iris.message.FieldType;
-import com.bunny.iris.message.FieldValue;
+import com.bunny.iris.message.Group;
 
-class SBEVarLengthField extends SBEField {
-
-	private short totalOccurrence;
-	private short[] nodeIds;
-
-	public SBEVarLengthField(SBEMessage message) {
-		super(message, (short) 1);
-		setType(FieldType.RAW);
-		
-		totalOccurrence = 0;
-		nodeIds = new short[SBEMessage.MAX_FIELD_OCCURRENCE];
-	}
-
-	void reset() {
-		totalOccurrence = 0;	
-		super.reset();
-	}
-
-	short addValue(SBEValueNode value) {
-		nodeIds[totalOccurrence] = value.getNodeId();
-		return totalOccurrence ++;
-	}
-		
-	public SBEValueNode getFieldValue(short idx) {
-		return getMessage().getValueNode(this.nodeIds[idx]);
+public class SBEVarLengthField extends SBEField {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2032780172159012674L;
+	private final SBEHeader header;
+	
+	SBEVarLengthField(Group parent, SBEHeader header) {
+		super(parent, FieldType.RAW, (short) 1);
+		this.header = header;
 	}
 	
-	@Override
-	public short getTotalOccurrence() {
-		return totalOccurrence;
+	public SBEHeader getHeader() {
+		return header;
 	}
-	
-	@Override
-	public void getValues(Consumer<FieldValue> consumer) {
-		for( short i = 0; i < totalOccurrence; i ++ ) {
-			consumer.accept(getMessage().getValueNode(this.nodeIds[i]));
-		}
-	}
-
-	int wrapForRead(int offset) {
-		SBEValueNode grpValue = getMessage().allocate();
-		grpValue.setField(this);
-		grpValue.setOffset(offset);
-		grpValue.initVarLengthNode();		
-		grpValue.setSize(getBlockSize()+getHeaderSize());
-		grpValue.setCurrentOccurrence(addValue(grpValue));
-		grpValue.setNumRows((short)0);
-
-		return grpValue.getSize();
-	}	
 }

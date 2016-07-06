@@ -6,7 +6,7 @@ import com.bunny.iris.message.FieldType;
 
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
-public class SBEVarLengthFieldHeader implements aSBEHeader {
+public class SBEVarLengthFieldHeader implements SBEHeader {
 	private final short headerSize;
 	private final FieldType lengthType;
 	

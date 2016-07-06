@@ -4,6 +4,7 @@ import java.nio.ByteOrder;
 
 import com.bunny.iris.message.FieldType;
 
+import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
@@ -13,7 +14,7 @@ import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
  * @author yzhou
  *
  */
-public class SBEGroupHeader implements aSBEHeader {
+public class SBEGroupHeader implements SBEHeader {
 	private final FieldType numInGroupType;
 	private final FieldType blockSizeType;
 	
@@ -29,7 +30,7 @@ public class SBEGroupHeader implements aSBEHeader {
 		return headerSize;
 	}
 	
-	public int getBlockSize(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order) {
+	public int getBlockSize(DirectBuffer buffer, int groupStartOffset, ByteOrder order) {
 		switch( this.blockSizeType ) {
 		case U8:
 		case I8:
@@ -42,7 +43,7 @@ public class SBEGroupHeader implements aSBEHeader {
 		}
 	}
 	
-	public int getNumRows(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order) {
+	public int getNumRows(DirectBuffer buffer, int groupStartOffset, ByteOrder order) {
 		switch( this.numInGroupType ) {
 		case U8:
 		case I8:

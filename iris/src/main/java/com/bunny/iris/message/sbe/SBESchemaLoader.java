@@ -38,11 +38,11 @@ public class SBESchemaLoader {
 		
 	}
 	
-	public static HashMap<Integer, aSBEMessage> loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
+	public static HashMap<Integer, SBEMessage> loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
 		SBESchemaLoader schemaCache = new SBESchemaLoader();
 		
 		// contains the map between the template id and the message definition
-		HashMap<Integer, aSBEMessage> lookupTable = new HashMap<>();
+		HashMap<Integer, SBEMessage> lookupTable = new HashMap<>();
 
 		InputStream is = null;
 		File file = new File(schemaXML);
@@ -85,7 +85,7 @@ public class SBESchemaLoader {
 		// parsing message
 		List<Message> messageList = schema.getMessage();
 		for( Message message : messageList ) {
-			aSBEMessage sbeMessage = new aSBEMessage(schemaHeader, msgHeader, grpHeader, varHeader);
+			SBEMessage sbeMessage = new SBEMessage(schemaHeader, msgHeader, grpHeader, varHeader);
 			sbeMessage.setID((short) message.getId()).setName(message.getName());
 			lookupTable.put(message.getId(), sbeMessage);
 			
@@ -313,7 +313,7 @@ public class SBESchemaLoader {
 		return varHeader;
 	}
 	
-	private static void processFieldsOfAGroup(SBESchemaLoader schemaCache, aSBEGroup group, String elementName, Object elementType) {
+	private static void processFieldsOfAGroup(SBESchemaLoader schemaCache, SBEGroup group, String elementName, Object elementType) {
 		if( elementType instanceof org.fix.sbe.FieldType ) {
 			org.fix.sbe.FieldType fieldType = (org.fix.sbe.FieldType) elementType;
 
@@ -336,16 +336,16 @@ public class SBESchemaLoader {
 			} else if( schemaCache.sbeEnums.containsKey(fieldType.getType())) {
 				// an enum type
 				SBEEnum sbeEnum = schemaCache.sbeEnums.get(fieldType.getType());
-				aSBEField enumField = (aSBEField) group.addChildField((short)fieldType.getId(), sbeEnum.primitiveType, (short) 1).setName(fieldType.getName());
+				SBEField enumField = (SBEField) group.addChildField((short)fieldType.getId(), sbeEnum.primitiveType, (short) 1).setName(fieldType.getName());
 				enumField.setEnumLookupTable(sbeEnum.enumLookup);
 			} else if( schemaCache.sbeChoices.containsKey(fieldType.getType())) {
 				// a set bit field
 				SBESet sbeSet = schemaCache.sbeChoices.get(fieldType.getType());
-				aSBEField choiceField = (aSBEField) group.addChildField((short)fieldType.getId(), sbeSet.primitiveType, (short) 1).setName(fieldType.getName());
+				SBEField choiceField = (SBEField) group.addChildField((short)fieldType.getId(), sbeSet.primitiveType, (short) 1).setName(fieldType.getName());
 				choiceField.setSetLookupTable(sbeSet.bitLookup);
 			} else if( schemaCache.sbeComposites.containsKey(fieldType.getType()) && ! "data".equals(elementName)) {
 				// composite field
-				aSBECompositeField compositeField = (aSBECompositeField) group.addChildField((short)fieldType.getId(),FieldType.COMPOSITE, (short) 1).setName(fieldType.getName());
+				SBECompositeField compositeField = (SBECompositeField) group.addChildField((short)fieldType.getId(),FieldType.COMPOSITE, (short) 1).setName(fieldType.getName());
 				List<EncodedDataType> eTypes = schemaCache.sbeComposites.get(fieldType.getType());
 				for( EncodedDataType eType : eTypes ) {			
 					if( null == eType.getPresence() || ! "constant".equals(eType.getPresence().toLowerCase())) {
@@ -366,7 +366,7 @@ public class SBESchemaLoader {
 		} else if( elementType instanceof GroupType ) {
 			GroupType groupType = (GroupType) elementType;
 			System.out.println("group: "+groupType.getName()+","+groupType.getId()+","+groupType.getBlockLength());
-			aSBEGroup childGroup = (aSBEGroup) group.addChildField((short)groupType.getId(),FieldType.GROUP, (short) 1).setName(groupType.getName());
+			SBEGroup childGroup = (SBEGroup) group.addChildField((short)groupType.getId(),FieldType.GROUP, (short) 1).setName(groupType.getName());
 			List<org.fix.sbe.FieldType> childFieldList = groupType.getField();
 			for( org.fix.sbe.FieldType type : childFieldList ) {
 				processFieldsOfAGroup(schemaCache, childGroup, "field", type);
@@ -390,7 +390,7 @@ public class SBESchemaLoader {
 	
 	public static void main(String[] args) throws FileNotFoundException, JAXBException {
 		SBESchemaLoader loader = new SBESchemaLoader();
-		HashMap<Integer, aSBEMessage> lookup = loader.loadSchema("src/test/resources/example-schema.xml");
+		HashMap<Integer, SBEMessage> lookup = loader.loadSchema("src/test/resources/example-schema.xml");
 		lookup.forEach((k,v) -> {
 			System.out.println(v);
 		});

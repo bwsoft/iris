@@ -1,11 +1,18 @@
 package com.bunny.iris.message;
 
-import java.util.List;
-import java.util.function.Consumer;
+import java.io.Serializable;
 
-public interface Field {
-	public static final short DEFAULT_MAX_REPEATS = 256;
-
+/**
+ * A Field is identified by name and id. It is in a structured group which is a special field
+ * that contains other fields and/or groups. The group that this field is in is its parent group.
+ * 
+ * The field id, field type, its array length, and its parent are determined upon 
+ * construction. It is typically created by the group it belongs to.
+ * 
+ * @author yzhou
+ *
+ */
+public interface Field extends Serializable {
 	public short getID();
 	public Field setID(short id);
 	
@@ -13,41 +20,6 @@ public interface Field {
 	public Field setName(String name);
 	
 	public FieldType getType();
-	public Field setType(FieldType type);		
-	public short getDimension();
-
-	public Field getParent();
-	public Field setParent(Field parent);
-	
-	public List<Field> getChildField();
-	/**
-	 * Create a field that is a child field of this field.
-	 * 
-	 * @param type
-	 * @param dimmension the dimmension of this type.
-	 * @return The newly created child field.
-	 */
-	public Field addChildField(FieldType type, short dimmension);	
-	public Field getMessage();
-	
-	public short getTotalOccurrence();
-	/**
-	 * Get values of all occurrences in sequence. The accept of the consumer will be invoked for each 
-	 * retrieved value. 
-	 * 
-	 * The retrieved FieldValue cannot be cached by the consumer since it will be populated with the next FieldValue 
-	 * in the next retrival. Copy the value in order to save or cache. 
-	 * 
-	 * @param consumer
-	 */
-	public void getValues(Consumer<FieldValue> consumer);
-	/**
-	 * This method is meant to retrieve the value of a particular occurrence. Do not use this method to 
-	 * retrieve all values of all occurrences. Use getValues instead. 
-	 * 
-	 * @param nth the nth occurrence in the field
-	 * @return the field value.
-	 */
-	public FieldValue getFieldValue(short occurrence);	
-	public void getChildValues(Consumer<FieldValue> consumer);
+	public short length(); // The array size if this field is an array.
+	public Group getParent();
 }

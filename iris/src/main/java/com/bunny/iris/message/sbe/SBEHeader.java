@@ -1,5 +1,5 @@
 package com.bunny.iris.message.sbe;
 
-public interface aSBEHeader {
+public interface SBEHeader {
 	public short getHeaderSize();
 }

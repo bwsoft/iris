@@ -36,7 +36,7 @@ public class SBEGroup extends SBEField implements Group {
 	private final LinkedHashMap<Short,Field> groupFieldLookup = new LinkedHashMap<>(); 
 	private short numFixedSizeFields;
 
-	public SBEGroup(SBEGroup parent, SBEHeader header, FieldType type) {
+	SBEGroup(SBEGroup parent, SBEHeader header, FieldType type) {
 		super(parent, type,(short) 1);
 		if( type != FieldType.GROUP && type != FieldType.MESSAGE ) {
 			throw new IllegalArgumentException("ilegal type specified for a SBE group: "+type.name());

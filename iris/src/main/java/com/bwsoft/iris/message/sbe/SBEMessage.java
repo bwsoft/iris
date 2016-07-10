@@ -31,14 +31,14 @@ public class SBEMessage extends SBEGroup implements Message {
 	 */
 	private static final long serialVersionUID = -1434540350355065622L;
 	
-	private final SBEMessageSchema schema;
+	private final SBEMessageSchemaHeader schema;
 	private final SBEMessageHeader msgHeader;
 	private final SBEGroupHeader grpHeader;
 	private final SBEVarLengthFieldHeader varLengthFieldHeader;
 
 	private final SBEParser parser;
 
-	public SBEMessage(SBEMessageSchema schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader) {
+	public SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader) {
 		super(null, header, FieldType.MESSAGE);
 		
 		this.schema = schema;

@@ -29,7 +29,7 @@ import uk.co.real_logic.agrona.DirectBuffer;
  * @author yzhou
  *
  */
-public class SBEObjectFactory {
+class SBEObjectFactory {
 	private int initialCapacity = 100;
 	
 	private int currentCount;
@@ -38,7 +38,7 @@ public class SBEObjectFactory {
 	private final DirectBuffer buffer;
 	private final ByteOrder order;
 	
-	public SBEObjectFactory(DirectBuffer buffer, ByteOrder order) {
+	SBEObjectFactory(DirectBuffer buffer, ByteOrder order) {
 		this.buffer = buffer;
 		this.order = order;
 		
@@ -51,7 +51,7 @@ public class SBEObjectFactory {
 		}
 	}
 	
-	public SBEObjectArray get() {
+	SBEObjectArray get() {
 		if( currentCount < pool.length ) {
 			return pool[currentCount++];
 		} else {
@@ -69,11 +69,11 @@ public class SBEObjectFactory {
 	 * Always contain the message object
 	 * @return
 	 */
-	public SBEObjectArray getRoot() {
+	SBEObjectArray getRoot() {
 		return pool[0];
 	}
 	
-	public void returnAll() {
+	void returnAll() {
 		for( int i = 0; i < currentCount; i ++ ) {
 			pool[i].reset();
 		}

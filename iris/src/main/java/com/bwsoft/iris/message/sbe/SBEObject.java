@@ -31,16 +31,16 @@ public class SBEObject implements GroupObject {
 	private LinkedHashMap<Short, SBEObjectArray> childFields;
 	private final SBEObjectArray array;
 	
-	public SBEObject(SBEObjectArray array)  {
+	SBEObject(SBEObjectArray array)  {
 		childFields = new LinkedHashMap<>();
 		this.array = array;
 	}
 	
-	public void reset() {
+	void reset() {
 		childFields.clear();
 	}
 
-	public void addChildObject(short id, SBEObjectArray aChild) {
+	void addChildObject(short id, SBEObjectArray aChild) {
 		if( ! childFields.containsKey(id)) 
 			childFields.put(id,aChild);
 		else
@@ -51,7 +51,7 @@ public class SBEObject implements GroupObject {
 		return this.offset;
 	}
 
-	public void setOffset(int offset) {
+	void setOffset(int offset) {
 		this.offset = offset;
 	}
 
@@ -59,7 +59,7 @@ public class SBEObject implements GroupObject {
 		return valueOffset;
 	}
 
-	public void setValueOffset(int valueOffset) {
+	void setValueOffset(int valueOffset) {
 		this.valueOffset = valueOffset;
 	}
 
@@ -67,7 +67,7 @@ public class SBEObject implements GroupObject {
 		return blockSize;
 	}
 
-	public void setBlockSize(int blockSize) {
+	void setBlockSize(int blockSize) {
 		this.blockSize = blockSize;
 	}
 

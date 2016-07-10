@@ -39,6 +39,7 @@ import org.fix.sbe.MessageSchema;
 import org.fix.sbe.MessageSchema.Types;
 
 import com.bwsoft.iris.message.FieldType;
+import com.bwsoft.iris.message.SBEMessageSchema;
 
 import org.fix.sbe.SetType;
 import org.fix.sbe.ValidValue;
@@ -50,11 +51,11 @@ public class SBESchemaLoader {
 	HashMap<String, SBEEnum> sbeEnums; // contains all the map between enum name and its values
 	HashMap<String, SBESet> sbeChoices; // contains all the map between a set/choice name and its corresponding bit set.
 	
-	public SBESchemaLoader() {
+	private SBESchemaLoader() {
 		
 	}
 	
-	public static SBESchema loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
+	public static SBEMessageSchema loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
 		SBESchemaLoader schemaCache = new SBESchemaLoader();
 		
 		// contains the map between the template id and the message definition
@@ -75,7 +76,7 @@ public class SBESchemaLoader {
 		MessageSchema schema = (MessageSchema) um.unmarshal(is);
 		
 		// create schema header
-		SBEMessageSchema schemaHeader = new SBEMessageSchema(schema.getPackage(), schema.getId(), schema.getVersion().intValue(), schema.getSemanticVersion(), schema.getByteOrder());
+		SBEMessageSchemaHeader schemaHeader = new SBEMessageSchemaHeader(schema.getPackage(), schema.getId(), schema.getVersion().intValue(), schema.getSemanticVersion(), schema.getByteOrder());
 		
 		// base type has to be processed first
 		schemaCache.sbeTypes = fetechTypes(schema);
@@ -115,7 +116,7 @@ public class SBESchemaLoader {
 				}
 			}
 		}
-		return new SBESchema(schemaHeader, msgHeader, grpHeader, varHeader, lookupTable);
+		return new SBEMessageSchema(schemaHeader, msgHeader, grpHeader, varHeader, lookupTable);
 	}
 	
 	/*
@@ -405,7 +406,7 @@ public class SBESchemaLoader {
 	
 	public static void main(String[] args) throws FileNotFoundException, JAXBException {
 		SBESchemaLoader loader = new SBESchemaLoader();
-		SBESchema factory = loader.loadSchema("src/test/resources/example-schema.xml");
+		SBEMessageSchema factory = loader.loadSchema("src/test/resources/example-schema.xml");
 		HashMap<Integer, SBEMessage> lookup = factory.getMsgLookup();
 		lookup.forEach((k,v) -> {
 			System.out.println(v);

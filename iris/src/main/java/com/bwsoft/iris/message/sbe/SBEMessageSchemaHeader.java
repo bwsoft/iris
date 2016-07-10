@@ -17,7 +17,7 @@ package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
-public class SBEMessageSchema {
+public class SBEMessageSchemaHeader {
 
 	private String packageName;
 	private final int id;
@@ -25,7 +25,7 @@ public class SBEMessageSchema {
 	private String semanticVersion;
 	private ByteOrder order;
 	
-	public SBEMessageSchema(String packageName, int id, int version, String semanticVersion, String order) {
+	public SBEMessageSchemaHeader(String packageName, int id, int version, String semanticVersion, String order) {
 		this.packageName = packageName;
 		this.id = id;
 		this.version = version;

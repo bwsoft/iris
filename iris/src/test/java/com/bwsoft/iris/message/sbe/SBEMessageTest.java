@@ -18,7 +18,6 @@ package com.bwsoft.iris.message.sbe;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 
 import javax.xml.bind.JAXBException;
 
@@ -30,6 +29,7 @@ import org.junit.Test;
 import com.bwsoft.iris.message.FieldType;
 import com.bwsoft.iris.message.Group;
 import com.bwsoft.iris.message.GroupObject;
+import com.bwsoft.iris.message.SBEMessageSchema;
 
 import baseline.BooleanType;
 import baseline.CarEncoder;
@@ -70,14 +70,14 @@ public class SBEMessageTest {
 	 */
 	@Test
 	public void testSbeMessageDefinitionCreation() throws FileNotFoundException, JAXBException {
-		// create a sbe message using SBESchemaLoader. 
+		// create a sbe message schema based upon the XML definition. 
 		// The HashMap contains all messages defined in the xml with the message templateId as the key.
 		// There is only one message in the XML.
-		SBESchema factory = SBESchemaLoader.loadSchema("./src/test/resources/example-schema.xml");
+		SBEMessageSchema factory = SBEMessageSchema.createSBESchema("./src/test/resources/example-schema.xml");
 		SBEMessage sbeMessage = factory.getMsgLookup().get(1);
 		
 		// Now create the same message manually
-		SBEMessageSchema schema = new SBEMessageSchema("", 1, 0, "", "LITTLEENDIAN");
+		SBEMessageSchemaHeader schema = new SBEMessageSchemaHeader("", 1, 0, "", "LITTLEENDIAN");
 		SBEMessageHeader msgHeader = new SBEMessageHeader(FieldType.U16, FieldType.U16, FieldType.U16, FieldType.U16);
 		SBEGroupHeader groupHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
 		SBEVarLengthFieldHeader varLengthFieldHeader = new SBEVarLengthFieldHeader(FieldType.U8);
@@ -122,8 +122,8 @@ public class SBEMessageTest {
 	 */
 	@Test
 	public void sbeMessageTest() throws FileNotFoundException, JAXBException {
-		// create SBEMessageFactory by loading them from schemas.
-		SBESchema factory = SBESchemaLoader.loadSchema("./src/test/resources/example-schema.xml");
+		// create SBEMessageSchema based upon the schema.
+		SBEMessageSchema factory = SBEMessageSchema.createSBESchema("./src/test/resources/example-schema.xml");
 		
 		// wrap message for reading
 		GroupObject obj = factory.wrapForRead(sbeBuffer, bufferOffset);

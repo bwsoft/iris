@@ -48,7 +48,7 @@ public class SBEObjectArray implements GroupObjectArray {
 	private short dimmension;
 	private SBEObject[] attrs;
 
-	public SBEObjectArray(DirectBuffer buffer, ByteOrder order) {
+	SBEObjectArray(DirectBuffer buffer, ByteOrder order) {
 		this.buffer = buffer;
 		this.order = order;
 		this.dimmension = 0;
@@ -61,17 +61,17 @@ public class SBEObjectArray implements GroupObjectArray {
 	/**
 	 * Reset this SBEObject for reuse 
 	 */
-	public void reset() {
+	void reset() {
 		for( int i = 0; i < dimmension; i ++ )
 			attrs[i].reset();
 		this.dimmension = 0;
 	}
 
-	public void setDefinition(Field definition) {
+	void setDefinition(Field definition) {
 		this.definition = (SBEField) definition;
 	}
 	
-	public SBEObject addObject(short index) {
+	SBEObject addObject(short index) {
 		if( index < attrs.length ) {
 			if( index >= dimmension ) dimmension = (short) (index + 1);
 			return attrs[index];
@@ -96,26 +96,6 @@ public class SBEObjectArray implements GroupObjectArray {
 		return order;
 	}
 
-//	public SBEObjectArray getGroup(int rowId, int id) {
-//		return attrs[rowId].getSubField(id);
-//	}
-//	
-//	public short getFieldU16(int rowId, int id, int index) {
-//		switch( definition.getType() ) {
-//		case GROUP:
-//			for( aField field : ((aSBEGroup) definition).getChildField() ) {
-//				if( id == field.getID() ) {
-//					int voff = this.attrs[rowId].valueOffset + ((aSBEField) field).getRelativeOffset() - ((aSBEGroup) this.definition).getHeader().getHeaderSize();
-//					return this.buffer.getShort(voff+index*definition.getBlockSize(), this.order);
-//				}
-//			}
-//			break;
-//		default:
-//			throw new IllegalArgumentException("cannot get a subfield from a non-group object");
-//		}
-//		return -1;
-//	}
-	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

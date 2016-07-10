@@ -27,6 +27,8 @@ public class SBEMessageHeader implements SBEHeader {
 	private final FieldType blockSizeType;
 	private final FieldType versionType;
 	private final int blockSizeOffset;
+	private final int templateIdOffset;
+	private final int schemaIdOffset;
 	private final short headerSize;
 	
 	public SBEMessageHeader(FieldType templateIdType, FieldType schemaIdType, FieldType blockSizeType, FieldType versionType) {
@@ -35,6 +37,8 @@ public class SBEMessageHeader implements SBEHeader {
 		this.blockSizeType = blockSizeType;
 		this.versionType = versionType;
 		this.blockSizeOffset = 0;
+		this.templateIdOffset = this.blockSizeOffset + this.blockSizeType.size();
+		this.schemaIdOffset = this.templateIdOffset + this.templateIdType.size();
 		this.headerSize = (short) (this.templateIdType.size() + this.schemaIdType.size() + this.blockSizeType.size() + this.versionType.size());
 	}
 	
@@ -50,6 +54,32 @@ public class SBEMessageHeader implements SBEHeader {
 		case U16:
 		case I16:
 			return buffer.getShort(offset+blockSizeOffset,order);
+		default:
+			throw new UnsupportedOperationException("Enum type, "+this.blockSizeType.name()+", not supported for block size");
+		}
+	}
+
+	public int getTemplateId(DirectBuffer buffer, int offset, ByteOrder order) {
+		switch( this.blockSizeType ) {
+		case U8:
+		case I8:
+			return buffer.getByte(offset+templateIdOffset);
+		case U16:
+		case I16:
+			return buffer.getShort(offset+templateIdOffset,order);
+		default:
+			throw new UnsupportedOperationException("Enum type, "+this.blockSizeType.name()+", not supported for block size");
+		}
+	}
+
+	public int getSchemaId(DirectBuffer buffer, int offset, ByteOrder order) {
+		switch( this.blockSizeType ) {
+		case U8:
+		case I8:
+			return buffer.getByte(offset+schemaIdOffset);
+		case U16:
+		case I16:
+			return buffer.getShort(offset+schemaIdOffset,order);
 		default:
 			throw new UnsupportedOperationException("Enum type, "+this.blockSizeType.name()+", not supported for block size");
 		}

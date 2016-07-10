@@ -73,11 +73,11 @@ public class SBEMessageTest {
 		// create a sbe message using SBESchemaLoader. 
 		// The HashMap contains all messages defined in the xml with the message templateId as the key.
 		// There is only one message in the XML.
-		HashMap<Integer, SBEMessage> lookup = SBESchemaLoader.loadSchema("./src/test/resources/example-schema.xml");
-		SBEMessage sbeMessage = lookup.get(1);
+		SBESchema factory = SBESchemaLoader.loadSchema("./src/test/resources/example-schema.xml");
+		SBEMessage sbeMessage = factory.getMsgLookup().get(1);
 		
 		// Now create the same message manually
-		SBEMessageSchema schema = new SBEMessageSchema("", 0, "", "LITTLEENDIAN");
+		SBEMessageSchema schema = new SBEMessageSchema("", 1, 0, "", "LITTLEENDIAN");
 		SBEMessageHeader msgHeader = new SBEMessageHeader(FieldType.U16, FieldType.U16, FieldType.U16, FieldType.U16);
 		SBEGroupHeader groupHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
 		SBEVarLengthFieldHeader varLengthFieldHeader = new SBEVarLengthFieldHeader(FieldType.U8);
@@ -122,17 +122,25 @@ public class SBEMessageTest {
 	 */
 	@Test
 	public void sbeMessageTest() throws FileNotFoundException, JAXBException {
-		// create SBEMessages by loading them from schemas.
-		HashMap<Integer, SBEMessage> lookup = SBESchemaLoader.loadSchema("./src/test/resources/example-schema.xml");
-		SBEMessage sbeMessage = lookup.get(1);
+		// create SBEMessageFactory by loading them from schemas.
+		SBESchema factory = SBESchemaLoader.loadSchema("./src/test/resources/example-schema.xml");
 		
 		// wrap message for reading
-		GroupObject obj = sbeMessage.wrapForRead(sbeBuffer, bufferOffset);
+		GroupObject obj = factory.wrapForRead(sbeBuffer, bufferOffset);
 
-		// retrieve a value of a field by following the message structure
-		System.out.println(obj.toString()); // TODO display whole object in json
-		System.out.println("mph: "+obj.getGroupArray((short)12).getGroupObject((short) 1).getGroupArray((short)14).getGroupObject(1).getNumber((short) 15, Integer.class));
-		
+		if( null != obj ) {
+			// it is the message belong to this message schema.
+			// obtain the message defintion 
+			SBEMessage msg = (SBEMessage) obj.getDefinition();
+			
+			// print out message ID
+			System.out.println("Get a message of ID: "+msg.getID());
+			
+			// retrieve a value of a field by following the message structure
+			System.out.println(obj.toString()); // TODO display whole object in json
+			System.out.println("mph: "+obj.getGroupArray((short)12).getGroupObject((short) 1).getGroupArray((short)14).getGroupObject(1).getNumber((short) 15, Integer.class));
+			
+		}
 	}
 	
 	@AfterClass

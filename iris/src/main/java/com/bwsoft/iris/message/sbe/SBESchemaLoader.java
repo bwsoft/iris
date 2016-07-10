@@ -54,7 +54,7 @@ public class SBESchemaLoader {
 		
 	}
 	
-	public static HashMap<Integer, SBEMessage> loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
+	public static SBESchema loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
 		SBESchemaLoader schemaCache = new SBESchemaLoader();
 		
 		// contains the map between the template id and the message definition
@@ -75,7 +75,7 @@ public class SBESchemaLoader {
 		MessageSchema schema = (MessageSchema) um.unmarshal(is);
 		
 		// create schema header
-		SBEMessageSchema schemaHeader = new SBEMessageSchema(schema.getPackage(), schema.getVersion().intValue(), schema.getSemanticVersion(), schema.getByteOrder());
+		SBEMessageSchema schemaHeader = new SBEMessageSchema(schema.getPackage(), schema.getId(), schema.getVersion().intValue(), schema.getSemanticVersion(), schema.getByteOrder());
 		
 		// base type has to be processed first
 		schemaCache.sbeTypes = fetechTypes(schema);
@@ -115,7 +115,7 @@ public class SBESchemaLoader {
 				}
 			}
 		}
-		return lookupTable;
+		return new SBESchema(schemaHeader, msgHeader, grpHeader, varHeader, lookupTable);
 	}
 	
 	/*
@@ -405,7 +405,8 @@ public class SBESchemaLoader {
 	
 	public static void main(String[] args) throws FileNotFoundException, JAXBException {
 		SBESchemaLoader loader = new SBESchemaLoader();
-		HashMap<Integer, SBEMessage> lookup = loader.loadSchema("src/test/resources/example-schema.xml");
+		SBESchema factory = loader.loadSchema("src/test/resources/example-schema.xml");
+		HashMap<Integer, SBEMessage> lookup = factory.getMsgLookup();
 		lookup.forEach((k,v) -> {
 			System.out.println(v);
 		});

@@ -20,12 +20,14 @@ import java.nio.ByteOrder;
 public class SBEMessageSchema {
 
 	private String packageName;
-	private int version;
+	private final int id;
+	private final int version;
 	private String semanticVersion;
 	private ByteOrder order;
 	
-	public SBEMessageSchema(String packageName, int version, String semanticVersion, String order) {
+	public SBEMessageSchema(String packageName, int id, int version, String semanticVersion, String order) {
 		this.packageName = packageName;
+		this.id = id;
 		this.version = version;
 		this.semanticVersion = semanticVersion;
 		switch(order.toLowerCase()) {
@@ -40,6 +42,22 @@ public class SBEMessageSchema {
 		}
 	}
 	
+	public String getPackageName() {
+		return packageName;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public int getVersion() {
+		return version;
+	}
+
+	public String getSemanticVersion() {
+		return semanticVersion;
+	}
+
 	public ByteOrder getOrder() {
 		return order;
 	}

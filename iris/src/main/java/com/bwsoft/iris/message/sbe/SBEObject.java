@@ -92,6 +92,37 @@ public class SBEObject implements GroupObject {
 	}
 
 	@Override
+	public int getSize(Field field) {
+		if( null != field.getParent() && field.getParent().getID() == this.getDefinition().getID() ) {
+			switch( field.getType() ) {
+			case RAW: 
+				GroupObjectArray array  = childFields.get(field.getID());
+				if( null == array ) 
+					return 0;
+				else
+					return array.getGroupObject(0).getSize();
+
+			case GROUP:
+				array  = childFields.get(field.getID());
+				if( null == array ) 
+					return 0;
+				else {
+					int size = 0;
+					for( short i = 0; i < array.getNumOfGroups(); i ++ )
+						size += array.getGroupObject(i).getSize();
+					return size;
+				}
+				
+			default:
+				SBEField sfield = (SBEField) field;
+				return sfield.getBlockSize()*sfield.length();
+			}
+		} else {
+			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+		}		
+	}
+	
+	@Override
 	public SBEField getDefinition() {
 		return array.getDefinition();
 	}
@@ -240,13 +271,35 @@ public class SBEObject implements GroupObject {
 	@Override
 	public int getBytes(Field field, byte[] dest, int destOffset, int length) {
 		if( null != field.getParent() && field.getParent().getID() == this.getDefinition().getID() ) {
-			if( FieldType.RAW != field.getType() ) {
+			switch(field.getType()) {
+			case RAW:
+				SBEObjectArray objArray = this.childFields.get(field.getID());
+				if( null != objArray ) {
+					SBEObject obj = (SBEObject) objArray.getGroupObject(0);
+					length = length > obj.getSize() ? obj.getSize() : length;
+					array.getBuffer().getBytes(obj.getValueOffset(), dest, destOffset, length);
+					return length;								
+				} else {
+					return 0;
+				}
+
+			case GROUP:
+				objArray = this.childFields.get(field.getID());
+				if( null != objArray ) {
+					int len = 0;
+					for( short i = 0; i < objArray.getNumOfGroups(); i ++ ) {
+						len += objArray.getGroupObject(i).getSize();
+					}
+					SBEObject obj = (SBEObject) objArray.getGroupObject(0);
+					length = length > len ? len : length;
+					array.getBuffer().getBytes(obj.getValueOffset(), dest, destOffset, length);
+					return length;								
+				} else {
+					return 0;
+				}
+				
+			default:
 				length = length > field.length()*((SBEField) field).getBlockSize() ? field.length()*((SBEField) field).getBlockSize() : length;		
-				array.getBuffer().getBytes(valueOffset+((SBEField) field).getRelativeOffset(), dest, destOffset, length);
-				return length;			
-			} else {
-				GroupObject obj = this.getVarLengthField(field);
-				length = length > obj.getSize() ? obj.getSize() : length;
 				array.getBuffer().getBytes(valueOffset+((SBEField) field).getRelativeOffset(), dest, destOffset, length);
 				return length;			
 			}
@@ -448,8 +501,15 @@ public class SBEObject implements GroupObject {
 
 	@Override
 	public String getEnumName(Field field) {
-		// TODO Auto-generated method stub
-		return null;
+		if( ((SBEField) field).isEnumField() ) {
+			String value = getString(field);
+			value = ((SBEField) field).getEnumName(value);
+			if( null != value ) 
+				return value;
+			else
+				throw new IllegalArgumentException("value in the message is not a valid enum value.");
+		}
+		throw new IllegalArgumentException("not a enum field");
 	}
 
 	@Override
@@ -525,8 +585,7 @@ public class SBEObject implements GroupObject {
 		
 		case RAW:
 			// TODO: SBE schema is missing encoding information.
-			GroupObject obj = getVarLengthField(field);
-			byte buf[] = new byte[obj.getSize()];
+			byte buf[] = new byte[getSize(field)];
 			return new String(buf,0,this.getBytes(field, buf, 0, buf.length));
 			
 		default:
@@ -536,22 +595,13 @@ public class SBEObject implements GroupObject {
 
 	@Override
 	public GroupObjectArray getGroupArray(Field field) {
-		if( null != field.getParent() && field.getParent().getID() == this.getDefinition().getID() ) {
+		if( null != field.getParent() && FieldType.GROUP == field.getType() && field.getParent().getID() == this.getDefinition().getID() ) {
 			return childFields.get(field.getID());
 		} else {
-			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+			throw new IllegalArgumentException("field, "+field.getID()+", is not a group field or does not belong to this group, "+this.getDefinition().getID());
 		}
 	}
 	
-	@Override
-	public GroupObject getVarLengthField(Field field) {
-		if( null != field.getParent() && FieldType.RAW == field.getType() && field.getParent().getID() == this.getDefinition().getID() ) {
-			return childFields.get(field.getID()).getGroupObject(0);
-		} else {
-			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
-		}
-	}
-
 	public Map<Short, SBEObjectArray> getGroupList() {
 		return childFields;
 	}

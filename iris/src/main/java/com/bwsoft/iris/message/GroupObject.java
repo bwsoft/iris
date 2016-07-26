@@ -44,6 +44,17 @@ public interface GroupObject {
 	public int getSize();
 	
 	/**
+	 * The storage size of the value of a child field. It does not include the size of 
+	 * header if there is.
+	 * 
+	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * 
+	 * @param field
+	 * @return
+	 */
+	public int getSize(Field field);
+	
+	/**
 	 * This is an unprotected method to return a character value of a field in this group. The
 	 * method will not check if the field type is CHAR. 
 	 * 
@@ -344,25 +355,35 @@ public interface GroupObject {
 	 */
 	public int getDoubleArray(Field field, double[] dest, int destOffset, int length);
 	
+	/**
+	 * This applies to an enum field. The primitive type of the enum field is a number or 
+	 * a char. It returns the corresponding enum name based upon the value contained in the 
+	 * SBE message.
+	 * 
+	 * @param field
+	 * @return the enum name based upon the value on the sbe message.
+	 */
 	public String getEnumName(Field field);
-	public boolean isSet(Field field, String bitName);	
-	public String getString(Field field);
 	
-	public GroupObjectArray getGroupArray(Field field);
+	public boolean isSet(Field field, String bitName);	
 	
 	/**
-	 * This is to retrieve the variable length field as a GroupObject in a message. 
-	 * The size of the returned GroupObject is the size of the variable length field. 
+	 * This is applicable to all type of fields. If the field is a number/raw, it returns its 
+	 * string representation. 
 	 * 
-	 * Use getBytes to fetch the value of the variable length field
-	 *        int sizeToFetch = some number;
-	 *        byte[] buffer = new byte[sizeToFetch]; 
-	 *        int size = getBytes(field, buffer, 0, buffer.length);
-	 *  The returned size is the minimum between the sizeToFetch and the length of the 
-	 *  variable length field. 
-	 *        
+	 * It is not designed for high performance usage. Use getBytes instead.
+	 * 
 	 * @param field
 	 * @return
 	 */
-	public GroupObject getVarLengthField(Field field);
+	public String getString(Field field);
+	
+	/**
+	 * Obtain a GroupObjectArray. The field has to be a type of GROUP or an IllegalArgumentException
+	 * will be thrown.
+	 * 
+	 * @param field
+	 * @return
+	 */
+	public GroupObjectArray getGroupArray(Field field);
 }

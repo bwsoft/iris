@@ -115,6 +115,10 @@ public class SBEField implements Field {
 		this.enumLookup = lookupTable;
 	}
 	
+	boolean isEnumField() {
+		return this.enumLookup != null;
+	}
+	
 	String getEnumName(String value) {
 		if( this.enumLookup == null ) 
 			throw new UnsupportedOperationException("no enum conversion for type: "+this.getType());

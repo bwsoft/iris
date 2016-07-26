@@ -26,6 +26,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.bwsoft.iris.message.Field;
 import com.bwsoft.iris.message.FieldType;
 import com.bwsoft.iris.message.Group;
 import com.bwsoft.iris.message.GroupObject;
@@ -44,6 +45,9 @@ public class SBEMessageTest {
 	private final static ByteBuffer sbeBuffer = ByteBuffer.allocateDirect(4096);
 	private final static int bufferOffset = 0;
 	
+	/**
+	 * Use RL SBE encoder to create a SBE message and store it in sbeBuffer
+	 */
 	@BeforeClass
 	public static void createSBEMessage() {
 		CarEncoder encoder = new CarEncoder();
@@ -63,7 +67,7 @@ public class SBEMessageTest {
 	}
 	
 	/**
-	 * Verify the XML based creation of SBE message.
+	 * Verify the XML based creation of SBE message and compare it with the manual creation.
 	 *  
 	 * @throws FileNotFoundException
 	 * @throws JAXBException
@@ -97,11 +101,13 @@ public class SBEMessageTest {
 		
 		Group fuelFigure = (Group) message.addChildField((short) 9,FieldType.GROUP, (short) 1).setName("fuelFigures");
 		fuelFigure.addChildField((short) 10,FieldType.U16, (short) 1).setName("speed");
+		fuelFigure.addChildField((short) 11,FieldType.FLOAT, (short) 1).setName("mpg");
 		
 		Group performanceFigures = (Group) message.addChildField((short) 12,FieldType.GROUP, (short) 1).setName("performanceFigures");
 		performanceFigures.addChildField((short)13,FieldType.U8, (short) 1).setName("octaneRating");
 		Group acceleration = (Group) performanceFigures.addChildField((short) 14,FieldType.GROUP, (short) 1).setName("acceleration");
 		acceleration.addChildField((short) 15,FieldType.U16, (short) 1).setName("mph");
+		acceleration.addChildField((short) 16,FieldType.FLOAT, (short) 1).setName("seconds");
 		
 		message.addChildField((short) 17,FieldType.RAW, (short) 1).setName("make");
 		message.addChildField((short) 18,FieldType.RAW, (short) 1).setName("model");
@@ -115,7 +121,8 @@ public class SBEMessageTest {
 	}
 	
 	/**
-	 * Demonstrate the usage of the SBEMessage parser
+	 * Demonstrate the usage of the SBEMessage parser by parsing the sbeBuffer populated
+	 * by RL SBE encoder. 
 	 * 
 	 * @throws FileNotFoundException
 	 * @throws JAXBException
@@ -124,8 +131,23 @@ public class SBEMessageTest {
 	public void sbeMessageTest() throws FileNotFoundException, JAXBException {
 		// create SBEMessageSchema based upon the schema.
 		SBEMessageSchema factory = SBEMessageSchema.createSBESchema("./src/test/resources/example-schema.xml");
+
+		// lookup a message definition in the factory and cache some field definition for accessing
+		// its value
+		// The message for template ID 1 is retrieved. 
+		SBEMessage msgDefinition = factory.getMsgLookup().get(1);
 		
-		// wrap message for reading
+		// performanceFigure is a group under the message
+		Group performanceFigureGroup = (Group) msgDefinition.getChildField((short) 12);
+		
+		// acceleration is a group within performanceFigure group
+		Group acclerationGroup = (Group) performanceFigureGroup.getChildField((short)14);
+		
+		// mph is a field within acceleration
+		Field mphField = acclerationGroup.getChildField((short)15);
+		
+		// wrap message for reading. The right message template is selected automatically
+		// based upon the template ID in the message header. 
 		GroupObject obj = factory.wrapForRead(sbeBuffer, bufferOffset);
 
 		if( null != obj ) {
@@ -138,7 +160,7 @@ public class SBEMessageTest {
 			
 			// retrieve a value of a field by following the message structure
 			System.out.println(obj.toString()); // TODO display whole object in json
-			System.out.println("mph: "+obj.getGroupArray((short)12).getGroupObject((short) 1).getGroupArray((short)14).getGroupObject(1).getNumber((short) 15, Integer.class));
+			System.out.println("mph: "+obj.getGroupArray(performanceFigureGroup).getGroupObject((short) 1).getGroupArray(acclerationGroup).getGroupObject(1).getNumber(mphField));
 			
 		}
 	}

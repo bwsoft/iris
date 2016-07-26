@@ -86,6 +86,8 @@ public class SBEGroup extends SBEField implements Group {
 		case I64:
 		case BYTE:
 		case CHAR:
+		case FLOAT:
+		case DOUBLE:
 			if( groupFieldLookup.size() > 0 ) {
 				SBEField lastField = (SBEField) getChildFields().get(groupFieldLookup.size()-1);
 				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 

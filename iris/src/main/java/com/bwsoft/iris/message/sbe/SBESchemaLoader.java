@@ -379,6 +379,8 @@ public class SBESchemaLoader {
 			} else if(schemaCache.sbeComposites.containsKey(fieldType.getType()) && "data".equals(elementName) ) {
 				// variable length field
 				group.addChildField((short)fieldType.getId(),FieldType.RAW, (short) 1).setName(fieldType.getName());
+			} else {
+				throw new IllegalArgumentException("unrecognized primitive type: "+fieldType.getType());				
 			}
 		} else if( elementType instanceof GroupType ) {
 			GroupType groupType = (GroupType) elementType;
@@ -391,6 +393,8 @@ public class SBESchemaLoader {
 			for( GroupType subGroup : childGroups ) {
 				processFieldsOfAGroup(schemaCache, childGroup, "group", subGroup);
 			}
+		} else {
+			throw new IllegalArgumentException("unrecognized field type in message definition. Pontentailly a different XSD version");						
 		}
 	}
 	

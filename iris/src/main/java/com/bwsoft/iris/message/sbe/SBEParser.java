@@ -17,6 +17,7 @@ package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.time.temporal.ValueRange;
 import java.util.List;
 
 import com.bwsoft.iris.message.Field;
@@ -144,12 +145,14 @@ public class SBEParser {
 	}
 
 	private int wrapVarRead(int offset, SBEVarLengthField field, SBEObjectArray parent, int parentIndex) {
+		SBEVarLengthFieldHeader header = (SBEVarLengthFieldHeader) field.getHeader();
+		int blockSize = header.getBlockSize(buffer, offset);
 		SBEObjectArray sbeObj = sbeObjFactory.get();
 		sbeObj.setDefinition(field);
 		SBEObject attr = sbeObj.addObject((short) 0);
 		attr.setOffset(offset);
 		attr.setValueOffset(offset+varFieldHeaderSize);
-		attr.setSize(field.getBlockSize());
+		attr.setSize(blockSize);
 		parent.addObject((short) parentIndex).addChildObject(field.getID(),sbeObj);
 		
 		return attr.getSize()+varFieldHeaderSize;

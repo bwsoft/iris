@@ -100,36 +100,9 @@ public class SBEObjectArray implements GroupObjectArray {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		if( dimmension > 1 ) sb.append("[");
-		boolean addComma = false;
-		for( int i = 0; i < dimmension; i ++ ) {
-			if( addComma ) sb.append(",");
-			else	addComma = true;
-			sb.append("{name:").append(this.definition.getName()).append(",");
-			sb.append("id:").append(this.definition.getID());
-			if( definition instanceof Group ) {
-				List<Field> childFields = ((Group) definition).getChildFields();
-				for( Field childField : childFields ) {
-					if( childField instanceof SBEGroup || childField instanceof SBEVarLengthField ) 
-						break;
-					sb.append(",");
-					if( childField.length() > 1 ) sb.append("[");
-					boolean addComma2 = false;
-					for( int j = 0; j < childField.length(); j++ ) {
-						if( addComma2 ) sb.append(",");
-						else addComma2 = true;
-						sb.append("{");
-						sb.append("name:").append(childField.getName());
-						sb.append(",id:").append(childField.getID());
-						sb.append(",type:").append(childField.getType().name());
-						sb.append("}");
-					}
-				}
-			}
-			for( SBEObjectArray child : this.attrs[i].getGroupList().values() ) {
-				sb.append(",");
-				sb.append(child.toString());
-			}
-			sb.append("}");
+		sb.append(attrs[0]);
+		for( int i = 1; i < dimmension; i ++ ) {
+			sb.append(",").append(attrs[i]);
 		}
 		if( dimmension > 1 ) sb.append("]");
 		return sb.toString();

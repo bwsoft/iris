@@ -19,7 +19,7 @@ import java.nio.ByteOrder;
 
 import com.bwsoft.iris.message.FieldType;
 
-import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
+import uk.co.real_logic.agrona.DirectBuffer;
 
 public class SBEVarLengthFieldHeader implements SBEHeader {
 	private final short headerSize;
@@ -36,7 +36,7 @@ public class SBEVarLengthFieldHeader implements SBEHeader {
 		return headerSize;
 	}
 	
-	public int getBlockSize(UnsafeBuffer buffer, int startOffset) {
+	public int getBlockSize(DirectBuffer buffer, int startOffset) {
 		switch( headerSize ) {
 		case 1:
 			return buffer.getByte(startOffset);

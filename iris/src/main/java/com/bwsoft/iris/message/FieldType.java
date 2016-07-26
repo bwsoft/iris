@@ -24,6 +24,8 @@ public enum FieldType {
 	I16(2),
 	I32(4),
 	I64(8),
+	FLOAT(4),
+	DOUBLE(8),
 	CHAR(1),
 	BYTE(1),
 	RAW(0),
@@ -63,6 +65,10 @@ public enum FieldType {
 			return FieldType.CHAR;
 		case "byte":
 			return FieldType.BYTE;
+		case "float":
+			return FieldType.FLOAT;
+		case "double":
+			return FieldType.DOUBLE;
 		default:
 			return null;
 		}

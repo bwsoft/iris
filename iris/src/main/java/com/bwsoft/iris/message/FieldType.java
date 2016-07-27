@@ -28,6 +28,7 @@ public enum FieldType {
 	DOUBLE(8),
 	CHAR(1),
 	BYTE(1),
+	CONSTANT(0),  // a constant field, the value of which is never changed from one message to another. 
 	RAW(0),
 	COMPOSITE(0),
 	GROUP(0),

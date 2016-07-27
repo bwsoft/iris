@@ -65,7 +65,7 @@ public class SBECompositeField extends SBEField implements Group {
 			throw new IllegalArgumentException("zero length is not allowed");
 		}
 		SBEField newField = null;
-		int currentOffset = header.getHeaderSize();
+		int currentOffset = header.getHeaderSize()+this.getRelativeOffset();
 		
 		switch( type ) {
 		case U8:
@@ -78,6 +78,9 @@ public class SBECompositeField extends SBEField implements Group {
 		case I64:
 		case BYTE:
 		case CHAR:
+		case DOUBLE:
+		case FLOAT:
+		case CONSTANT:
 			if( children.size() > 0 ) {
 				SBEField lastField = (SBEField) children.get(children.size()-1);
 				currentOffset = lastField.getBlockSize() + lastField.getRelativeOffset(); 

@@ -348,7 +348,9 @@ public class SBESchemaLoader {
 					}
 					group.addChildField((short)fieldType.getId(),primitiveType,dataType.getLength().shortValue()).setName(fieldType.getName());
 				} else {
-					//TODO: handle constant simple field
+					// handle constant simple field
+					SBEField field = (SBEField) group.addChildField((short)fieldType.getId(),FieldType.CONSTANT,dataType.getLength().shortValue()).setName(fieldType.getName());
+					field.setConstantValue(dataType.getValue()).setConstantType(FieldType.getType(dataType.getPrimitiveType()));
 				}
 			} else if( schemaCache.sbeEnums.containsKey(fieldType.getType())) {
 				// an enum type
@@ -373,7 +375,9 @@ public class SBESchemaLoader {
 						}
 						compositeField.addChildField((short)fieldType.getId(),primitiveType,eType.getLength().shortValue()).setName(eType.getName());
 					} else {
-						//TODO: handle constant simple field
+						// handle constant simple field
+						SBEField field = (SBEField) compositeField.addChildField((short)fieldType.getId(),FieldType.CONSTANT,eType.getLength().shortValue()).setName(eType.getName());
+						field.setConstantValue(eType.getValue()).setConstantType(FieldType.getType(eType.getPrimitiveType()));
 					}
 				}
 			} else if(schemaCache.sbeComposites.containsKey(fieldType.getType()) && "data".equals(elementName) ) {

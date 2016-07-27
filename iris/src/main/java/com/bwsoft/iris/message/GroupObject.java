@@ -34,11 +34,9 @@ public interface GroupObject {
 	public Field getField(short id);
 	
 	/**
-	 * The storage size of the value of this field. It does not include the size of 
+	 * The storage size of the value of the current GroupObject. It does not include the size of 
 	 * header if there is.
 	 * 
-	 * The size is the size of the field type multiplied by its dimension in case of a fixed size field. 
-	 *  
 	 * @return size of the value storage of this field
 	 */
 	public int getSize();
@@ -47,6 +45,9 @@ public interface GroupObject {
 	 * The storage size of the value of a child field. It does not include the size of 
 	 * header if there is.
 	 * 
+	 * For a fixed size field, the size is equal to the size of the field type multiplied by its dimension.
+	 * For a constant field, the size is zero. 
+	 *  
 	 * An IllegalArgumentException will be thrown if field does not belong to this group.
 	 * 
 	 * @param field
@@ -58,7 +59,9 @@ public interface GroupObject {
 	 * This is an unprotected method to return a character value of a field in this group. The
 	 * method will not check if the field type is CHAR. 
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -69,7 +72,9 @@ public interface GroupObject {
 	 * This is an unprotected method to return a byte value of a field in this group. The
 	 * method will not check if the field type is BYTE. 
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -82,7 +87,7 @@ public interface GroupObject {
 	 * byte, I8, U8, I16 needs to have a short type at minimal. U16, I32 need to have an int
 	 * as minimal. U32, I64, U64 requires a long type.
 	 * 
-	 * Apply this method to other type of fields result in an IllegalArgumentException.
+	 * Apply this method to other type of fields including constant field result in an IllegalArgumentException.
 	 * 
 	 * @param fieldId
 	 * @return
@@ -94,7 +99,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type U16. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -106,7 +113,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type I16. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -118,7 +127,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type I32. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -130,7 +141,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type U32. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -142,7 +155,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type U64 or I64. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -155,7 +170,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type FLOAT. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -168,7 +185,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type DOUBLE. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param fieldId
 	 * @return
@@ -180,7 +199,9 @@ public interface GroupObject {
 	 * This is an unprotected method to return a character array of a field in this group. The
 	 * method will not check if the field type is CHAR. 
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -191,9 +212,9 @@ public interface GroupObject {
 	public int getChars(Field field, char[] dest, int destOffset, int length);
 	
 	/**
-	 * Return a byte array representation of the field. All types of fields can be converted
-	 * into a byte array. It is purely the byte copy of the field content excluding the field
-	 * header if there is any.
+	 * Return a byte array representation of the field. All types of fields 
+	 * can be converted into a byte array. It is purely the byte copy of the field content 
+	 * excluding the field header if there is any.
 	 * 
 	 * @param field
 	 * @param dest
@@ -210,7 +231,7 @@ public interface GroupObject {
 	 * byte, I8, U8, I16 needs to have a short type at minimal. U16, I32 need to have an int
 	 * as minimal. U32, I64, U64 requires a long type.
 	 * 
-	 * Apply this method to other type of fields result in an IllegalArgumentException.
+	 * Apply this method to other type of fields including constant fields result in an IllegalArgumentException.
 	 * 
 	 * @param field
 	 * @param dest
@@ -240,7 +261,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type I8. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -255,7 +278,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type U16. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -270,7 +295,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type I16. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -285,7 +312,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type I32. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -300,7 +329,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type U32. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -315,7 +346,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type U64 or I64. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -330,7 +363,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type FLOAT. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -345,7 +380,9 @@ public interface GroupObject {
 	 * This method can only be applied to fields of type DOUBLE. However the method 
 	 * does not validate the field type but assumes it is the responsibility of the application.
 	 * 
-	 * An IllegalArgumentException will be thrown if field does not belong to this group.
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
 	 * 
 	 * @param field
 	 * @param dest
@@ -357,14 +394,27 @@ public interface GroupObject {
 	
 	/**
 	 * This applies to an enum field. The primitive type of the enum field is a number or 
-	 * a char. It returns the corresponding enum name based upon the value contained in the 
+	 * a char. The method returns the corresponding enum name based upon the value contained in the 
 	 * SBE message.
+	 * 
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is not an enum type.
 	 * 
 	 * @param field
 	 * @return the enum name based upon the value on the sbe message.
 	 */
 	public String getEnumName(Field field);
 	
+	/**
+	 * Test if a bitName is set. Bit name of a choice is defined in the SBE XML.
+	 *  
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is not a choice type.
+	 * 
+	 * @param field the choice field
+	 * @param bitName the bitname defined in the SBE XML for the current choice.
+	 * @return true if set.
+	 */
 	public boolean isSet(Field field, String bitName);	
 	
 	/**

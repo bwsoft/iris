@@ -48,6 +48,9 @@ public class SBEField implements Field {
 	private HashMap<String, Integer> bitLookup;
 
 	private Group parent;
+	
+	private String constValue;
+	private FieldType constType;
 
 	// can only be created by its parent and hence package scope
 	SBEField(Group parent, FieldType type, short arrayLength) {
@@ -55,6 +58,25 @@ public class SBEField implements Field {
 		this.type = type;
 		this.arrayLength = arrayLength;
 		this.blockSize = type.size();
+		this.constValue = null;
+	}
+	
+	public SBEField setConstantValue(String value) {
+		this.constValue = value;
+		return this;
+	}
+	
+	public SBEField setConstantType(FieldType type) {
+		this.constType = type;
+		return this;
+	}
+	
+	public String getConstantValue() {
+		return this.constValue;
+	}
+	
+	public FieldType getConstantType() {
+		return this.constType;
 	}
 	
 	/**
@@ -136,6 +158,10 @@ public class SBEField implements Field {
 		return this.bitLookup.get(bitName);
 	}
 
+	boolean isChoiceField() {
+		return null != this.bitLookup;
+	}
+	
 	@Override
 	public short getID() {
 		return id;

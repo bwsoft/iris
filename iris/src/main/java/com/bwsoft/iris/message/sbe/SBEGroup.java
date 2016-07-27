@@ -88,6 +88,7 @@ public class SBEGroup extends SBEField implements Group {
 		case CHAR:
 		case FLOAT:
 		case DOUBLE:
+		case CONSTANT:
 			if( groupFieldLookup.size() > 0 ) {
 				SBEField lastField = (SBEField) getChildFields().get(groupFieldLookup.size()-1);
 				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 
@@ -102,7 +103,7 @@ public class SBEGroup extends SBEField implements Group {
 				SBEField lastField = (SBEField) getChildFields().get(groupFieldLookup.size()-1);
 				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 
 			}
-			newField = new SBECompositeField(this,arrayLength);
+			newField = new SBECompositeField(this,arrayLength).setRelativeOffset(currentOffset);
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
 			numFixedSizeFields ++;

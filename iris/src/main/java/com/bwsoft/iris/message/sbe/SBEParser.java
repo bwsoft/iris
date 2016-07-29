@@ -17,7 +17,6 @@ package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.time.temporal.ValueRange;
 import java.util.List;
 
 import com.bwsoft.iris.message.Field;
@@ -110,12 +109,13 @@ public class SBEParser {
 		int numRows = header.getNumRows(buffer, offset, order);
 		int blockSize = header.getBlockSize(buffer, offset, order);
 		int size = groupHeaderSize; 
-		
+
+		SBEObjectArray rowObj = sbeObjFactory.get();
+		rowObj.setDefinition(field);
+		parent.addObject((short) parentIndex).addChildObject(field.getID(), rowObj);
+
 		if( numRows > 0 ) {
 			int currentOffset = offset + size;
-			SBEObjectArray rowObj = sbeObjFactory.get();
-			rowObj.setDefinition(field);
-			parent.addObject((short) parentIndex).addChildObject(field.getID(), rowObj);
 
 			List<Field> fieldList = field.getChildFields();
 			int numFixedSizeFields = field.getNumFixedSizeFields();

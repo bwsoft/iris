@@ -16,10 +16,8 @@
 package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
-import java.util.List;
 
 import com.bwsoft.iris.message.Field;
-import com.bwsoft.iris.message.Group;
 import com.bwsoft.iris.message.GroupObject;
 import com.bwsoft.iris.message.GroupObjectArray;
 
@@ -100,9 +98,13 @@ public class SBEObjectArray implements GroupObjectArray {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		if( dimmension > 1 ) sb.append("[");
-		sb.append(attrs[0]);
-		for( int i = 1; i < dimmension; i ++ ) {
-			sb.append(",").append(attrs[i]);
+		if( dimmension > 0 ) {
+			sb.append(attrs[0]);
+			for( int i = 1; i < dimmension; i ++ ) {
+				sb.append(",").append(attrs[i]);
+			}
+		} else {
+			sb.append("null");
 		}
 		if( dimmension > 1 ) sb.append("]");
 		return sb.toString();

@@ -309,6 +309,11 @@ public class SBEObject implements GroupObject {
 					return 0;
 				}
 				
+			case MESSAGE:
+				length = length > getSize() ? getSize() : length;
+				array.getBuffer().getBytes(getValueOffset(), dest, destOffset, length);
+				return length;								
+				
 			case CONSTANT:
 				length = length > sfield.getConstantValue().getBytes().length ? sfield.getConstantValue().getBytes().length : length;
 				System.arraycopy(sfield.getConstantValue().getBytes(), 0, dest, destOffset, length);
@@ -560,7 +565,10 @@ public class SBEObject implements GroupObject {
 		case BYTE:
 		case RAW:
 			// TODO: SBE schema is missing encoding information.
-			byte buf[] = new byte[getSize(field)];
+			int nsize = getSize(field);
+			if( nsize == 0 ) 
+				return null;
+			byte buf[] = new byte[nsize];
 			return new String(buf,0,this.getBytes(field, buf, 0, buf.length));
 				
 		case CONSTANT:
@@ -741,7 +749,11 @@ public class SBEObject implements GroupObject {
 			break;
 
 		case RAW:
-			sb.append("\"").append(getString(field)).append("\"");
+			String rawField = getString(field);
+			if( null != rawField ) 
+				sb.append("\"").append(getString(field)).append("\"");
+			else
+				sb.append("null");
 			break;
 					
 		case CONSTANT:

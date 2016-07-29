@@ -413,8 +413,7 @@ public class SBESchemaLoader {
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException, JAXBException {
-		SBESchemaLoader loader = new SBESchemaLoader();
-		SBEMessageSchema factory = loader.loadSchema("src/test/resources/example-schema.xml");
+		SBEMessageSchema factory = SBESchemaLoader.loadSchema("src/test/resources/example-schema.xml");
 		HashMap<Integer, SBEMessage> lookup = factory.getMsgLookup();
 		lookup.forEach((k,v) -> {
 			System.out.println(v);

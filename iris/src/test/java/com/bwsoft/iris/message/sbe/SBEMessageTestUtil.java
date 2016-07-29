@@ -36,7 +36,27 @@ public class SBEMessageTestUtil {
 		.version(encoder.sbeSchemaVersion());
 		
 		// encode the message body using RealLogic generated code
-		encode(encoder, directBuffer, bufferOffset+headerEncoder.encodedLength());		
+		int nsize = encode1(encoder, directBuffer, bufferOffset+headerEncoder.encodedLength());		
+		
+		bufferOffset += (nsize + headerEncoder.encodedLength());
+		// write message header using RealLogic generated code. 
+		headerEncoder = new MessageHeaderEncoder()
+		.wrap(directBuffer, bufferOffset)
+		.blockLength(encoder.sbeBlockLength())
+		.templateId(encoder.sbeTemplateId())
+		.schemaId(encoder.sbeSchemaId())
+		.version(encoder.sbeSchemaVersion());
+		nsize = encode2(encoder, directBuffer, bufferOffset+headerEncoder.encodedLength());
+
+		bufferOffset += (nsize + headerEncoder.encodedLength());
+		// write message header using RealLogic generated code. 
+		headerEncoder = new MessageHeaderEncoder()
+		.wrap(directBuffer, bufferOffset)
+		.blockLength(encoder.sbeBlockLength())
+		.templateId(encoder.sbeTemplateId())
+		.schemaId(encoder.sbeSchemaId())
+		.version(encoder.sbeSchemaVersion());
+		nsize = encode3(encoder, directBuffer, bufferOffset+headerEncoder.encodedLength());
 	}
 	
 	private static final byte[] VEHICLE_CODE;
@@ -61,7 +81,15 @@ public class SBEMessageTestUtil {
 		}
 	}
 	
-	public static int encode(final CarEncoder car, final UnsafeBuffer directBuffer, final int bufferOffset)
+	/**
+	 * Create a sbe message with every repeating group and raw field.
+	 * 
+	 * @param car
+	 * @param directBuffer
+	 * @param bufferOffset
+	 * @return
+	 */
+	public static int encode1(final CarEncoder car, final UnsafeBuffer directBuffer, final int bufferOffset)
 	{
 		final int srcOffset = 0;
 
@@ -99,6 +127,124 @@ public class SBEMessageTestUtil {
 		.accelerationCount(3)
 		.next().mph(30).seconds(4.0f)
 		.next().mph(60).seconds(7.5f)
+		.next().mph(100).seconds(12.2f);
+		perfFigures.next()
+		.octaneRating((short)99)
+		.accelerationCount(3)
+		.next().mph(30).seconds(3.8f)
+		.next().mph(60).seconds(7.1f)
+		.next().mph(100).seconds(11.8f);
+
+		car.make(new String(MAKE));
+		car.putModel(MODEL, srcOffset, MODEL.length);
+		car.putActivationCode(ACTIVATION_CODE, 0, ACTIVATION_CODE.capacity());
+
+		return car.encodedLength();
+	}	
+
+	/**
+	 * SBE buffer without fuel figure repeating group. And no equal length row in the performanceFigure 
+	 * repeating group. The 2nd nested repeating group in the performanceFigure is not presented.
+	 * 
+	 * No raw data field of "MAKE".
+	 * 
+	 * @param car
+	 * @param directBuffer
+	 * @param bufferOffset
+	 * @return
+	 */
+	public static int encode2(final CarEncoder car, final UnsafeBuffer directBuffer, final int bufferOffset)
+	{
+		final int srcOffset = 0;
+
+		car.wrap(directBuffer, bufferOffset)
+		.serialNumber(1235)
+		.modelYear(2014)
+		.available(BooleanType.FALSE)
+		.code(Model.B)
+		.putVehicleCode(VEHICLE_CODE, srcOffset);
+
+		for (int i = 0, size = CarEncoder.someNumbersLength(); i < size; i++)
+		{
+			car.someNumbers(i, i*3);
+		}
+
+		car.extras()
+		.clear()
+		.cruiseControl(true)
+		.sportsPack(false)
+		.sunRoof(true);
+
+		car.engine()
+		.capacity(2000)
+		.numCylinders((short)4)
+		.putManufacturerCode(MANUFACTURER_CODE, srcOffset);
+
+		car.fuelFiguresCount(0);
+
+		final CarEncoder.PerformanceFiguresEncoder perfFigures = car.performanceFiguresCount(2);
+		perfFigures.next()
+		.octaneRating((short)95)
+		.accelerationCount(3)
+		.next().mph(30).seconds(4.0f)
+		.next().mph(60).seconds(7.5f)
+		.next().mph(100).seconds(12.2f);
+		perfFigures.next()
+		.octaneRating((short)99)
+		.accelerationCount(0);
+
+		car.make(new String(MAKE));
+		car.putModel(MODEL, srcOffset, 0);
+		car.putActivationCode(ACTIVATION_CODE, 0, ACTIVATION_CODE.capacity());
+
+		return car.encodedLength();
+	}	
+	
+	/**
+	 * Unequally length of rows in repeating group performanceFigure
+	 * 
+	 * @param car
+	 * @param directBuffer
+	 * @param bufferOffset
+	 * @return
+	 */
+	public static int encode3(final CarEncoder car, final UnsafeBuffer directBuffer, final int bufferOffset)
+	{
+		final int srcOffset = 0;
+
+		car.wrap(directBuffer, bufferOffset)
+		.serialNumber(1234)
+		.modelYear(2013)
+		.available(BooleanType.TRUE)
+		.code(Model.A)
+		.putVehicleCode(VEHICLE_CODE, srcOffset);
+
+		for (int i = 0, size = CarEncoder.someNumbersLength(); i < size; i++)
+		{
+			car.someNumbers(i, i);
+		}
+
+		car.extras()
+		.clear()
+		.cruiseControl(true)
+		.sportsPack(true)
+		.sunRoof(false);
+
+		car.engine()
+		.capacity(2000)
+		.numCylinders((short)4)
+		.putManufacturerCode(MANUFACTURER_CODE, srcOffset);
+
+		car.fuelFiguresCount(3)
+		.next().speed(30).mpg(35.9f)
+		.next().speed(55).mpg(49.0f)
+		.next().speed(75).mpg(40.0f);
+
+		final CarEncoder.PerformanceFiguresEncoder perfFigures = car.performanceFiguresCount(2);
+		perfFigures.next()
+		.octaneRating((short)95)
+		.accelerationCount(2)
+		.next().mph(30).seconds(4.0f)
 		.next().mph(100).seconds(12.2f);
 		perfFigures.next()
 		.octaneRating((short)99)

@@ -36,8 +36,13 @@ public class SBEMessage extends SBEGroup implements Message {
 	private final SBEGroupHeader grpHeader;
 	private final SBEVarLengthFieldHeader varLengthFieldHeader;
 
-	private final SBEParser parser;
-
+	private final ThreadLocal<SBEParser> parser = new ThreadLocal<SBEParser>() {
+		@Override
+		protected SBEParser initialValue() {
+			return new SBEParser(SBEMessage.this);
+		}
+	};
+	
 	public SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader) {
 		super(null, header, FieldType.MESSAGE);
 		
@@ -45,7 +50,6 @@ public class SBEMessage extends SBEGroup implements Message {
 		this.msgHeader = header;
 		this.grpHeader = grpHeader;
 		this.varLengthFieldHeader = vHeader;
-		this.parser = new SBEParser(this);
 	}
 
 	public SBEMessageHeader getMsgHeader() {
@@ -65,26 +69,26 @@ public class SBEMessage extends SBEGroup implements Message {
 	}
 	
 	public SBEObject warpForRead(DirectBuffer buffer, int offset) {
-		return (SBEObject) this.parser.wrapForRead(buffer, offset).getGroupObject(0);
+		return (SBEObject) this.parser.get().wrapForRead(buffer, offset).getGroupObject(0);
 	}
 
 	@Override
 	public GroupObject wrapForRead(ByteBuffer buffer, int offset) {
-		return (SBEObject) this.parser.wrapForRead(buffer, offset).getGroupObject(0);
+		return (SBEObject) this.parser.get().wrapForRead(buffer, offset).getGroupObject(0);
 	}
 
 	@Override
 	public GroupObject wrapForRead(ByteBuffer buffer, int offset, int length) {
-		return (SBEObject) this.parser.wrapForRead(buffer, offset, length).getGroupObject(0);
+		return (SBEObject) this.parser.get().wrapForRead(buffer, offset, length).getGroupObject(0);
 	}
 	
 	@Override
 	public GroupObject wrapForRead(byte[] buffer, int offset) {
-		return (SBEObject) this.parser.wrapForRead(buffer, offset).getGroupObject(0);
+		return (SBEObject) this.parser.get().wrapForRead(buffer, offset).getGroupObject(0);
 	}
 
 	@Override
 	public GroupObject wrapForRead(byte[] buffer, int offset, int length) {
-		return (SBEObject) this.parser.wrapForRead(buffer, offset, length).getGroupObject(0);
+		return (SBEObject) this.parser.get().wrapForRead(buffer, offset, length).getGroupObject(0);
 	}
 }

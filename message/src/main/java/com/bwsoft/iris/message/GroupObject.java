@@ -40,7 +40,17 @@ public interface GroupObject {
 	 * @return size of the value storage of this field
 	 */
 	public int getSize();
-	
+
+	/**
+	 * Retrieve this group object in its byte representation excluding its header.
+	 * 
+	 * @param dest
+	 * @param destOffset
+	 * @param length
+	 * @return
+	 */
+	public int getBytes(byte[] dest, int destOffset, int length);
+
 	/**
 	 * The storage size of the value of a child field. It does not include the size of 
 	 * header if there is.
@@ -223,7 +233,7 @@ public interface GroupObject {
 	 * @return
 	 */
 	public int getBytes(Field field, byte[] dest, int destOffset, int length);
-
+	
 	/**
 	 * Return a number array of this field. The inference generic type needs to be able to hold the
 	 * returned value. Otherwise a cast exception will be thrown.

@@ -18,6 +18,7 @@ package com.bwsoft.iris.message.sbe;
 import java.nio.ByteOrder;
 
 import uk.co.real_logic.agrona.DirectBuffer;
+import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
  * This factory class is to recycle all SBEObject created to reduce the chance of GC collection.
@@ -35,10 +36,10 @@ class SBEObjectFactory {
 	private int currentCount;
 	private SBEObjectArray[] pool;
 	
-	private final DirectBuffer buffer;
+	private final UnsafeBuffer buffer;
 	private final ByteOrder order;
 	
-	SBEObjectFactory(DirectBuffer buffer, ByteOrder order) {
+	SBEObjectFactory(UnsafeBuffer buffer, ByteOrder order) {
 		this.buffer = buffer;
 		this.order = order;
 		

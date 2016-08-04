@@ -20,6 +20,7 @@ import java.nio.ByteOrder;
 import com.bwsoft.iris.message.FieldType;
 
 import uk.co.real_logic.agrona.DirectBuffer;
+import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
  * This group header supports the header format that consists of 1 or 2 bytes of block size 
@@ -65,6 +66,40 @@ public class SBEGroupHeader implements SBEHeader {
 		case U16:
 		case I16:
 			return buffer.getShort(groupStartOffset+this.blockSizeType.size(),order);
+		default:
+			throw new UnsupportedOperationException("Enum type, "+this.numInGroupType.name()+", not supported for num in group");
+		}
+	}
+
+	public void putBlockSize(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order, int blockSize) {
+		switch( this.blockSizeType ) {
+		case U8:
+		case I8:
+			buffer.putByte(groupStartOffset, (byte) blockSize); 
+			break;
+
+		case U16:
+		case I16:
+			buffer.putShort(groupStartOffset, (short) blockSize, order);
+			break;
+
+		default:
+			throw new UnsupportedOperationException("Enum type, "+this.blockSizeType.name()+", not supported for block size");
+		}
+	}
+	
+	public void putNumRows(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order, int numRows) {
+		switch( this.numInGroupType ) {
+		case U8:
+		case I8:
+			buffer.putByte(groupStartOffset+this.blockSizeType.size(), (byte) numRows); 
+			break;
+
+		case U16:
+		case I16:
+			buffer.putShort(groupStartOffset+this.blockSizeType.size(), (short) numRows, order);
+			break;
+
 		default:
 			throw new UnsupportedOperationException("Enum type, "+this.numInGroupType.name()+", not supported for num in group");
 		}

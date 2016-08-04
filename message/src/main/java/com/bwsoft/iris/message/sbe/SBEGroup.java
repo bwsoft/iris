@@ -35,6 +35,8 @@ public class SBEGroup extends SBEField implements Group {
 	// child field definition
 	private final LinkedHashMap<Short,Field> groupFieldLookup = new LinkedHashMap<>(); 
 	private short numFixedSizeFields;
+	private short numGroupFields;
+	private short numRawFields;
 
 	SBEGroup(SBEGroup parent, SBEHeader header, FieldType type) {
 		super(parent, type,(short) 1);
@@ -49,8 +51,16 @@ public class SBEGroup extends SBEField implements Group {
 		return header;
 	}
 	
-	public short getNumFixedSizeFields() {
+	short getNumFixedSizeFields() {
 		return numFixedSizeFields;
+	}
+	
+	short getNumGroupFields() {
+		return numGroupFields;
+	}
+	
+	short getNumRawFields() {
+		return numRawFields;
 	}
 	
 	@Override
@@ -97,6 +107,10 @@ public class SBEGroup extends SBEField implements Group {
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
 			numFixedSizeFields ++;
+			
+			// update the block size of the group
+			int blockSize = this.getBlockSize();
+			this.setBlockSize(blockSize+newField.getBlockSize()*newField.length());
 			break;
 		case COMPOSITE:
 			if( groupFieldLookup.size() > 0 ) {
@@ -112,11 +126,13 @@ public class SBEGroup extends SBEField implements Group {
 			newField = new SBEGroup(this, getMessage().getGrpHeader(), FieldType.GROUP);
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
+			numGroupFields ++;
 			break;
 		case RAW:
 			newField = new SBEVarLengthField(this, getMessage().getVarLengthFieldHeader());
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
+			numRawFields ++;
 			break;
 		default:
 			throw new IllegalArgumentException("unrecognized type: "+type.name());

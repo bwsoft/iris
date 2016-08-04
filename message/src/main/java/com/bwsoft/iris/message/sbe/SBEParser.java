@@ -29,7 +29,7 @@ public class SBEParser {
 	
 	private final SBEMessage message;
 	private final SBEObjectFactory sbeObjFactory;
-	private final DirectBuffer buffer;
+	private final UnsafeBuffer buffer;
 	private final ByteOrder order;
 	
 	private int messageHeaderSize;
@@ -77,6 +77,9 @@ public class SBEParser {
 
 		SBEObjectArray rowObj = sbeObjFactory.get();
 		rowObj.setDefinition(message);
+		rowObj.setOffset(offset);
+		rowObj.setParent(null);
+		rowObj.setParentRow((short) 0);
 
 		SBEObject rowAttr = rowObj.addObject((short) 0);
 		rowAttr.setOffset(offset);
@@ -112,6 +115,9 @@ public class SBEParser {
 
 		SBEObjectArray rowObj = sbeObjFactory.get();
 		rowObj.setDefinition(field);
+		rowObj.setOffset(offset);
+		rowObj.setParent(parent);
+		rowObj.setParentRow((short) parentIndex);
 		parent.addObject((short) parentIndex).addChildObject(field.getID(), rowObj);
 
 		if( numRows > 0 ) {
@@ -149,6 +155,9 @@ public class SBEParser {
 		int blockSize = header.getBlockSize(buffer, offset);
 		SBEObjectArray sbeObj = sbeObjFactory.get();
 		sbeObj.setDefinition(field);
+		sbeObj.setOffset(offset);
+		sbeObj.setParent(parent);
+		sbeObj.setParentRow((short) parentIndex);
 		SBEObject attr = sbeObj.addObject((short) 0);
 		attr.setOffset(offset);
 		attr.setValueOffset(offset+varFieldHeaderSize);
@@ -157,4 +166,39 @@ public class SBEParser {
 		
 		return attr.getSize()+varFieldHeaderSize;
 	}	
+
+	void wrapGroupObject(SBEObject rowAttr, SBEGroup field, SBEObjectArray parent, int parentIndex) {	
+		int currentOffset = field.getBlockSize() + rowAttr.getValueOffset();
+		List<Field> fieldList = field.getChildFields();
+		for( int k = field.getNumFixedSizeFields(); k < fieldList.size(); k ++ ) {
+			Field subfield = fieldList.get(k);
+			if( FieldType.GROUP == subfield.getType() ) {
+				SBEObjectArray rowObj = sbeObjFactory.get();
+				rowObj.setDefinition(subfield);
+				rowObj.setOffset(currentOffset);
+				rowObj.setParent(parent);
+				rowObj.setParentRow((short) parentIndex);
+				rowAttr.addChildObject(subfield.getID(), rowObj);
+
+				currentOffset += ((SBEGroup) subfield).getHeader().getHeaderSize();				
+			} else if( FieldType.RAW == subfield.getType() ) {
+				SBEObjectArray sbeObj = sbeObjFactory.get();
+				sbeObj.setDefinition(subfield);
+				sbeObj.setOffset(currentOffset);
+				sbeObj.setParent(parent);
+				sbeObj.setParentRow((short) parentIndex);
+				SBEObject attr = sbeObj.addObject((short) 0);
+				attr.setOffset(currentOffset);
+				attr.setValueOffset(currentOffset+varFieldHeaderSize);
+				attr.setSize(0);
+				rowAttr.addChildObject(subfield.getID(), sbeObj);
+
+				currentOffset += varFieldHeaderSize;
+			}
+		}
+	}
+	
+	SBEObject getRootObject() {
+		return (SBEObject) sbeObjFactory.getRoot().getGroupObject(0);
+	}
 }

@@ -45,4 +45,18 @@ public interface GroupObjectArray {
 	 * @return total number of group objects in this array.
 	 */
 	public short getNumOfGroups(); 
+	
+	/**
+	 * Add a group to the end of the existing group list. 
+	 * 
+	 * @return
+	 */
+	public GroupObject addGroupObject();
+	
+	/**
+	 * Delete a group object at nth position. It starts from zero and has to be less than getNumOfGroups.
+	 * 
+	 * @param n
+	 */
+	public void deleteGroupObject(int n);
 }

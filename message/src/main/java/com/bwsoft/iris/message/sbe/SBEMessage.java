@@ -52,6 +52,14 @@ public class SBEMessage extends SBEGroup implements Message {
 		this.varLengthFieldHeader = vHeader;
 	}
 
+	SBEParser getParser() {
+		return parser.get();
+	}
+	
+	SBEObject getRootObject() {
+		return parser.get().getRootObject();
+	}
+	
 	public SBEMessageHeader getMsgHeader() {
 		return msgHeader;
 	}

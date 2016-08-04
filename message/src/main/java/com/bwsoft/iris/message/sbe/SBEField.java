@@ -47,6 +47,7 @@ public class SBEField implements Field {
 	private HashMap<String, String> enumLookup;
 	private HashMap<String, Integer> bitLookup;
 
+	private SBEMessage message;
 	private Group parent;
 	
 	private String constValue;
@@ -59,6 +60,12 @@ public class SBEField implements Field {
 		this.arrayLength = arrayLength;
 		this.blockSize = type.size();
 		this.constValue = null;
+		
+		if( parent == null ) {
+			this.message = (SBEMessage) this;
+		} else {
+			this.message = ((SBEField) parent).getMessage();
+		}
 	}
 	
 	public SBEField setConstantValue(String value) {
@@ -122,15 +129,7 @@ public class SBEField implements Field {
 	}
 	
 	public SBEMessage getMessage() {
-		Group grp = this.parent; 		
-		if( grp == null ) {
-			return (SBEMessage) this;
-		} else {
-			while( grp.getParent() != null ) {
-				grp = grp.getParent();
-			}
-			return (SBEMessage) grp;
-		}
+		return this.message;
 	}
 	
 	void setEnumLookupTable(HashMap<String, String> lookupTable) {

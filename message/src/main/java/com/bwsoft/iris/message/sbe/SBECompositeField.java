@@ -88,6 +88,10 @@ public class SBECompositeField extends SBEField implements Group {
 			newField = new SBEField(this, type, arrayLength).setRelativeOffset(currentOffset);
 			this.setBlockSize(this.getBlockSize()+newField.getBlockSize()*newField.length());
 			children.add(newField);
+			
+			// update the blocksize of its parent
+			SBEGroup grp = (SBEGroup) this.getParent();
+			grp.setBlockSize(grp.getBlockSize()+newField.getBlockSize()*newField.length());
 			break;
 		default:
 			throw new IllegalArgumentException("composite field does not accept the child field of type: "+type);

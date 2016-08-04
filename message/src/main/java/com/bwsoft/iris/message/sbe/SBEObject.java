@@ -43,12 +43,44 @@ public class SBEObject implements GroupObject {
 	}
 
 	void addChildObject(short id, SBEObjectArray aChild) {
-		if( ! childFields.containsKey(id)) 
+		if( ! childFields.containsKey(id)) {
 			childFields.put(id,aChild);
-		else
+		} else
 			throw new IllegalStateException("A logical error in adding a duplicate child");
 	}
 
+	/**
+	 * This reacts to the other SBEObject expansion/shrink shift. 
+	 * All fields nbyte down to expand array or nbytes up to shrink array
+	 * 
+	 * @param nbytes
+	 */
+	void shift(int nbytes) {
+		this.offset += nbytes;
+		this.valueOffset += nbytes;
+		for( SBEObjectArray arr : childFields.values() ) {
+			arr.shift(nbytes);
+		}
+	}
+	
+	/**
+	 * This reacts to the expansion/shrink of a field internally. 
+	 * 
+	 * @param field the field that is expanded or shrunk.
+	 * @param nbytes
+	 */
+	void shift(Field field, int nbytes) {
+		boolean startShift = false;
+		for( SBEObjectArray array : childFields.values() ) {
+			if( startShift ) {
+				array.shift(nbytes);
+			} else if( array.getDefinition().getID() == field.getID() ) {
+				startShift = true;
+			}
+		}
+		this.size += nbytes;
+	}
+	
 	public int getOffset() {
 		return this.offset;
 	}
@@ -86,6 +118,14 @@ public class SBEObject implements GroupObject {
 	public int getSize() {
 		return size;
 	}
+	
+	@Override
+	public int getBytes(byte[] dest, int destOffset, int length) {
+		length = length > size ? size : length;
+		array.getBuffer().getBytes(this.valueOffset, dest, destOffset, length);
+		return length;
+	}
+
 
 	public void setSize(int size) {
 		this.size = size;

@@ -235,6 +235,21 @@ public interface GroupObject {
 	public int getBytes(Field field, byte[] dest, int destOffset, int length);
 	
 	/**
+	 * Set bytes to the destination field. If the target field size is longer than the src,
+	 * all bytes are copied and the remaining bytes in the target field is untouched. 
+	 * if the target field size is shorter than the src, the byte array is truncated. If 
+	 * the target field is a raw field, the src is copied as it is with the raw field size 
+	 * adjusted automatically. 
+	 *  
+	 * @param field
+	 * @param src
+	 * @param srcOffset
+	 * @param length
+	 * @return
+	 */
+	public int setBytes(Field field, byte[] src, int srcOffset, int length);
+	
+	/**
 	 * Return a number array of this field. The inference generic type needs to be able to hold the
 	 * returned value. Otherwise a cast exception will be thrown.
 	 * 

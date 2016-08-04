@@ -152,7 +152,7 @@ public class SBEParser {
 
 	private int wrapVarRead(int offset, SBEVarLengthField field, SBEObjectArray parent, int parentIndex) {
 		SBEVarLengthFieldHeader header = (SBEVarLengthFieldHeader) field.getHeader();
-		int blockSize = header.getBlockSize(buffer, offset);
+		int blockSize = header.getBlockSize(buffer, offset, order);
 		SBEObjectArray sbeObj = sbeObjFactory.get();
 		sbeObj.setDefinition(field);
 		sbeObj.setOffset(offset);
@@ -162,6 +162,7 @@ public class SBEParser {
 		attr.setOffset(offset);
 		attr.setValueOffset(offset+varFieldHeaderSize);
 		attr.setSize(blockSize);
+		attr.setBlockSize(blockSize);
 		parent.addObject((short) parentIndex).addChildObject(field.getID(),sbeObj);
 		
 		return attr.getSize()+varFieldHeaderSize;
@@ -191,6 +192,7 @@ public class SBEParser {
 				attr.setOffset(currentOffset);
 				attr.setValueOffset(currentOffset+varFieldHeaderSize);
 				attr.setSize(0);
+				attr.setBlockSize(0);
 				rowAttr.addChildObject(subfield.getID(), sbeObj);
 
 				currentOffset += varFieldHeaderSize;

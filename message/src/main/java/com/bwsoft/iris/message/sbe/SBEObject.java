@@ -370,6 +370,40 @@ public class SBEObject implements GroupObject {
 	}
 
 	@Override
+	public int setBytes(Field field, byte[] src, int srcOffset, int length) {
+		SBEField sfield = (SBEField) field;
+		if( validateField(sfield) ) {
+			switch(field.getType()) {
+			case RAW:
+				SBEObjectArray objArray = this.childFields.get(field.getID());
+				if( null != objArray ) {
+					SBEObject obj = (SBEObject) objArray.getGroupObject(0);
+					objArray.adjustRawGroupSize(length);
+					
+					if( length > 0 ) {
+						array.getBuffer().putBytes(obj.getValueOffset(), src, srcOffset, length);
+					}
+					return length;								
+				} else {
+					throw new InternalError("internal error: unrecognized raw field");
+				}
+
+			case GROUP:
+			case MESSAGE:
+			case CONSTANT:
+				throw new UnsupportedOperationException("cannot set bytes for field type: "+field.getType());
+						
+			default:
+				length = length > field.length()*sfield.getBlockSize() ? field.length()*sfield.getBlockSize() : length;		
+				array.getBuffer().putBytes(valueOffset+sfield.getRelativeOffset(), src, srcOffset, length);
+				return length;			
+			}
+		} else {
+			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+		}		
+	}
+
+	@Override
 	public int getNumbers(Field field, Number[] dest, int destOffset, int length) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {

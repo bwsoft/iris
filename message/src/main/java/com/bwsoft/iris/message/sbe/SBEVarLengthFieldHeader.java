@@ -20,12 +20,11 @@ import java.nio.ByteOrder;
 import com.bwsoft.iris.message.FieldType;
 
 import uk.co.real_logic.agrona.DirectBuffer;
+import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 public class SBEVarLengthFieldHeader implements SBEHeader {
 	private final short headerSize;
 	private final FieldType lengthType;
-	
-	private ByteOrder order;
 	
 	public SBEVarLengthFieldHeader(FieldType lengthType) {
 		this.lengthType = lengthType;
@@ -36,7 +35,7 @@ public class SBEVarLengthFieldHeader implements SBEHeader {
 		return headerSize;
 	}
 	
-	public int getBlockSize(DirectBuffer buffer, int startOffset) {
+	public int getBlockSize(DirectBuffer buffer, int startOffset, ByteOrder order) {
 		switch( headerSize ) {
 		case 1:
 			return buffer.getByte(startOffset);
@@ -46,4 +45,19 @@ public class SBEVarLengthFieldHeader implements SBEHeader {
 			throw new IllegalArgumentException("SBE VAR field header size can only be 1 or 2 (default)");
 		}
 	}
+	
+	public void putBlockSize(UnsafeBuffer buffer, int startOffset, ByteOrder order, int value) {
+		switch( headerSize ) {
+		case 1:
+			buffer.putByte(startOffset, (byte) value); 
+			break;
+			
+		case 2:
+			buffer.putShort(startOffset, (short) value, order);
+			break;
+			
+		default:
+			throw new IllegalArgumentException("SBE VAR field header size can only be 1 or 2 (default)");
+		}
+	}	
 }

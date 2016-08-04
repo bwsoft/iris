@@ -174,7 +174,7 @@ public class SBEMessageCreationTest {
 	
 	@Test
 	public void deleteExistingSbeGroupCase0() {
-		// copy the second new SBE message to the buffer
+		// copy the first SBE message to the buffer
 		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer, 0, factory);
 
 		// wrap the copied message
@@ -224,5 +224,36 @@ public class SBEMessageCreationTest {
 		beforeWrap = msgObj.toString();
 		msgObj = factory.wrapForRead(newSbeBuffer, 0);
 		Assert.assertEquals(beforeWrap, msgObj.toString());
+	}
+	
+	@Test
+	public void addRemoveRawField() {
+		// copy the 2nd SBE message to the buffer
+		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer, 0, factory);
+
+		// wrap the copied message
+		GroupObject msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		System.out.println(msgObj.toString());
+		int sizeBefore = msgObj.getSize();
+		
+		byte[] newModel = "Honda Accord".getBytes();
+		msgObj.setBytes(msgObj.getField((short) 18), newModel, 0, newModel.length);
+		System.out.println(msgObj.toString());
+
+		newModel = "Accord".getBytes();
+		msgObj.setBytes(msgObj.getField((short) 18), newModel, 0, newModel.length);
+		System.out.println(msgObj.toString());
+
+		// delete all var fields
+		msgObj.setBytes(msgObj.getField((short) 17), newModel, 0, 0);
+		msgObj.setBytes(msgObj.getField((short) 18), newModel, 0, 0);
+		msgObj.setBytes(msgObj.getField((short) 19), newModel, 0, 0);
+		System.out.println(msgObj.toString());
+
+		newModel = "cafe".getBytes();
+		msgObj.setBytes(msgObj.getField((short) 19), newModel, 0, newModel.length);
+		System.out.println(msgObj.toString());
+		String beforeWrap = msgObj.toString();
+		Assert.assertEquals(beforeWrap, factory.wrapForRead(newSbeBuffer, 0).toString());
 	}
 }

@@ -142,7 +142,7 @@ public class SBEObjectArray implements GroupObjectArray {
 		}
 	}
 	
-	DirectBuffer getBuffer() {
+	UnsafeBuffer getBuffer() {
 		return buffer;
 	}
 
@@ -263,6 +263,32 @@ public class SBEObjectArray implements GroupObjectArray {
 				this.parent.shift(parentRow, this.definition, -nsize);
 			}			
 		}
+	}
+	
+	GroupObject adjustRawGroupSize(int newSize) {
+		SBEVarLengthField field = (SBEVarLengthField) this.definition;
+		SBEObject raw = this.attrs[0];
+
+		// update header to record both block size
+		int originalSize = raw.getSize();
+		int nsize = newSize - originalSize;
+		if( nsize == 0 ) 
+			return raw;
+		
+		((SBEVarLengthFieldHeader) field.getHeader()).putBlockSize(buffer, offset, order, newSize);
+		
+		// shift the array
+		shiftArray(raw.getValueOffset()+raw.getSize(), nsize);
+		
+		raw.setBlockSize(newSize);
+		raw.setSize(newSize);
+		
+		// notify the parent about the shift of nsize
+		if( null != this.parent ) {
+			this.parent.shift(parentRow, this.definition, nsize);
+		}
+		
+		return raw;
 	}
 	
 	private void shiftArray(int offset, int nsize) {

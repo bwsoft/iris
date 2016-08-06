@@ -54,7 +54,7 @@ public class SBEMessageCreationTest {
 		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer, 0, factory);
 		
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		
 		// insert a new row for fuel figure
@@ -62,12 +62,14 @@ public class SBEMessageCreationTest {
 		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField((short) 9));
 		GroupObject newFuelFigure = fuelFigures.addGroupObject();
 		System.out.println(msgObj.toString());
+		newFuelFigure.setNumber(newFuelFigure.getField((short) 10), (short) 100);
+		newFuelFigure.setNumber(newFuelFigure.getField((short) 11), 35.0);
 		
 		// verify the size change is correct
 		Assert.assertEquals(sizeBefore+newFuelFigure.getSize(), msgObj.getSize());
 
 		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
 		
@@ -88,7 +90,7 @@ public class SBEMessageCreationTest {
 		Assert.assertEquals(sizeBefore+newAccleration.getSize(), msgObj.getSize());		
 
 		unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
 	}	
@@ -102,7 +104,7 @@ public class SBEMessageCreationTest {
 		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer, 0, factory);
 		
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		int sizeBefore = msgObj.getSize();
 		
@@ -114,7 +116,7 @@ public class SBEMessageCreationTest {
 		Assert.assertEquals(6, newFuelFigure.getSize());
 		
 		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
 		
@@ -140,7 +142,7 @@ public class SBEMessageCreationTest {
 		Assert.assertEquals(sizeBefore+newAccleration.getSize(), msgObj.getSize());
 		Assert.assertEquals(performanceFigure2Size+newAccleration.getSize(), performanceFigure2.getSize());
 		unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
 	}	
@@ -154,7 +156,7 @@ public class SBEMessageCreationTest {
 		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer, 0, factory);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		int sizeBefore = msgObj.getSize();
 		
@@ -169,7 +171,7 @@ public class SBEMessageCreationTest {
 		GroupObject accleration = acclerations.addGroupObject();
 		System.out.println(msgObj.toString());
 		String originalMsg = msgObj.toString();
-		Assert.assertEquals(originalMsg, factory.wrapForRead(newSbeBuffer, 0).toString());
+		Assert.assertEquals(originalMsg, factory.wrapSbeBuffer(newSbeBuffer, 0).toString());
 	}	
 	
 	@Test
@@ -178,7 +180,7 @@ public class SBEMessageCreationTest {
 		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer, 0, factory);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		int sizeBefore = msgObj.getSize();
 		
@@ -187,7 +189,7 @@ public class SBEMessageCreationTest {
 		fuelFigures.deleteGroupObject(1);
 		System.out.println(msgObj.toString());
 		String beforeWrap = msgObj.toString();
-		msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		Assert.assertEquals(beforeWrap, msgObj.toString());
 		Assert.assertEquals(sizeBefore-6, msgObj.getSize());
@@ -211,7 +213,7 @@ public class SBEMessageCreationTest {
 		acclerations.deleteGroupObject(0);
 		System.out.println(msgObj.toString());
 		beforeWrap = msgObj.toString();
-		msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		Assert.assertEquals(beforeWrap, msgObj.toString());
 		
 		// delete the performance figure 
@@ -222,7 +224,7 @@ public class SBEMessageCreationTest {
 		performanceFigures.addGroupObject();
 		System.out.println(msgObj.toString());
 		beforeWrap = msgObj.toString();
-		msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		Assert.assertEquals(beforeWrap, msgObj.toString());
 	}
 	
@@ -232,7 +234,7 @@ public class SBEMessageCreationTest {
 		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer, 0, factory);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapForRead(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
 		System.out.println(msgObj.toString());
 		int sizeBefore = msgObj.getSize();
 		
@@ -254,6 +256,6 @@ public class SBEMessageCreationTest {
 		msgObj.setBytes(msgObj.getField((short) 19), newModel, 0, newModel.length);
 		System.out.println(msgObj.toString());
 		String beforeWrap = msgObj.toString();
-		Assert.assertEquals(beforeWrap, factory.wrapForRead(newSbeBuffer, 0).toString());
+		Assert.assertEquals(beforeWrap, factory.wrapSbeBuffer(newSbeBuffer, 0).toString());
 	}
 }

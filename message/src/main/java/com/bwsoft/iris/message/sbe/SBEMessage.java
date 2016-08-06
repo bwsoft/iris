@@ -35,6 +35,8 @@ public class SBEMessage extends SBEGroup implements Message {
 	private final SBEMessageHeader msgHeader;
 	private final SBEGroupHeader grpHeader;
 	private final SBEVarLengthFieldHeader varLengthFieldHeader;
+	
+	private final boolean safeMode;
 
 	private final ThreadLocal<SBEParser> parser = new ThreadLocal<SBEParser>() {
 		@Override
@@ -43,13 +45,14 @@ public class SBEMessage extends SBEGroup implements Message {
 		}
 	};
 	
-	public SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader) {
+	public SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader, boolean safeMode) {
 		super(null, header, FieldType.MESSAGE);
 		
 		this.schema = schema;
 		this.msgHeader = header;
 		this.grpHeader = grpHeader;
 		this.varLengthFieldHeader = vHeader;
+		this.safeMode = safeMode;
 	}
 
 	SBEParser getParser() {
@@ -58,6 +61,10 @@ public class SBEMessage extends SBEGroup implements Message {
 	
 	SBEObject getRootObject() {
 		return parser.get().getRootObject();
+	}
+	
+	public SBEMessageSchemaHeader getMsgSchemaHeader() {
+		return schema;
 	}
 	
 	public SBEMessageHeader getMsgHeader() {
@@ -76,27 +83,36 @@ public class SBEMessage extends SBEGroup implements Message {
 		return schema.getOrder();
 	}
 	
-	public SBEObject warpForRead(DirectBuffer buffer, int offset) {
-		return (SBEObject) this.parser.get().wrapForRead(buffer, offset).getGroupObject(0);
+	public boolean safeMode() {
+		return this.safeMode;
+	}
+	
+	public SBEObject warpSbeBuffer(DirectBuffer buffer, int offset) {
+		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 
 	@Override
-	public GroupObject wrapForRead(ByteBuffer buffer, int offset) {
-		return (SBEObject) this.parser.get().wrapForRead(buffer, offset).getGroupObject(0);
+	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset) {
+		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 
 	@Override
-	public GroupObject wrapForRead(ByteBuffer buffer, int offset, int length) {
-		return (SBEObject) this.parser.get().wrapForRead(buffer, offset, length).getGroupObject(0);
+	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset, int length) {
+		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset, length).getGroupObject(0);
 	}
 	
 	@Override
-	public GroupObject wrapForRead(byte[] buffer, int offset) {
-		return (SBEObject) this.parser.get().wrapForRead(buffer, offset).getGroupObject(0);
+	public GroupObject wrapSbeBuffer(byte[] buffer, int offset) {
+		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 
 	@Override
-	public GroupObject wrapForRead(byte[] buffer, int offset, int length) {
-		return (SBEObject) this.parser.get().wrapForRead(buffer, offset, length).getGroupObject(0);
+	public GroupObject wrapSbeBuffer(byte[] buffer, int offset, int length) {
+		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset, length).getGroupObject(0);
+	}
+	
+	@Override
+	public GroupObject createSbeBuffer(ByteBuffer buffer, int offset) {
+		return this.parser.get().createSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 }

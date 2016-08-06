@@ -51,8 +51,18 @@ public class SBESchemaLoader {
 	HashMap<String, SBEEnum> sbeEnums; // contains all the map between enum name and its values
 	HashMap<String, SBESet> sbeChoices; // contains all the map between a set/choice name and its corresponding bit set.
 	
+	private static boolean safeMode = true;
+	
 	private SBESchemaLoader() {
 		
+	}
+	
+	public static void safeModeOn() {
+		safeMode = true;
+	}
+	
+	public static void safeModeOff() {
+		safeMode = false;
 	}
 	
 	public static SBEMessageSchema loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
@@ -102,7 +112,7 @@ public class SBESchemaLoader {
 		// parsing message
 		List<Message> messageList = schema.getMessage();
 		for( Message message : messageList ) {
-			SBEMessage sbeMessage = new SBEMessage(schemaHeader, msgHeader, grpHeader, varHeader);
+			SBEMessage sbeMessage = new SBEMessage(schemaHeader, msgHeader, grpHeader, varHeader, SBESchemaLoader.safeMode);
 			sbeMessage.setID((short) message.getId()).setName(message.getName());
 			lookupTable.put(message.getId(), sbeMessage);
 			

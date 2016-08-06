@@ -33,11 +33,32 @@ import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
- * A SBE message schema is a collection of a SBE messages defined by a 
- * SBE XML file. It is to parse an array of bytes that contains the SBE
- * message. 
+ * A SBE message schema contains a collection of SBE messages that are defined within a 
+ * SBE XML file. It is capable to parse, modify, or create messages within this schema scope.
+ *
+ * Use the following to create a schema from a XML schema file. The schemaFilename
+ * can point toward a file in the filesystem or a file in the classpath. It is typically
+ * done during the program initialization or in a static block.
  * 
- * The schema is always created by the SBESchemaLoader. 
+ * <pre>
+ * {@code
+ *     // configure the schema usage. Turn off the safeMode for production use. 
+ *     SBEMessageSchema.configSafeMode(false);
+ *     
+ *     // create SBEMessageSchema
+ *     SBEMessageSchema schema = SBEMessageSchema.createSchema(schemaFilename);
+ *     
+ *     // obtain the definitions of all messages from the hashmap 
+ *     HashMap<Integer, SBEMessage> messages = schema.getMsgLookup();
+ *     
+ *     // do something with the message definition such as obtaining field definitions for 
+ *     // those fields that are being used repeatedly.
+ *     ...
+ * }
+ * </pre>
+ * 
+ * Now use one of the wrap calls to parse or modify an existing SBE message buffer or one 
+ * of the create calls to create a SBE message.
  * 
  * @author yzhou
  *
@@ -53,6 +74,7 @@ public class SBEMessageSchema {
 	private final SBEVarLengthFieldHeader varHeader;
 	private final ByteOrder order;
 	private final int schemaId;
+	private final int version;
 	private final DirectBuffer buffer;
 
 	// contains the map between the template id and the message definition
@@ -71,8 +93,20 @@ public class SBEMessageSchema {
 	}
 	
 	/**
-	 * The constructor is provided for internal use. Use 
-	 * createSBESchema instead.
+	 * If safeMode is true, there are additional checks against the runtime error 
+	 * caused by erroneous logic implementation. 
+	 * 
+	 * @param safeMode
+	 */
+	public static void configSafeMode(boolean safeMode) {
+		if (safeMode) 
+			SBESchemaLoader.safeModeOn();
+		else
+			SBESchemaLoader.safeModeOff();
+	}
+	
+	/**
+	 * The constructor is provided for internal use. Use {@link #createSBESchema(String)} instead.
 	 * 
 	 * @param schemaHeader
 	 * @param msgHeader
@@ -91,6 +125,7 @@ public class SBEMessageSchema {
 		this.varHeader = varHeader;
 		this.order = this.schemaHeader.getOrder();
 		this.schemaId = this.schemaHeader.getId();
+		this.version = this.schemaHeader.getVersion();
 		this.lookupTable = lookupTable;
 		this.buffer = new UnsafeBuffer(new byte[0]);
 	}
@@ -106,11 +141,11 @@ public class SBEMessageSchema {
 	 * @param offset the starting position of the message.
 	 * @return GroupObject to access SBE fields
 	 */
-	public GroupObject wrapForRead(ByteBuffer buffer, int offset) {
+	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset) {
 		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapForRead(this.buffer, offset);
+		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
 		if( null != msg ) {
-			return msg.wrapForRead(buffer, offset);
+			return msg.wrapSbeBuffer(buffer, offset);
 		}
 		return null;
 	}
@@ -126,11 +161,11 @@ public class SBEMessageSchema {
 	 * @param offset the starting position of the message.
 	 * @return GroupObject to access SBE fields
 	 */
-	public GroupObject wrapForRead(byte[] buffer, int offset) {
+	public GroupObject wrapSbeBuffer(byte[] buffer, int offset) {
 		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapForRead(this.buffer, offset);
+		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
 		if( null != msg ) {
-			return msg.wrapForRead(buffer, offset);
+			return msg.wrapSbeBuffer(buffer, offset);
 		}
 		return null;
 	}
@@ -147,11 +182,11 @@ public class SBEMessageSchema {
 	 * @param length it is no less than the size of the whole SBE message including the message header. 
 	 * @return GroupObject to access SBE fields
 	 */
-	public GroupObject wrapForRead(ByteBuffer buffer, int offset, int length) {
+	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset, int length) {
 		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapForRead(this.buffer, offset);
+		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
 		if( null != msg ) {
-			return msg.wrapForRead(buffer, offset, length);
+			return msg.wrapSbeBuffer(buffer, offset, length);
 		}
 		return null;
 	}
@@ -168,16 +203,25 @@ public class SBEMessageSchema {
 	 * @param length it is no less than the size of the whole SBE message including the message header. 
 	 * @return GroupObject to access SBE fields
 	 */
-	public GroupObject wrapForRead(byte[] buffer, int offset, int length) {
+	public GroupObject wrapSbeBuffer(byte[] buffer, int offset, int length) {
 		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapForRead(this.buffer, offset);
+		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
 		if( null != msg ) {
-			return msg.wrapForRead(buffer, offset, length);
+			return msg.wrapSbeBuffer(buffer, offset, length);
 		}
 		return null;
 	}
 
-	private SBEMessage wrapForRead(DirectBuffer buffer, int offset) {
+	public GroupObject createSbeBuffer(int templateId, ByteBuffer buffer, int offset) {
+		SBEMessage message = this.lookupTable.get(templateId);
+		if( null != message ) {
+			return message.createSbeBuffer(buffer, offset);
+		} else {
+			return null;
+		}
+	}
+	
+	private SBEMessage wrapSbeBuffer(DirectBuffer buffer, int offset) {
 		int schemaId = this.msgHeader.getSchemaId(buffer, offset, order);
 		int templateId = this.msgHeader.getTemplateId(buffer, offset, order);
 		if( schemaId == this.schemaId ) {

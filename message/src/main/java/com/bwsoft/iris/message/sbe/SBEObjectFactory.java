@@ -39,7 +39,9 @@ class SBEObjectFactory {
 	private final UnsafeBuffer buffer;
 	private final ByteOrder order;
 	
-	SBEObjectFactory(UnsafeBuffer buffer, ByteOrder order) {
+	private final boolean safeMode;
+	
+	SBEObjectFactory(UnsafeBuffer buffer, ByteOrder order, boolean safeMode) {
 		this.buffer = buffer;
 		this.order = order;
 		
@@ -48,8 +50,9 @@ class SBEObjectFactory {
 		pool = new SBEObjectArray[initialCapacity];
 		
 		for( int i = 0; i < initialCapacity; i ++ ) {
-			pool[i] = new SBEObjectArray(buffer,order);
+			pool[i] = new SBEObjectArray(buffer,order, safeMode);
 		}
+		this.safeMode = safeMode;
 	}
 	
 	SBEObjectArray get() {
@@ -59,7 +62,7 @@ class SBEObjectFactory {
 			SBEObjectArray[] nPool = new SBEObjectArray[pool.length+initialCapacity];
 			System.arraycopy(pool, 0, nPool, 0, pool.length);
 			for( int i = pool.length; i < nPool.length; i ++ ) {
-				nPool[i] = new SBEObjectArray(buffer, order);
+				nPool[i] = new SBEObjectArray(buffer, order, safeMode);
 			}
 			pool = nPool;
 			return get();

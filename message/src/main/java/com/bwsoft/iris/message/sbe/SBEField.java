@@ -136,11 +136,11 @@ public class SBEField implements Field {
 		this.enumLookup = lookupTable;
 	}
 	
-	boolean isEnumField() {
+	public boolean isEnumField() {
 		return this.enumLookup != null;
 	}
 	
-	String getEnumName(String value) {
+	public String getEnumName(String value) {
 		if( this.enumLookup == null ) 
 			throw new UnsupportedOperationException("no enum conversion for type: "+this.getType());
 		return this.enumLookup.get(value);
@@ -153,6 +153,8 @@ public class SBEField implements Field {
 	int getSetBit(String bitName) {
 		if( this.bitLookup == null ) {
 			throw new UnsupportedOperationException("no bit selection is supported for type: "+this.getType());
+		} else if( ! bitLookup.containsKey(bitName) ) {
+			throw new IllegalArgumentException("nonexist bitname for a choice field: "+bitName);
 		}
 		return this.bitLookup.get(bitName);
 	}

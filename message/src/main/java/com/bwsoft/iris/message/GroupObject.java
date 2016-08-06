@@ -77,6 +77,19 @@ public interface GroupObject {
 	 * @return
 	 */
 	public char getChar(Field field);
+	
+	/**
+	 * This is an unprotected method to set a character value to a field in this group. The
+	 * method will not check if the field type is CHAR. 
+	 * 
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
+	 * 
+	 * @param field
+	 * @param c
+	 */
+	public void setChar(Field field, char c);
 
 	/**
 	 * This is an unprotected method to return a byte value of a field in this group. The
@@ -90,6 +103,19 @@ public interface GroupObject {
 	 * @return
 	 */
 	public byte getByte(Field field); 
+	
+	/**
+	 * This is an unprotected method to set a byte value to a field in this group. The
+	 * method will not check if the field type is BYTE. 
+	 * 
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
+	 * 
+	 * @param field
+	 * @param value
+	 */
+	public void setByte(Field field, byte value);
 
 	/**
 	 * Return a number of this field. 
@@ -103,6 +129,19 @@ public interface GroupObject {
 	 * @return
 	 */
 	public Number getNumber(Field field);
+	
+	/**
+	 * Set a target field in this group with a number value. 
+	 * 
+	 * byte, I8, U8, I16 needs to have a short type at minimal. U16, I32 need to have an int
+	 * as minimal. U32, I64, U64 requires a long type.
+	 * 
+	 * Apply this method to other type of fields including constant field result in an IllegalArgumentException.
+	 * 
+	 * @param field
+	 * @param value
+	 */
+	public void setNumber(Field field, Number value);
 	
 	/**
 	 * This is an unprotected method to return an integer value of a field in this group.
@@ -222,6 +261,21 @@ public interface GroupObject {
 	public int getChars(Field field, char[] dest, int destOffset, int length);
 	
 	/**
+	 * This is an unprotected method to set value to a character array of a field in this group. 
+	 * The method will not check if the field type is CHAR. 
+	 * 
+	 * An IllegalArgumentException will be thrown if field does not belong to this group or
+	 * if the field is a constant field. Use {@link #getString(Field)} to retrieve the value 
+	 * of a constant field. 
+	 * 
+	 * @param field
+	 * @param src
+	 * @param srcOffset
+	 * @param length the number of characters that are set.
+	 */
+	public int setChars(Field field, char[] src, int srcOffset, int length);
+	
+	/**
 	 * Return a byte array representation of the field. All types of fields 
 	 * can be converted into a byte array. It is purely the byte copy of the field content 
 	 * excluding the field header if there is any.
@@ -235,11 +289,12 @@ public interface GroupObject {
 	public int getBytes(Field field, byte[] dest, int destOffset, int length);
 	
 	/**
-	 * Set bytes to the destination field. If the target field size is longer than the src,
-	 * all bytes are copied and the remaining bytes in the target field is untouched. 
-	 * if the target field size is shorter than the src, the byte array is truncated. If 
-	 * the target field is a raw field, the src is copied as it is with the raw field size 
-	 * adjusted automatically. 
+	 * Set bytes to a destination field in this group. If the target field size is 
+	 * longer than the src, all bytes are copied and the remaining bytes in the target 
+	 * field is untouched. If the target field size is shorter than the src, the byte 
+	 * array is truncated. If the target field is a raw field, the src is copied as it is 
+	 * with the raw field size adjusted automatically. It is effectively to remove the raw
+	 * field from the message by setting it to a zero length. 
 	 *  
 	 * @param field
 	 * @param src
@@ -265,6 +320,8 @@ public interface GroupObject {
 	 * @return
 	 */
 	public int getNumbers(Field field, Number[] dest, int destOffset, int length);
+	
+	public int setNumbers(Field field, Number[] src, int srcOffset, int length);
 	
 	/**
 	 * This is an unprotected method to return a short array of a field in this group.

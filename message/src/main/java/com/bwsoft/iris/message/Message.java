@@ -18,8 +18,9 @@ package com.bwsoft.iris.message;
 import java.nio.ByteBuffer;
 
 public interface Message extends Group {
-	public GroupObject wrapForRead(ByteBuffer buffer, int offset);
-	public GroupObject wrapForRead(ByteBuffer buffer, int offset, int length);
-	public GroupObject wrapForRead(byte[] buffer, int offset);
-	public GroupObject wrapForRead(byte[] buffer, int offset, int length);
+	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset);
+	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset, int length);
+	public GroupObject wrapSbeBuffer(byte[] buffer, int offset);
+	public GroupObject wrapSbeBuffer(byte[] buffer, int offset, int length);
+	public GroupObject createSbeBuffer(ByteBuffer buffer, int offset);
 }

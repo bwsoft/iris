@@ -120,7 +120,7 @@ public class SBEMessageTest {
 		SBEGroupHeader groupHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
 		SBEVarLengthFieldHeader varLengthFieldHeader = new SBEVarLengthFieldHeader(FieldType.U8);
 
-		SBEMessage message = (SBEMessage) new SBEMessage(schema, msgHeader, groupHeader, varLengthFieldHeader).setName("Car").setID((short) 1);
+		SBEMessage message = (SBEMessage) new SBEMessage(schema, msgHeader, groupHeader, varLengthFieldHeader, true).setName("Car").setID((short) 1);
 		message.addChildField((short)1,FieldType.U64, (short) 1).setName("serialNumber");
 		message.addChildField((short)2,FieldType.U16, (short) 1).setName("modelYear");
 		message.addChildField((short)3,FieldType.U8, (short) 1).setName("available");
@@ -178,7 +178,7 @@ public class SBEMessageTest {
 		// wrap message for reading. The right message template is selected automatically
 		// based upon the template ID in the message header. 
 		int currentOffset = bufferOffset;
-		GroupObject obj = factory.wrapForRead(sbeBuffer, currentOffset);
+		GroupObject obj = factory.wrapSbeBuffer(sbeBuffer, currentOffset);
 
 		// loop through the whole buffer since it may contain multiple messages
 		int testCase = 0;
@@ -218,7 +218,7 @@ public class SBEMessageTest {
 			
 			// move offset to the end and process the next message
 			currentOffset += (nsize +msg.getMsgHeader().getHeaderSize());
-			obj = factory.wrapForRead(sbeBuffer, currentOffset);
+			obj = factory.wrapSbeBuffer(sbeBuffer, currentOffset);
 			testCase ++;
 		}
 	}

@@ -51,15 +51,18 @@ public class SBEObjectArray implements GroupObjectArray {
 	private SBEObjectArray parent;
 	private short parentRow;
 	private int offset;
+	
+	private final boolean safeMode;
 
-	SBEObjectArray(UnsafeBuffer buffer, ByteOrder order) {
+	SBEObjectArray(UnsafeBuffer buffer, ByteOrder order, boolean safeMode) {
 		this.buffer = buffer;
 		this.order = order;
 		this.dimmension = 0;
 		this.attrs = new SBEObject[OPTIMIZED_DIMMENSION];
 		for( int i = 0; i < OPTIMIZED_DIMMENSION; i ++ ) {
-			this.attrs[i] = new SBEObject(this);
+			this.attrs[i] = new SBEObject(this, safeMode);
 		}
+		this.safeMode = safeMode;
 	}
 
 	public int getOffset() {
@@ -134,7 +137,7 @@ public class SBEObjectArray implements GroupObjectArray {
 				SBEObject[] eAttrs = new SBEObject[attrs.length+OPTIMIZED_DIMMENSION];
 				System.arraycopy(attrs, 0, eAttrs, 0, attrs.length);
 				for( int i = attrs.length; i < eAttrs.length; i ++ ) {
-					eAttrs[i] = new SBEObject(this);
+					eAttrs[i] = new SBEObject(this, this.safeMode);
 				}
 				attrs = eAttrs;
 			}
@@ -220,7 +223,7 @@ public class SBEObjectArray implements GroupObjectArray {
 		
 		if( nsize - blockSize > 0 ) {
 			// fill array with zero for the section of groups and raws	
-			fillArray(newObj.getValueOffset()+blockSize, nsize-blockSize, (byte) 0);
+			fillArray(this.buffer, newObj.getValueOffset()+blockSize, nsize-blockSize, (byte) 0);
 			
 			// wrap new array
 			SBEParser parser = this.definition.getMessage().getParser();
@@ -303,8 +306,8 @@ public class SBEObjectArray implements GroupObjectArray {
 		}
 	}
 	
-	private void fillArray(int offset, int nsize, byte value) {
-		byte[] array = this.buffer.byteArray();
+	static void fillArray(UnsafeBuffer buffer, int offset, int nsize, byte value) {
+		byte[] array = buffer.byteArray();
 		if( null != array ) {
 			array[offset] = value;
 		    for( int i = 1; i < nsize; i += i ) {
@@ -312,8 +315,8 @@ public class SBEObjectArray implements GroupObjectArray {
 		    }
 		} else {
 			for( int i = 0; i < nsize; i ++ ) {
-				this.buffer.putByte(offset+i, value);
+				buffer.putByte(offset+i, value);
 			}
-		}
+		}		
 	}
 }

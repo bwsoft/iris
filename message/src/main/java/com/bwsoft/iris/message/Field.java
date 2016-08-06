@@ -18,11 +18,13 @@ package com.bwsoft.iris.message;
 import java.io.Serializable;
 
 /**
- * A Field is identified by name and id. It is in a structured group which is a special field
- * that contains other fields and/or groups. The group that this field is in is its parent group.
+ * A Field is identified by name and id. A group is a special field that 
+ * contains other fields and/or groups. The group that this field is in is its parent group.
  * 
  * The field id, field type, its array length, and its parent are determined upon 
- * construction. It is typically created by the group it belongs to.
+ * construction. It is typically created by the group it belongs to. 
+ * 
+ * @see com.bwsoft.iris.message.Group#addChildField(short, FieldType, short)
  * 
  * @author yzhou
  *

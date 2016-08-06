@@ -33,9 +33,12 @@ public class SBEObject implements GroupObject {
 	private LinkedHashMap<Short, SBEObjectArray> childFields;
 	private final SBEObjectArray array;
 	
-	SBEObject(SBEObjectArray array)  {
+	private final boolean safeMode;
+	
+	SBEObject(SBEObjectArray array, boolean safeMode)  {
 		childFields = new LinkedHashMap<>();
 		this.array = array;
+		this.safeMode = safeMode;
 	}
 	
 	void reset() {
@@ -178,6 +181,16 @@ public class SBEObject implements GroupObject {
 	}
 
 	@Override
+	public void setChar(Field field, char c) {
+		SBEField sfield = (SBEField) field;
+		if( validateField(sfield) ) {
+			array.getBuffer().putChar(valueOffset+sfield.getRelativeOffset(),c);
+		} else {
+			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+		}		
+	}
+	
+	@Override
 	public byte getByte(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
@@ -187,6 +200,16 @@ public class SBEObject implements GroupObject {
 		}
 	}
 
+	@Override
+	public void setByte(Field field, byte value) {
+		SBEField sfield = (SBEField) field;
+		if( validateField(sfield) ) {
+			array.getBuffer().putByte(valueOffset+sfield.getRelativeOffset(), value);
+		} else {
+			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+		}		
+	}
+	
 	@Override
 	public Number getNumber(Field field) {
 		SBEField sfield = (SBEField) field;
@@ -232,6 +255,54 @@ public class SBEObject implements GroupObject {
 		}
 	}
 
+	@Override
+	public void setNumber(Field field, Number value) {
+		SBEField sfield = (SBEField) field;
+		if( validateField(sfield) ) {
+			switch(field.getType()) {
+			case BYTE:
+			case U8:
+			case I8:
+				array.getBuffer().putByte(valueOffset+sfield.getRelativeOffset(), (byte) value.shortValue());
+				break;
+				
+			case I16:
+				array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset(), value.shortValue(), array.getOrder());
+				break;
+				
+			case U16:
+				array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset(), (short) value.intValue(), array.getOrder());
+				break;
+
+			case I32:
+				array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset(), value.intValue(), array.getOrder());
+				break;
+				
+			case U32:
+				array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset(), (int) value.longValue(), array.getOrder());
+				break;
+
+			case U64:
+			case I64:
+				array.getBuffer().putLong(valueOffset+sfield.getRelativeOffset(), value.longValue(), array.getOrder());
+				break;
+				
+			case FLOAT:
+				array.getBuffer().putFloat(valueOffset+sfield.getRelativeOffset(), value.floatValue(), array.getOrder());
+				break;
+				
+			case DOUBLE:
+				array.getBuffer().putDouble(valueOffset+sfield.getRelativeOffset(), value.doubleValue(), array.getOrder());
+				break;
+				
+			default:
+				throw new IllegalArgumentException("type, "+field.getType().name()+", cannot be converted to a number");
+			}
+		} else {
+			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+		}		
+	}
+	
 	@Override
 	public int getU16(Field field) {
 		SBEField sfield = (SBEField) field;
@@ -317,6 +388,21 @@ public class SBEObject implements GroupObject {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}
 	}
+	
+	@Override
+	public int setChars(Field field, char[] src, int srcOffset, int length) {
+		SBEField sfield = (SBEField) field;
+		if( validateField(sfield) ) {
+			int len = length > field.length() ? field.length() : length;
+			for( int i = 0; i < len; i ++ ) {
+				array.getBuffer().putChar(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[i]);
+			}
+			return len;
+		} else {
+			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+		}		
+	}
+
 
 	@Override
 	public int getBytes(Field field, byte[] dest, int destOffset, int length) {
@@ -475,6 +561,71 @@ public class SBEObject implements GroupObject {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}
 		
+	}
+
+	@Override
+	public int setNumbers(Field field, Number[] src, int srcOffset, int length) {
+		SBEField sfield = (SBEField) field;
+		if( validateField(sfield) ) {
+			int len = length > field.length() ? field.length() : length;
+			switch(field.getType()) {
+			case BYTE:
+			case U8:
+			case I8:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (byte) src[srcOffset+i].shortValue());
+				}
+				return len;
+
+			case I16:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].shortValue(), array.getOrder());
+				}
+				return len;
+
+			case U16:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (short) src[srcOffset+i].intValue(), array.getOrder());
+				}
+				return len;
+				
+			case I32:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].intValue(), array.getOrder());
+				}
+				return len;
+
+			case U32:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (int) src[srcOffset+i].longValue(), array.getOrder());
+				}
+				return len;
+
+			case U64:
+			case I64:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putLong(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].longValue(), array.getOrder());
+				}
+				return len;
+
+			case FLOAT:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putFloat(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].floatValue(), array.getOrder());
+				}
+				return len;
+
+			case DOUBLE:
+				for( int i = 0; i < len; i ++ ) {
+					array.getBuffer().putDouble(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].doubleValue(), array.getOrder());
+				}
+				return len;
+				
+			default:
+				throw new IllegalArgumentException("type, "+field.getType().name()+", cannot be converted to a number");
+			}
+		} else {
+			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
+		}		
 	}
 
 	@Override
@@ -643,7 +794,8 @@ public class SBEObject implements GroupObject {
 			if( nsize == 0 ) 
 				return null;
 			byte buf[] = new byte[nsize];
-			return new String(buf,0,this.getBytes(field, buf, 0, buf.length));
+			String str = new String(buf,0,this.getBytes(field, buf, 0, buf.length));
+			return str.trim();
 				
 		case CONSTANT:
 			return sfield.getConstantValue();
@@ -780,7 +932,7 @@ public class SBEObject implements GroupObject {
 	}
 	
 	private boolean validateField(SBEField field) {
-		return  
+		return  ! safeMode ||
 				( field.getParent() == this.getDefinition() ||
 				  (
 					 // handle child elements of a composite field

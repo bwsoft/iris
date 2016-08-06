@@ -381,7 +381,7 @@ public class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = array.getBuffer().getChar(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
+				dest[destOffset+i] = (char) array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {

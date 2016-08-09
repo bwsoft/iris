@@ -20,14 +20,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.bwsoft.iris.message.Field;
+import com.bwsoft.iris.message.FieldHeader;
 import com.bwsoft.iris.message.FieldType;
 import com.bwsoft.iris.message.Group;
 
-public class SBEGroup extends SBEField implements Group {
+class SBEGroup extends SBEField implements Group {
 
 	private static final long serialVersionUID = 6161858305622927888L;
 
-	private final SBEHeader header;
+	private final FieldHeader header;
 	
 	// child field definition
 	private final LinkedHashMap<Short,Field> groupFieldLookup = new LinkedHashMap<>(); 
@@ -36,17 +37,13 @@ public class SBEGroup extends SBEField implements Group {
 	private short numGroupFields;
 	private short numRawFields;
 
-	SBEGroup(SBEGroup parent, SBEHeader header, FieldType type) {
+	SBEGroup(SBEGroup parent, FieldHeader header, FieldType type) {
 		super(parent, type,(short) 1);
 		if( type != FieldType.GROUP && type != FieldType.MESSAGE ) {
 			throw new IllegalArgumentException("ilegal type specified for a SBE group: "+type.name());
 		}
 		
 		this.header = header;
-	}
-	
-	public SBEHeader getHeader() {
-		return header;
 	}
 	
 	short getNumFixedSizeFields() {
@@ -66,6 +63,11 @@ public class SBEGroup extends SBEField implements Group {
 			throw new IllegalArgumentException("cannot have fields of the same name in a group");
 		}
 		this.groupFieldLookupByName.put(name, field);
+	}
+	
+	@Override
+	public FieldHeader getHeader() {
+		return header;
 	}
 	
 	@Override

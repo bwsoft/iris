@@ -16,13 +16,13 @@
 package com.bwsoft.iris.message;
 
 /**
- * A group object array is a continuous section in the message. The section contains several 
- * repeated structures, each of which is structured based upon a group definition. getNumOfGroups
- * returns the number of repeated structures.
+ * A GroupObjectArray is a section in a message that contains several repeated identical structures.
+ * Use {@link #getDefinition()} to obtain the definition of each identical structure.
+ * The GroupObjectArray is the array of this structure, the size of which can be obtained 
+ * via {@link #getNumOfGroups()}. 
  * 
- *  A GroupObjectArray for a message will only contain one repeat of the structure. 
- *  Hence its getNumOfGroups returns 1. 
- *  
+ * GroupObjectArray is also used to add/remove a row to the array. 
+ * 
  * @author yzhou
  *
  */
@@ -33,8 +33,8 @@ public interface GroupObjectArray {
 	public Field getDefinition(); 
 	/**
 	 * Get nth group object from the array. There is no obligation for the code to verify
-	 * the existence of the nth object. And hence an ArrayOutofBound exception may throw 
-	 * if n is greater than the available objects.
+	 * the existence of the nth object. The behavior is undefined for retrieving a 
+	 * GroupObject out of bound. 
 	 * 
 	 * @param n index of a group object
 	 * @return nth group object
@@ -47,16 +47,16 @@ public interface GroupObjectArray {
 	public short getNumOfGroups(); 
 	
 	/**
-	 * Add a group to the end of the existing group list. 
+	 * Add a new row to the end of the existing group list. 
 	 * 
-	 * @return
+	 * @return the newly added GroupObject to set values
 	 */
 	public GroupObject addGroupObject();
 	
 	/**
 	 * Delete a group object at nth position. It starts from zero and has to be less than getNumOfGroups.
 	 * 
-	 * @param n
+	 * @param n the row to be deleted
 	 */
 	public void deleteGroupObject(int n);
 }

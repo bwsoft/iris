@@ -17,6 +17,7 @@ package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
+import com.bwsoft.iris.message.FieldHeader;
 import com.bwsoft.iris.message.FieldType;
 
 import uk.co.real_logic.agrona.DirectBuffer;
@@ -29,7 +30,7 @@ import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
  * @author yzhou
  *
  */
-public class SBEGroupHeader implements SBEHeader {
+class SBEGroupHeader implements FieldHeader {
 	private final FieldType numInGroupType;
 	private final FieldType blockSizeType;
 	
@@ -41,11 +42,12 @@ public class SBEGroupHeader implements SBEHeader {
 		this.headerSize = (short) (this.numInGroupType.size() + this.blockSizeType.size());
 	}
 	
-	public short getHeaderSize() {
+	@Override
+	public short getSize() {
 		return headerSize;
 	}
 	
-	public int getBlockSize(DirectBuffer buffer, int groupStartOffset, ByteOrder order) {
+	int getBlockSize(DirectBuffer buffer, int groupStartOffset, ByteOrder order) {
 		switch( this.blockSizeType ) {
 		case U8:
 		case I8:
@@ -58,7 +60,7 @@ public class SBEGroupHeader implements SBEHeader {
 		}
 	}
 	
-	public int getNumRows(DirectBuffer buffer, int groupStartOffset, ByteOrder order) {
+	int getNumRows(DirectBuffer buffer, int groupStartOffset, ByteOrder order) {
 		switch( this.numInGroupType ) {
 		case U8:
 		case I8:
@@ -71,7 +73,7 @@ public class SBEGroupHeader implements SBEHeader {
 		}
 	}
 
-	public void putBlockSize(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order, int blockSize) {
+	void putBlockSize(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order, int blockSize) {
 		switch( this.blockSizeType ) {
 		case U8:
 		case I8:
@@ -88,7 +90,7 @@ public class SBEGroupHeader implements SBEHeader {
 		}
 	}
 	
-	public void putNumRows(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order, int numRows) {
+	void putNumRows(UnsafeBuffer buffer, int groupStartOffset, ByteOrder order, int numRows) {
 		switch( this.numInGroupType ) {
 		case U8:
 		case I8:

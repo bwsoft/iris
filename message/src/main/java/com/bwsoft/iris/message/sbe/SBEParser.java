@@ -25,7 +25,7 @@ import com.bwsoft.iris.message.FieldType;
 import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
-public class SBEParser {
+class SBEParser {
 	
 	private final SBEMessage message;
 	private final SBEObjectFactory sbeObjFactory;
@@ -36,51 +36,51 @@ public class SBEParser {
 	private int groupHeaderSize;
 	private int varFieldHeaderSize;
 	
-	public SBEParser(SBEMessage message) {
+	SBEParser(SBEMessage message) {
 		this.message = message;
 		this.buffer = new UnsafeBuffer(new byte[0]);
 		this.order = message.getByteOrder();
 		sbeObjFactory = new SBEObjectFactory(buffer, order, message.safeMode());
 		
-		messageHeaderSize = message.getMsgHeader().getHeaderSize();
-		groupHeaderSize = message.getGrpHeader().getHeaderSize();
-		varFieldHeaderSize = message.getVarLengthFieldHeader().getHeaderSize();
+		messageHeaderSize = message.getMsgHeader().getSize();
+		groupHeaderSize = message.getGrpHeader().getSize();
+		varFieldHeaderSize = message.getVarLengthFieldHeader().getSize();
 	}
 	
-	public SBEObjectArray wrapSbeBuffer(DirectBuffer buffer, int offset) {
+	SBEObjectArray wrapSbeBuffer(DirectBuffer buffer, int offset) {
 		this.buffer.wrap(buffer);
 		return parse(offset);
 	}
 
-	public SBEObjectArray wrapSbeBuffer(ByteBuffer buffer, int offset) {
+	SBEObjectArray wrapSbeBuffer(ByteBuffer buffer, int offset) {
 		this.buffer.wrap(buffer);
 		return parse(offset);
 	}
 	
-	public SBEObjectArray wrapSbeBuffer(ByteBuffer buffer, int offset, int length) {
+	SBEObjectArray wrapSbeBuffer(ByteBuffer buffer, int offset, int length) {
 		this.buffer.wrap(buffer,offset,length);
 		return parse(0);
 	}
 
-	public SBEObjectArray wrapSbeBuffer(byte[] buffer, int offset) {
+	SBEObjectArray wrapSbeBuffer(byte[] buffer, int offset) {
 		this.buffer.wrap(buffer);
 		return parse(offset);
 	}
 
-	public SBEObjectArray wrapSbeBuffer(byte[] buffer, int offset, int length) {
+	SBEObjectArray wrapSbeBuffer(byte[] buffer, int offset, int length) {
 		this.buffer.wrap(buffer, offset, length);
 		return parse(0);
 	}
 
-	public SBEObjectArray createSbeBuffer(ByteBuffer buffer, int offset) {
+	SBEObjectArray createSbeBuffer(ByteBuffer buffer, int offset) {
 		this.buffer.wrap(buffer);
 		
 		// create message header
 		writeMessageHeader(offset);
 		
 		// null out array in its necessary positions
-		int nsize = this.message.getNumGroupFields()*this.message.getGrpHeader().getHeaderSize() 
-				+ this.message.getNumRawFields()*this.message.getVarLengthFieldHeader().getHeaderSize();
+		int nsize = this.message.getNumGroupFields()*this.message.getGrpHeader().getSize() 
+				+ this.message.getNumRawFields()*this.message.getVarLengthFieldHeader().getSize();
 		int startOffset = this.message.getBlockSize() + offset;
 		SBEObjectArray.fillArray(this.buffer, startOffset, nsize, (byte) 0);
 		
@@ -206,7 +206,7 @@ public class SBEParser {
 				rowObj.setParentRow((short) parentIndex);
 				rowAttr.addChildObject(subfield.getID(), rowObj);
 
-				currentOffset += ((SBEGroup) subfield).getHeader().getHeaderSize();				
+				currentOffset += ((SBEGroup) subfield).getHeader().getSize();				
 			} else if( FieldType.RAW == subfield.getType() ) {
 				SBEObjectArray sbeObj = sbeObjFactory.get();
 				sbeObj.setDefinition(subfield);

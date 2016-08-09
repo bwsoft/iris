@@ -341,7 +341,7 @@ public class SBEMessageDecoderTest {
 			Assert.assertEquals(sbeMsgInJson[testCase], MessageUtil.toJsonString(obj, Charset.defaultCharset().name()));
 
 			// move offset to the end and process the next message
-			currentOffset += (obj.getSize() + ((SBEMessage) obj.getDefinition()).getMsgHeader().getHeaderSize());
+			currentOffset += (obj.getSize() + ((SBEMessage) obj.getDefinition()).getMsgHeader().getSize());
 			obj = factory.wrapSbeBuffer(sbeBuffer, currentOffset);
 			testCase ++;
 		}

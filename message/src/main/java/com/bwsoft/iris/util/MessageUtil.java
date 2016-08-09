@@ -20,9 +20,7 @@ import com.bwsoft.iris.message.Group;
 import com.bwsoft.iris.message.GroupObject;
 import com.bwsoft.iris.message.GroupObjectArray;
 import com.bwsoft.iris.message.SBEMessageSchema;
-import com.bwsoft.iris.message.sbe.SBECompositeField;
 import com.bwsoft.iris.message.sbe.SBEField;
-import com.bwsoft.iris.message.sbe.SBEGroup;
 import com.bwsoft.iris.message.sbe.SBEMessage;
 
 public class MessageUtil {
@@ -30,12 +28,12 @@ public class MessageUtil {
 	/**
 	 * Copy a message to a byte buffer
 	 * 
-	 * @param original
-	 * @param startOffset
-	 * @param nth
-	 * @param dest
-	 * @param destOffset
-	 * @param schema
+	 * @param original the original message buffer
+	 * @param startOffset the start offset of the first message
+	 * @param nth nth message in this byte array. Starts from zero for the first message.
+	 * @param dest the destination buffer
+	 * @param destOffset the start position in the destination buffer
+	 * @param schema schema to parse this message
 	 * @return true if copy is successful
 	 */
 	public static boolean messageCopy(ByteBuffer original, int startOffset, int nth,
@@ -49,12 +47,12 @@ public class MessageUtil {
 			if( msgObj == null )
 				return false;
 			startOffset += msgObj.getSize();
-			startOffset += ((SBEMessage) msgObj.getDefinition()).getHeader().getHeaderSize();
+			startOffset += ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
 		}
 		
 		GroupObject msgObj = schema.wrapSbeBuffer(original, startOffset);
 		int msgLength = msgObj.getSize() 
-				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getHeaderSize();
+				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
 
 		original.position(startOffset);
 		
@@ -72,8 +70,8 @@ public class MessageUtil {
 	 * @param original a buffer containing one or more SBE messages
 	 * @param startOffset the start offset of the first message
 	 * @param nth  nth message in this byte array. Starts from zero for the first message.
-	 * @param dest
-	 * @param destOffset
+	 * @param dest the destination buffer
+	 * @param destOffset the start position in the destination buffer
 	 * @param schema schema to parse this message
 	 * @return true if copy is successful
 	 */
@@ -84,12 +82,12 @@ public class MessageUtil {
 			if( null == msgObj )
 				return false;
 			startOffset += msgObj.getSize();
-			startOffset += ((SBEMessage) msgObj.getDefinition()).getHeader().getHeaderSize();
+			startOffset += ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
 		}
 		
 		GroupObject msgObj = schema.wrapSbeBuffer(original, startOffset);
 		int msgLength = msgObj.getSize() 
-				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getHeaderSize();
+				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
 
 		original.position(startOffset);
 		original.slice().get(dest, destOffset, msgLength);
@@ -102,8 +100,8 @@ public class MessageUtil {
 	 * @param original a buffer containing one or more SBE messages
 	 * @param startOffset the start offset of the first message
 	 * @param nth  nth message in this byte array. Starts from zero for the first message.
-	 * @param dest
-	 * @param destOffset
+	 * @param dest the destination buffer
+	 * @param destOffset the start position in the destination buffer
 	 * @param schema schema to parse this message
 	 * @return true if copy is successful
 	 */
@@ -114,12 +112,12 @@ public class MessageUtil {
 			if( null == msgObj )
 				return false;
 			startOffset += msgObj.getSize();
-			startOffset += ((SBEMessage) msgObj.getDefinition()).getHeader().getHeaderSize();
+			startOffset += ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
 		}
 
 		GroupObject msgObj = schema.wrapSbeBuffer(original, startOffset);
 		int msgLength = msgObj.getSize() 
-				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getHeaderSize();
+				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
 
 		System.arraycopy(original, startOffset, dest, destOffset, msgLength);
 		return true;
@@ -129,8 +127,8 @@ public class MessageUtil {
 	 * Create a Json expression for a GroupObject, including all of the nested
 	 * subgroups. Handle byte arrays as String using platform default encoding type.
 	 * 
-	 * @param obj
-	 * @return
+	 * @param obj a GroupObject
+	 * @return the Json representation of the GroupObject
 	 */
 	public static String toJsonString(GroupObject obj) {
 		try {
@@ -144,14 +142,15 @@ public class MessageUtil {
 	 * Create a Json expression for a GroupObject, including all of the nested
 	 * subgroups.
 	 * 
-	 * @param obj
-	 * @return
-	 * @throws UnsupportedEncodingException 
+	 * @param obj the GroupObject
+	 * @param encodingType the encoding type to convert a byte array into a String
+	 * @return the Json representation of the GroupObject
+	 * @throws UnsupportedEncodingException if the encoding type is undefined or not supported
 	 */
 	public static String toJsonString(GroupObject obj, String encodingType) throws UnsupportedEncodingException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");
-		SBEGroup group = (SBEGroup) obj.getDefinition();
+		Group group = (Group) obj.getDefinition();
 		boolean addComma = false;
 		for( Field field : group.getFields() ) {
 			if( addComma ) 
@@ -183,7 +182,7 @@ public class MessageUtil {
 				
 			case COMPOSITE:
 				sb.append("\"").append(field.getName()).append("\"").append(":");
-				SBECompositeField compField = (SBECompositeField) field;
+				Group compField = (Group) field;
 				sb.append("{");
 				boolean addComma1 = false;
 				for( Field cfield : compField.getFields() ) {
@@ -209,8 +208,8 @@ public class MessageUtil {
 	 * Create a Json expression for a GroupObjectArray, including all of the nested
 	 * subgroups. Handle byte arrays as String using platform default encoding type.
 	 * 
-	 * @param array
-	 * @return
+	 * @param array the GroupObjectArray
+	 * @return the Json representation of the GroupObjectArray
 	 */
 	public static String toJsonString(GroupObjectArray array) {
 		try {
@@ -224,9 +223,10 @@ public class MessageUtil {
 	 * Create a Json expression for a GroupObjectArray, including all of the nested
 	 * subgroups.
 	 * 
-	 * @param array
-	 * @return
-	 * @throws UnsupportedEncodingException 
+	 * @param array the GroupObjectArray
+	 * @param encodingType the encoding type to convert a byte array into a string
+	 * @return the Json representation of the GroupObjectArray
+	 * @throws UnsupportedEncodingException if the encoding type is undefined or not supported
 	 */
 	public static String toJsonString(GroupObjectArray array, String encodingType) throws UnsupportedEncodingException {
 		StringBuilder sb = new StringBuilder();
@@ -247,8 +247,8 @@ public class MessageUtil {
 	/**
 	 * Convert a group definition to a corresponding JSON expression
 	 * 
-	 * @param group
-	 * @return
+	 * @param group a Group
+	 * @return the Json string representation of the Group
 	 */
 	public static String toJsonString(Group group) {
 		StringBuilder sb = new StringBuilder();
@@ -305,15 +305,15 @@ public class MessageUtil {
 		case FLOAT:
 		case DOUBLE:
 			String value = obj.getString(field,encodingType);
-			if( ((SBEField) field).isEnumField() ) {
-				value = ((SBEField) field).getEnumName(value);
+			if( ((SBEField)field).isEnumField() ) {
+				value = obj.getEnumName(field);
 			}
 			sb.append(value);
 			break;
 			
 		case CHAR:
-			if( ((SBEField) field).isEnumField() ) {
-				sb.append(((SBEField) field).getEnumName(obj.getString(field,encodingType)));
+			if( ((SBEField)field).isEnumField() ) {
+				sb.append(obj.getEnumName(field));
 				break;
 			} // if not, handle the same way as BYTE
 		case BYTE:
@@ -331,9 +331,9 @@ public class MessageUtil {
 		case CONSTANT:
 			if( ((SBEField) field).getConstantType() == FieldType.BYTE ||
 					((SBEField) field).getConstantType() == FieldType.CHAR )
-				sb.append("\"").append(((SBEField) field).getConstantValue()).append("\"");
+				sb.append("\"").append(obj.getString(field)).append("\"");
 			else
-				sb.append(((SBEField) field).getConstantValue());
+				sb.append(obj.getString(field));
 			break;
 			
 		default:

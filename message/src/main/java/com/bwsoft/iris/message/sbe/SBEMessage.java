@@ -24,11 +24,20 @@ import com.bwsoft.iris.message.Message;
 
 import uk.co.real_logic.agrona.DirectBuffer;
 
+/**
+ * The representation of a SBE message. It contains the definition of a SBE message. 
+ * Use {@link com.bwsoft.iris.util.MessageUtil#toJsonString(com.bwsoft.iris.message.Group)}
+ * to obtain the Json representation of the message definition. It provides wrap calls
+ * to wrap the existing SBE message buffer for read and modification. It provides create 
+ * calls to create a SBE message. Typically do not make direct calls to wraps or creates in
+ * this class. Use the corresponding calls in the {@link com.bwsoft.iris.message.SBEMessageSchema}
+ * instead. 
+ * 
+ * @author yzhou
+ *
+ */
 public class SBEMessage extends SBEGroup implements Message {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -1434540350355065622L;
 	
 	private final SBEMessageSchemaHeader schema;
@@ -45,7 +54,7 @@ public class SBEMessage extends SBEGroup implements Message {
 		}
 	};
 	
-	public SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader, boolean safeMode) {
+	SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader, boolean safeMode) {
 		super(null, header, FieldType.MESSAGE);
 		
 		this.schema = schema;
@@ -63,7 +72,7 @@ public class SBEMessage extends SBEGroup implements Message {
 		return parser.get().getRootObject();
 	}
 	
-	public SBEMessageSchemaHeader getMsgSchemaHeader() {
+	SBEMessageSchemaHeader getMsgSchemaHeader() {
 		return schema;
 	}
 	
@@ -71,23 +80,23 @@ public class SBEMessage extends SBEGroup implements Message {
 		return msgHeader;
 	}
 
-	public SBEGroupHeader getGrpHeader() {
+	SBEGroupHeader getGrpHeader() {
 		return grpHeader;
 	}
 
-	public SBEVarLengthFieldHeader getVarLengthFieldHeader() {
+	SBEVarLengthFieldHeader getVarLengthFieldHeader() {
 		return varLengthFieldHeader;
 	}
 
-	public ByteOrder getByteOrder() {
+	ByteOrder getByteOrder() {
 		return schema.getOrder();
 	}
 	
-	public boolean safeMode() {
+	boolean safeMode() {
 		return this.safeMode;
 	}
 	
-	public SBEObject warpSbeBuffer(DirectBuffer buffer, int offset) {
+	SBEObject warpSbeBuffer(DirectBuffer buffer, int offset) {
 		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 

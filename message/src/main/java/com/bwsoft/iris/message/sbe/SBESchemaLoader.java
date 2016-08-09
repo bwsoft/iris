@@ -44,6 +44,12 @@ import com.bwsoft.iris.message.SBEMessageSchema;
 import org.fix.sbe.SetType;
 import org.fix.sbe.ValidValue;
 
+/**
+ * A factory class to create a SBEMessageSchema.
+ * 
+ * @author yzhou
+ *
+ */
 public class SBESchemaLoader {
 		
 	HashMap<String, EncodedDataType> sbeTypes; // contains all the definitions of type in types
@@ -57,14 +63,29 @@ public class SBESchemaLoader {
 		
 	}
 	
+	/**
+	 * Turn on the safe mode that enables the additional check for runtime errors.
+	 */
 	public static void safeModeOn() {
 		safeMode = true;
 	}
 	
+	/**
+	 * Turn off the safe mode that disable the additional check for runtime errors for better 
+	 * performance.
+	 */
 	public static void safeModeOff() {
 		safeMode = false;
 	}
 	
+	/**
+	 * Create a SBEMessageSchema from a SBE XML message template.
+	 *  
+	 * @param schemaXML the SBE XML message template in the classpath or in the file system.
+	 * @return the SBEMessageSchema to create SBE messages.
+	 * @throws JAXBException if failed to parse the SBE xml schema
+	 * @throws FileNotFoundException if the SBE xml schema file cannot be found
+	 */
 	public static SBEMessageSchema loadSchema(String schemaXML) throws JAXBException, FileNotFoundException {
 		SBESchemaLoader schemaCache = new SBESchemaLoader();
 		

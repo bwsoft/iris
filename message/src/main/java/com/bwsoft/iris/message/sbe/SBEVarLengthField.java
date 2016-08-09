@@ -15,22 +15,24 @@
  *******************************************************************************/
 package com.bwsoft.iris.message.sbe;
 
+import com.bwsoft.iris.message.FieldHeader;
 import com.bwsoft.iris.message.FieldType;
 import com.bwsoft.iris.message.Group;
 
-public class SBEVarLengthField extends SBEField {
+class SBEVarLengthField extends SBEField {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2032780172159012674L;
-	private final SBEHeader header;
+	private final FieldHeader header;
 	
-	SBEVarLengthField(Group parent, SBEHeader header) {
+	SBEVarLengthField(Group parent, FieldHeader header) {
 		super(parent, FieldType.RAW, (short) 1);
 		this.header = header;
 	}
 	
-	public SBEHeader getHeader() {
+	@Override
+	public FieldHeader getHeader() {
 		return header;
 	}
 }

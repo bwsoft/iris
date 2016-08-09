@@ -162,7 +162,7 @@ public class Car {
 		System.out.println("Created message:"+MessageUtil.toJsonString(msgObj));
 		
 		// return the total size of the message
-		return ((SBEMessage) msgObj.getDefinition()).getHeader().getHeaderSize() + msgObj.getSize();
+		return ((SBEMessage) msgObj.getDefinition()).getHeader().getSize() + msgObj.getSize();
 	}
 	
 	/**

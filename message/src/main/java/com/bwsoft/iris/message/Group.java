@@ -30,31 +30,34 @@ public interface Group extends Field {
 	/**
 	 * Get a subfield that belongs to this group.
 	 * 
-	 * @param id
+	 * @param id the id of the field
 	 * @return the field or null if no such Field
 	 */
 	public Field getField(short id);
 	/**
 	 * Get a subfield that belongs to this group.
 	 * 
-	 * @param name
+	 * @param name the name of the field
 	 * @return the field or null if no such Field
 	 */
 	public Field getField(String name);
 	/**
 	 * The factory class to add a field to this group. It returns the added Field object 
-	 * for application to further modify its attributes.
+	 * for the application to further modify its attributes.
 	 * 
-	 * id has to be unique among direct children of this group. The field is considered to be 
+	 * id and name have to be unique among direct children of this group. The field is considered to be 
 	 * an array by default. If not, specify the arrayLength to be 1.
 	 * 
 	 * @param id the id of the field
-	 * @param type
-	 * @param arrayLength
-	 * @return
+	 * @param type the type of this field. See available types in {@link FieldType}.
+	 * @param arrayLength the array size of this field
+	 * @return the newly created field
 	 */
 	public Field addField(short id, FieldType type, short arrayLength);	
 
+	/* (non-Javadoc)
+	 * @see com.bwsoft.iris.message.Field#length()
+	 */
 	public default short length() {
 		return 1;
 	}

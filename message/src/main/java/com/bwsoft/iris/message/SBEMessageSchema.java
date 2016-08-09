@@ -22,17 +22,16 @@ import java.util.HashMap;
 
 import javax.xml.bind.JAXBException;
 
-import com.bwsoft.iris.message.sbe.SBEGroupHeader;
 import com.bwsoft.iris.message.sbe.SBEMessage;
 import com.bwsoft.iris.message.sbe.SBEMessageHeader;
 import com.bwsoft.iris.message.sbe.SBEMessageSchemaHeader;
 import com.bwsoft.iris.message.sbe.SBESchemaLoader;
-import com.bwsoft.iris.message.sbe.SBEVarLengthFieldHeader;
 
 import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
+ * A factory class to create SBE messages within a scope of a message schema.
  * A SBE message schema contains a collection of SBE messages that are defined within a 
  * SBE XML file. It is capable to parse, modify, or create messages within this schema scope.
  *
@@ -48,30 +47,26 @@ import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
  *     // create SBEMessageSchema
  *     SBEMessageSchema schema = SBEMessageSchema.createSchema(schemaFilename);
  *     
- *     // obtain the definitions of all messages from the hashmap 
- *     HashMap<Integer, SBEMessage> messages = schema.getMsgLookup();
+ *     // use one of the wrap calls to parse a buffer 
+ *     SBEMessage aMessage = schema.wrapSbeBuffer(...);
  *     
- *     // do something with the message definition such as obtaining field definitions for 
- *     // those fields that are being used repeatedly.
+ *     // use one of the create  calls to create a sbe message
+ *     SBEMessage aNewMessage = schema.createSbeBuffer(templateId, ...);
+ *     
+ *     // one can also examine all message definitions in the schema
+ *     HashMap<Integer, SBEMessage> definitions = schema.getMsgLookup()
  *     ...
  * }
  * </pre>
  * 
- * Now use one of the wrap calls to parse or modify an existing SBE message buffer or one 
- * of the create calls to create a SBE message.
- * 
- * @author yzhou
- *
- */
-/**
  * @author yzhou
  *
  */
 public class SBEMessageSchema {
 	private final SBEMessageSchemaHeader schemaHeader;
 	private final SBEMessageHeader msgHeader;
-	private final SBEGroupHeader grpHeader;
-	private final SBEVarLengthFieldHeader varHeader;
+	private final FieldHeader grpHeader;
+	private final FieldHeader varHeader;
 	private final ByteOrder order;
 	private final int schemaId;
 	private final int version;
@@ -83,10 +78,10 @@ public class SBEMessageSchema {
 	/**
 	 * Create the message schema based upon the SBE XML.
 	 * 
-	 * @param xmlDefinition
-	 * @return
-	 * @throws FileNotFoundException
-	 * @throws JAXBException
+	 * @param xmlDefinition the SBE xml template filename. It can be in a classpath or filesystem
+	 * @return a SBEMessageSchema to parse or create SBE messages.
+	 * @throws FileNotFoundException if the SBE xml schema file cannot be found
+	 * @throws JAXBException if there is an error in parsing the SBE xml schema file
 	 */
 	public static SBEMessageSchema createSBESchema(String xmlDefinition) throws FileNotFoundException, JAXBException {
 		return SBESchemaLoader.loadSchema(xmlDefinition);
@@ -96,7 +91,7 @@ public class SBEMessageSchema {
 	 * If safeMode is true, there are additional checks against the runtime error 
 	 * caused by erroneous logic implementation. 
 	 * 
-	 * @param safeMode
+	 * @param safeMode false to turn off the safe mode for better performance
 	 */
 	public static void configSafeMode(boolean safeMode) {
 		if (safeMode) 
@@ -108,16 +103,16 @@ public class SBEMessageSchema {
 	/**
 	 * The constructor is provided for internal use. Use {@link #createSBESchema(String)} instead.
 	 * 
-	 * @param schemaHeader
-	 * @param msgHeader
-	 * @param grpHeader
-	 * @param varHeader
-	 * @param lookupTable
+	 * @param schemaHeader the schema header
+	 * @param msgHeader the message header
+	 * @param grpHeader the group header
+	 * @param varHeader the variable length field header
+	 * @param lookupTable a lookup table contains all messages defined in this schema
 	 */
 	public SBEMessageSchema(SBEMessageSchemaHeader schemaHeader,
 			SBEMessageHeader msgHeader,
-			SBEGroupHeader grpHeader,
-			SBEVarLengthFieldHeader varHeader,
+			FieldHeader grpHeader,
+			FieldHeader varHeader,
 			HashMap<Integer, SBEMessage> lookupTable) {
 		this.schemaHeader = schemaHeader;
 		this.msgHeader = msgHeader;
@@ -212,6 +207,14 @@ public class SBEMessageSchema {
 		return null;
 	}
 
+	/**
+	 * Create a SBE message using the provided buffer. 
+	 * 
+	 * @param templateId the target message template ID
+	 * @param buffer the buffer for building SBE message
+	 * @param offset the starting position of the message
+	 * @return a GroupObject to set values for fields in this message or null if the message cannot be created. 
+	 */
 	public GroupObject createSbeBuffer(int templateId, ByteBuffer buffer, int offset) {
 		SBEMessage message = this.lookupTable.get(templateId);
 		if( null != message ) {
@@ -235,7 +238,7 @@ public class SBEMessageSchema {
 	 * Obtain a hash map contains all SBEMessage definitions found in the 
 	 * current schema. The message template ID is the key.
 	 * 
-	 * @return
+	 * @return a HashMap containing all available message definitions in the schema
 	 */
 	public HashMap<Integer, SBEMessage> getMsgLookup() {
 		return this.lookupTable;

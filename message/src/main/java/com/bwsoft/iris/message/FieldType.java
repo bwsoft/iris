@@ -15,23 +15,85 @@
  *******************************************************************************/
 package com.bwsoft.iris.message;
 
+/**
+ * Defines all supported types. The size is defined as the number of bytes
+ * that requires to hold this field. A size of zero indicates the size of the field is determined
+ * dynamically.
+ * 
+ * @author yzhou
+ *
+ */
 public enum FieldType {
+	/**
+	 * A type of an unsigned number of 8 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	U8(1),
+	/**
+	 * A type of an unsigned number of 16 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	U16(2),
+	/**
+	 * A type of an unsigned number of 32 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	U32(4),
+	/**
+	 * A type of an unsigned number of 64 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	U64(8),
+	/**
+	 * A type of a signed number of 8 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	I8(1),
+	/**
+	 * A type of a signed number of 16 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	I16(2),
+	/**
+	 * A type of a signed number of 32 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	I32(4),
+	/**
+	 * A type of a signed number of 64 bits. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	I64(8),
+	/**
+	 * A type of a float number of 4 bytes. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	FLOAT(4),
+	/**
+	 * A type of a double number of 8 bytes. It can be a number or an array of numbers when length &gt; 1. 
+	 */
 	DOUBLE(8),
+	/**
+	 * A type of a character. It can be one character or an array of characters when length &gt; 1. 
+	 */
 	CHAR(1),
+	/**
+	 * A type of a byte. It can be one byte or an array of bytes when length &gt; 1. 
+	 */
 	BYTE(1),
-	CONSTANT(0),  // a constant field, the value of which is never changed from one message to another. 
+	/**
+	 * The value of which is never changed from one message to another.
+	 */
+	CONSTANT(0),   
+	/**
+	 * A variable length byte array.
+	 * It always has a length of 1 and cannot be an array.
+	 */
 	RAW(0),
+	/**
+	 * A field that contains other simple field that is not a GROUP, MESSAGE, COMPOSITE, and/or RAW.
+	 */
 	COMPOSITE(0),
+	/**
+	 * A field that contains other fields including GROUPs.
+	 * It always has a length of 1 and cannot be an array.
+	 */
 	GROUP(0),
+	/**
+	 * A special GROUP that is at the root level. 
+	 * It always has a length of 1 and cannot be an array.
+	 */
 	MESSAGE(0);
 	
 	private int length;
@@ -40,10 +102,18 @@ public enum FieldType {
 		length = len;
 	}
 	
+	/**
+	 * @return the storage size of this field. A size of zero indicates the storage size 
+	 * of the field is determined dynamically. 
+	 */
 	public int size() {
 		return length;
 	}
 	
+	/**
+	 * @param name the type name in its string representation
+	 * @return the type
+	 */
 	public static FieldType getType(String name) {
 		switch(name.toLowerCase()) {
 		case "int8":

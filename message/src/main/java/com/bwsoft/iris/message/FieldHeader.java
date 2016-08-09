@@ -13,9 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.bwsoft.iris.util;
+package com.bwsoft.iris.message;
 
-public interface ResourcePool<T extends Resource> {
-	public T get();
-	public void add(T resource);
+/**
+ * Defines a header for a field
+ * 
+ * @author yzhou
+ *
+ */
+public interface FieldHeader {
+	/**
+	 * @return the storage size of the header
+	 */
+	public short getSize();
 }

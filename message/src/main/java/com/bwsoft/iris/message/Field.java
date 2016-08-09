@@ -18,25 +18,58 @@ package com.bwsoft.iris.message;
 import java.io.Serializable;
 
 /**
- * A Field is identified by name and id. A group is a special field that 
- * contains other fields and/or groups. The group that this field is in is its parent group.
+ * The definition of a message field. It is identified by a name and an id. They have to be 
+ * unique in its parent field, the {@link Group}, but the same name or id can appear in other 
+ * groups.    
  * 
- * The field id, field type, its array length, and its parent are determined upon 
- * construction. It is typically created by the group it belongs to. 
- * 
- * @see com.bwsoft.iris.message.Group#addField(short, FieldType, short)
+ * The field id, field type, its array length, and its parent typically need to be decided upon 
+ * construction. And it is typically created by a factory method such as 
+ * {@link Group#addField(short, FieldType, short)} in the {@link Group} class. 
  * 
  * @author yzhou
  *
  */
 public interface Field extends Serializable {
+	/**
+	 * @return the id of the field
+	 */
 	public short getID();
+	/**
+	 * @param id the id of the field. 
+	 * @return this field
+	 */
 	public Field setID(short id);
 	
+	/**
+	 * @return the name of the field
+	 */
 	public String getName();
+	/**
+	 * @param name the name of the field
+	 * @return this field
+	 */
 	public Field setName(String name);
 	
+	/**
+	 * For available types, see {@link FieldType}.
+	 * 
+	 * @return the type of the field
+	 */
 	public FieldType getType();
+	
+	/**
+	 * @return the header definition of the field
+	 */
+	public default FieldHeader getHeader() {
+		return null;
+	}
+	
+	/**
+	 * @return the length, aka the dimension, of the field
+	 */
 	public short length(); // The array size if this field is an array.
+	/**
+	 * @return the parent of this field
+	 */
 	public Group getParent();
 }

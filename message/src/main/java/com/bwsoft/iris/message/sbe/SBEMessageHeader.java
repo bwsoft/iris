@@ -17,12 +17,19 @@ package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
+import com.bwsoft.iris.message.FieldHeader;
 import com.bwsoft.iris.message.FieldType;
 
 import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
-public class SBEMessageHeader implements SBEHeader {
+/**
+ * Header for the SBE message.
+ * 
+ * @author yzhou
+ *
+ */
+public class SBEMessageHeader implements FieldHeader {
 	private final FieldType templateIdType;
 	private final FieldType schemaIdType;
 	private final FieldType blockSizeType;
@@ -33,7 +40,7 @@ public class SBEMessageHeader implements SBEHeader {
 	private final int versionOffset;
 	private final short headerSize;
 	
-	public SBEMessageHeader(FieldType templateIdType, FieldType schemaIdType, FieldType blockSizeType, FieldType versionType) {
+	SBEMessageHeader(FieldType templateIdType, FieldType schemaIdType, FieldType blockSizeType, FieldType versionType) {
 		this.templateIdType = templateIdType;
 		this.schemaIdType = schemaIdType;
 		this.blockSizeType = blockSizeType;
@@ -45,10 +52,19 @@ public class SBEMessageHeader implements SBEHeader {
 		this.headerSize = (short) (this.templateIdType.size() + this.schemaIdType.size() + this.blockSizeType.size() + this.versionType.size());
 	}
 	
-	public short getHeaderSize() {
+	@Override
+	public short getSize() {
 		return this.headerSize;
 	}
 
+	/**
+	 * Get the block size from the message header
+	 * 
+	 * @param buffer SBE message buffer
+	 * @param offset the start position in the buffer
+	 * @param order ByteOrder
+	 * @return the message block size in bytes
+	 */
 	public int getBlockSize(DirectBuffer buffer, int offset, ByteOrder order) {
 		switch( this.blockSizeType ) {
 		case U8:
@@ -62,7 +78,7 @@ public class SBEMessageHeader implements SBEHeader {
 		}
 	}
 
-	public void putBlockSize(UnsafeBuffer buffer, int offset, ByteOrder order, int blockSize) {
+	void putBlockSize(UnsafeBuffer buffer, int offset, ByteOrder order, int blockSize) {
 		switch( this.blockSizeType ) {
 		case U8:
 		case I8:
@@ -79,6 +95,14 @@ public class SBEMessageHeader implements SBEHeader {
 		}
 	}
 
+	/**
+	 * Return the message template ID from the SBE buffer.
+	 * 
+	 * @param buffer the SBE buffer 
+	 * @param offset the start position of the SBE message in the buffer
+	 * @param order ByteOrder
+	 * @return the template ID of the message
+	 */
 	public int getTemplateId(DirectBuffer buffer, int offset, ByteOrder order) {
 		switch( this.templateIdType ) {
 		case U8:
@@ -92,7 +116,7 @@ public class SBEMessageHeader implements SBEHeader {
 		}
 	}
 
-	public void putTemplateId(UnsafeBuffer buffer, int offset, ByteOrder order, int templateId) {
+	void putTemplateId(UnsafeBuffer buffer, int offset, ByteOrder order, int templateId) {
 		switch( this.templateIdType ) {
 		case U8:
 		case I8:
@@ -109,6 +133,14 @@ public class SBEMessageHeader implements SBEHeader {
 		}
 	}
 
+	/**
+	 * Return the schema ID from the message buffer.
+	 * 
+	 * @param buffer the SBE buffer
+	 * @param offset the start position of the SBE message in the buffer
+	 * @param order ByteOrder
+	 * @return the schema ID of the message
+	 */
 	public int getSchemaId(DirectBuffer buffer, int offset, ByteOrder order) {
 		switch( this.schemaIdType ) {
 		case U8:
@@ -122,7 +154,7 @@ public class SBEMessageHeader implements SBEHeader {
 		}
 	}
 
-	public void putSchemaId(UnsafeBuffer buffer, int offset, ByteOrder order, int schemaId) {
+	void putSchemaId(UnsafeBuffer buffer, int offset, ByteOrder order, int schemaId) {
 		switch( this.schemaIdType ) {
 		case U8:
 		case I8:
@@ -139,6 +171,14 @@ public class SBEMessageHeader implements SBEHeader {
 		}
 	}
 
+	/**
+	 * Return the version of the message from the SBE buffer
+	 * 
+	 * @param buffer the SBE buffer
+	 * @param offset the starting position of the SBE message in the buffer
+	 * @param order ByteOrder 
+	 * @return the version of the message
+	 */
 	public int getVersion(DirectBuffer buffer, int offset, ByteOrder order) {
 		switch( this.versionType ) {
 		case U8:
@@ -152,7 +192,7 @@ public class SBEMessageHeader implements SBEHeader {
 		}
 	}
 
-	public void putVersion(UnsafeBuffer buffer, int offset, ByteOrder order, int version) {
+	void putVersion(UnsafeBuffer buffer, int offset, ByteOrder order, int version) {
 		switch( this.versionType ) {
 		case U8:
 		case I8:

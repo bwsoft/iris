@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.bwsoft.iris.message.Field;
+import com.bwsoft.iris.message.FieldHeader;
 import com.bwsoft.iris.message.FieldType;
 import com.bwsoft.iris.message.Group;
 
@@ -30,12 +31,12 @@ import com.bwsoft.iris.message.Group;
  * @author yzhou
  *
  */
-public class SBECompositeField extends SBEField implements Group {
+class SBECompositeField extends SBEField implements Group {
 	private static final long serialVersionUID = 1242147768313259509L;
 
-	private final SBEHeader header = new SBEHeader() {
+	private final FieldHeader header = new FieldHeader() {
 		@Override
-		public short getHeaderSize() {
+		public short getSize() {
 			return 0;
 		}		
 	};
@@ -76,7 +77,7 @@ public class SBECompositeField extends SBEField implements Group {
 			throw new IllegalArgumentException("zero length is not allowed");
 		}
 		SBEField newField = null;
-		int currentOffset = header.getHeaderSize()+this.getRelativeOffset();
+		int currentOffset = header.getSize()+this.getRelativeOffset();
 		
 		switch( type ) {
 		case U8:

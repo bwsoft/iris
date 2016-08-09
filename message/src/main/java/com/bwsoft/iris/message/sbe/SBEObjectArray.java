@@ -36,7 +36,7 @@ import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
  * @author yzhou
  *
  */
-public class SBEObjectArray implements GroupObjectArray {
+class SBEObjectArray implements GroupObjectArray {
 	private final static int OPTIMIZED_DIMMENSION = 8;
 	private SBEField definition; // Field definition, name, id, etc.
 
@@ -64,7 +64,7 @@ public class SBEObjectArray implements GroupObjectArray {
 		this.safeMode = safeMode;
 	}
 
-	public int getOffset() {
+	int getOffset() {
 		return this.offset;
 	}
 
@@ -176,8 +176,8 @@ public class SBEObjectArray implements GroupObjectArray {
 		
 		// get size of an empty row
 		int nsize = grp.getBlockSize() 
-				+ grp.getNumGroupFields()*grp.getHeader().getHeaderSize() 
-				+ grp.getNumRawFields()*grp.getMessage().getVarLengthFieldHeader().getHeaderSize();
+				+ grp.getNumGroupFields()*grp.getHeader().getSize() 
+				+ grp.getNumRawFields()*grp.getMessage().getVarLengthFieldHeader().getSize();
 		
 		// add attr
 		int blockSize = 0;
@@ -188,7 +188,7 @@ public class SBEObjectArray implements GroupObjectArray {
 			blockSize = lastObj.getBlockSize();
 		} else {
 			// TODO: exception out if version is not the same
-			valueOffset = this.offset + grp.getHeader().getHeaderSize();
+			valueOffset = this.offset + grp.getHeader().getSize();
 			blockSize = grp.getBlockSize();
 			((SBEGroupHeader) grp.getHeader()).putBlockSize(buffer, offset, order, blockSize);
 		}
@@ -279,7 +279,7 @@ public class SBEObjectArray implements GroupObjectArray {
 	
 	private void shiftArray(int offset, int nsize) {
 		byte[] array = this.buffer.byteArray();
-		int length = this.definition.getMessage().getRootObject().getSize() + this.definition.getMessage().getHeader().getHeaderSize() - offset;		
+		int length = this.definition.getMessage().getRootObject().getSize() + this.definition.getMessage().getHeader().getSize() - offset;		
 		if( null != array ) {
 			System.arraycopy(array, offset, array, offset+nsize, length);
 		} else {

@@ -25,7 +25,7 @@ import com.bwsoft.iris.message.FieldType;
 import com.bwsoft.iris.message.GroupObject;
 import com.bwsoft.iris.message.GroupObjectArray;
 
-public class SBEObject implements GroupObject {
+class SBEObject implements GroupObject {
 	private int offset; // relative to the start byte of the message.
 	private int valueOffset; // offset + headersize
 	private int blockSize; // size to contain the root element
@@ -86,7 +86,7 @@ public class SBEObject implements GroupObject {
 		this.size += nbytes;
 	}
 	
-	public int getOffset() {
+	int getOffset() {
 		return this.offset;
 	}
 
@@ -94,7 +94,7 @@ public class SBEObject implements GroupObject {
 		this.offset = offset;
 	}
 
-	public int getValueOffset() {
+	int getValueOffset() {
 		return valueOffset;
 	}
 
@@ -102,7 +102,7 @@ public class SBEObject implements GroupObject {
 		this.valueOffset = valueOffset;
 	}
 
-	public int getBlockSize() {
+	int getBlockSize() {
 		return blockSize;
 	}
 
@@ -132,7 +132,7 @@ public class SBEObject implements GroupObject {
 	}
 
 
-	public void setSize(int size) {
+	void setSize(int size) {
 		this.size = size;
 	}
 
@@ -765,14 +765,17 @@ public class SBEObject implements GroupObject {
 			try {
 				value = getString(field, Charset.defaultCharset().name());
 			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				return null;
 			}
-			value = sfield.getEnumName(value);
-			if( null != value ) 
-				return value;
-			else
-				throw new IllegalArgumentException("value in the message is not a valid enum value.");
+			if( null != value && ! "".equals(value.trim()) ) {
+				value = sfield.getEnumName(value);
+				if( null != value ) 
+					return value;
+				else
+					throw new IllegalArgumentException("value in the message is not a valid enum value.");
+			} else {
+				return null;
+			}
 		}
 		throw new IllegalArgumentException("not a enum field");
 	}
@@ -886,7 +889,7 @@ public class SBEObject implements GroupObject {
 		}
 	}
 	
-	public Map<Short, SBEObjectArray> getGroupList() {
+	Map<Short, SBEObjectArray> getGroupList() {
 		return childFields;
 	}
 	

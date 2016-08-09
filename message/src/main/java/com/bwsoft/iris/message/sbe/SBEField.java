@@ -22,8 +22,9 @@ import com.bwsoft.iris.message.FieldType;
 import com.bwsoft.iris.message.Group;
 
 /**
- * A SBEField in the message. It can be a group field, variable length field, a composite 
- * field, and/or a fixed size field. 
+ * The base class for all fields in a SBE message. It extends 
+ * the basic {@link com.bwsoft.iris.message.Field} by adding a couple of 
+ * additional operations that are specific to SBE message.  
  * 
  * @author yzhou
  *
@@ -65,20 +66,30 @@ public class SBEField implements Field {
 		}
 	}
 	
-	public SBEField setConstantValue(String value) {
+	SBEField setConstantValue(String value) {
 		this.constValue = value;
 		return this;
 	}
 	
-	public SBEField setConstantType(FieldType type) {
+	SBEField setConstantType(FieldType type) {
 		this.constType = type;
 		return this;
 	}
 	
+	/**
+	 * Return the value of a constant field or null for other field types. 
+	 * 
+	 * @return the value of a constant field or null for other field types
+	 */
 	public String getConstantValue() {
 		return this.constValue;
 	}
 	
+	/**
+	 * Return the type for the value in the constant field or null if other field types.
+	 * 
+	 * @return the type for the value in the constant field or null if other field types.
+	 */
 	public FieldType getConstantType() {
 		return this.constType;
 	}
@@ -90,7 +101,7 @@ public class SBEField implements Field {
 	 * @param blockSize
 	 * @return
 	 */
-	public SBEField setBlockSize(int blockSize) {
+	SBEField setBlockSize(int blockSize) {
 		this.blockSize = blockSize;
 		return this;
 	}
@@ -101,7 +112,7 @@ public class SBEField implements Field {
 	 * 
 	 * @return 
 	 */
-	public int getBlockSize() {
+	int getBlockSize() {
 		return this.blockSize;
 	}
 	
@@ -111,7 +122,7 @@ public class SBEField implements Field {
 	 * @param offset
 	 * @return
 	 */
-	public SBEField setRelativeOffset(int offset) {
+	SBEField setRelativeOffset(int offset) {
 		this.offset = offset;
 		return this;
 	}
@@ -121,10 +132,15 @@ public class SBEField implements Field {
 	 *  
 	 * @return
 	 */
-	public int getRelativeOffset() {
+	int getRelativeOffset() {
 		return offset;
 	}
 	
+	/**
+	 * Obtain the message definition.
+	 * 
+	 * @return the SBEMessage definition
+	 */
 	public SBEMessage getMessage() {
 		return this.message;
 	}
@@ -133,10 +149,22 @@ public class SBEField implements Field {
 		this.enumLookup = lookupTable;
 	}
 	
+	/**
+	 * Test if the field is an enum field.
+	 * 
+	 * @return true if the field is an enum field
+	 */
 	public boolean isEnumField() {
 		return this.enumLookup != null;
 	}
 	
+	/**
+	 * Return the enum name based upon its value or throw an UnsupportedOperationException
+	 * if the field is not an enum field.
+	 * 
+	 * @param value the value of the enum
+	 * @return the enum name based upon its value
+	 */
 	public String getEnumName(String value) {
 		if( this.enumLookup == null ) 
 			throw new UnsupportedOperationException("no enum conversion for type: "+this.getType());
@@ -147,7 +175,13 @@ public class SBEField implements Field {
 		this.bitLookup = lookupTable;
 	}
 	
-	int getSetBit(String bitName) {
+	/**
+	 * Get the corresponding bit position for a given bitName. 
+	 * 
+	 * @param bitName the name of the bit position defined in the SBE xml template
+	 * @return the corresponding bit position
+	 */
+	public int getSetBit(String bitName) {
 		if( this.bitLookup == null ) {
 			throw new UnsupportedOperationException("no bit selection is supported for type: "+this.getType());
 		} else if( ! bitLookup.containsKey(bitName) ) {
@@ -156,7 +190,11 @@ public class SBEField implements Field {
 		return this.bitLookup.get(bitName);
 	}
 
-	boolean isChoiceField() {
+	/**
+	 * Test if the field is a BitSet field
+	 * @return true if it is
+	 */
+	public boolean isChoiceField() {
 		return null != this.bitLookup;
 	}
 	

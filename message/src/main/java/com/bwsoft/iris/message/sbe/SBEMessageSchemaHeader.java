@@ -17,6 +17,12 @@ package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
+/**
+ * Header for the SBE message schema
+ * 
+ * @author yzhou
+ *
+ */
 public class SBEMessageSchemaHeader {
 
 	private String packageName;
@@ -25,7 +31,7 @@ public class SBEMessageSchemaHeader {
 	private String semanticVersion;
 	private ByteOrder order;
 	
-	public SBEMessageSchemaHeader(String packageName, int id, int version, String semanticVersion, String order) {
+	SBEMessageSchemaHeader(String packageName, int id, int version, String semanticVersion, String order) {
 		this.packageName = packageName;
 		this.id = id;
 		this.version = version;
@@ -42,22 +48,48 @@ public class SBEMessageSchemaHeader {
 		}
 	}
 	
+	/**
+	 * The package name of this schema.
+	 * 
+	 * @return package name
+	 */
 	public String getPackageName() {
 		return packageName;
 	}
 
+	/**
+	 * The schema ID. This schema can only process messages whose schema ID equals to this 
+	 * value.
+	 * 
+	 * @return the schema ID
+	 */
 	public int getId() {
 		return id;
 	}
 
+	/**
+	 * Get the version of the schema.
+	 * 
+	 * @return the version
+	 */
 	public int getVersion() {
 		return version;
 	}
 
+	/**
+	 * Get the semantic version
+	 * 
+	 * @return the semantic version
+	 */
 	public String getSemanticVersion() {
 		return semanticVersion;
 	}
 
+	/**
+	 * Get the ByteOrderfor fields in the schema.
+	 *  
+	 * @return the ByteOrder
+	 */
 	public ByteOrder getOrder() {
 		return order;
 	}

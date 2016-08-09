@@ -21,7 +21,6 @@ import com.bwsoft.iris.message.Field;
 import com.bwsoft.iris.message.GroupObject;
 import com.bwsoft.iris.message.GroupObjectArray;
 
-import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
@@ -151,22 +150,6 @@ public class SBEObjectArray implements GroupObjectArray {
 
 	ByteOrder getOrder() {
 		return order;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		if( dimmension > 1 ) sb.append("[");
-		if( dimmension > 0 ) {
-			sb.append(attrs[0]);
-			for( int i = 1; i < dimmension; i ++ ) {
-				sb.append(",").append(attrs[i]);
-			}
-		} else {
-			sb.append("null");
-		}
-		if( dimmension > 1 ) sb.append("]");
-		return sb.toString();
 	}
 
 	@Override

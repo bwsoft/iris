@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2016 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
 package com.bwsoft.iris.sample;
 
 import java.nio.ByteBuffer;
@@ -106,11 +116,11 @@ public class Car {
 		
 		// Field: engine - set up a composite field. Ignore all constant fields.
 		Group engine = (Group) msgObj.getField((short) 8);
-		msgObj.setNumber(engine.getChildField((short) 0), 1500); // Field: capacity - the first field in the composite field 
-		msgObj.setNumber(engine.getChildField((short) 1), 6); // Field: numCylinders - the second field in the composite
+		msgObj.setNumber(engine.getField((short) 0), 1500); // Field: capacity - the first field in the composite field 
+		msgObj.setNumber(engine.getField((short) 1), 6); // Field: numCylinders - the second field in the composite
 		// Jump to the 3rd field to skip the constant field. 
 		char[] manufactureCode = {'V','T','I'};
-		msgObj.setChars(engine.getChildField((short) 3), manufactureCode, 0, 3); // Field: manufactureCode - the third field in the composite.
+		msgObj.setChars(engine.getField((short) 3), manufactureCode, 0, 3); // Field: manufactureCode - the third field in the composite.
 
 		// Field: fuelFigures - set up a group
 		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField((short) 9));
@@ -197,12 +207,12 @@ public class Car {
 
 		// Field: engine - get a composite field
 		Group engine = (Group) msgObj.getField((short) 8);
-		Number capacity = msgObj.getNumber(engine.getChildField((short) 0)); // Field: capacity - the first field in the composite field 
-		Number numCylinders = msgObj.getNumber(engine.getChildField((short) 1)); // Field: numCylinders - the second field in the composite
-		String maxRpm = msgObj.getString(engine.getChildField((short) 2)); // Field: maxRpm, a constant field. 
+		Number capacity = msgObj.getNumber(engine.getField((short) 0)); // Field: capacity - the first field in the composite field 
+		Number numCylinders = msgObj.getNumber(engine.getField((short) 1)); // Field: numCylinders - the second field in the composite
+		String maxRpm = msgObj.getString(engine.getField((short) 2)); // Field: maxRpm, a constant field. 
 		char[] manufactureCode = new char[128];
-		msgObj.getChars(engine.getChildField((short) 3), manufactureCode, 0, 128); // Field: manufactureCode - the third field in the composite.
-		String fuel = msgObj.getString(engine.getChildField((short) 4));
+		msgObj.getChars(engine.getField((short) 3), manufactureCode, 0, 128); // Field: manufactureCode - the third field in the composite.
+		String fuel = msgObj.getString(engine.getField((short) 4));
 		System.out.println("Field: engine, Value: capacity="+capacity.shortValue()
 		+", numCylinders="+numCylinders.shortValue()
 		+", maxRpm="+maxRpm

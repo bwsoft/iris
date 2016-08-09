@@ -16,6 +16,7 @@
 package com.bwsoft.iris.message.sbe;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.bwsoft.iris.message.Field;
@@ -30,10 +31,7 @@ import com.bwsoft.iris.message.Group;
  *
  */
 public class SBECompositeField extends SBEField implements Group {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1242147768313259509L;
 
 	private final SBEHeader header = new SBEHeader() {
 		@Override
@@ -44,23 +42,36 @@ public class SBECompositeField extends SBEField implements Group {
 	
 	// child field definition
 	private final List<Field> children = new ArrayList<>();
+	private final LinkedHashMap<String,Field> groupFieldLookupByName = new LinkedHashMap<>(); 
 
 	SBECompositeField(SBEGroup parent, short dimension) {
 		super(parent, FieldType.COMPOSITE, dimension);
 	}
 	
+	void buildNameIndex(String name, Field field) {
+		if( groupFieldLookupByName.containsKey(name) ) {
+			throw new IllegalArgumentException("cannot have fields of the same name in a group");
+		}
+		this.groupFieldLookupByName.put(name, field);
+	}
+	
 	@Override
-	public List<Field> getChildFields() {
+	public List<Field> getFields() {
 		return children;
 	}
 
 	@Override 
-	public Field getChildField(short id) {
+	public Field getField(short id) {
 		return children.get(id);
 	}
-	
+
 	@Override
-	public Field addChildField(short id, FieldType type, short arrayLength) {
+	public Field getField(String name) {
+		return groupFieldLookupByName.get(name);
+	}
+
+	@Override
+	public Field addField(short id, FieldType type, short arrayLength) {
 		if( arrayLength < 1 ) {
 			throw new IllegalArgumentException("zero length is not allowed");
 		}
@@ -97,19 +108,5 @@ public class SBECompositeField extends SBEField implements Group {
 			throw new IllegalArgumentException("composite field does not accept the child field of type: "+type);
 		}
 		return newField;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("{");
-		sb.append("name:").append(getName());
-		sb.append(",id:").append(this.getID());
-		sb.append(",type:").append(this.getType());
-		for( Field field : this.children ) {
-			sb.append(",").append(field);
-		}
-		sb.append("}");
-		return sb.toString();
 	}
 }

@@ -1,0 +1,10 @@
+Failed to create internal source file for proccessing the file
+     /sample/.classpath
+     /sample/.project
+     /sample/.settings/org.eclipse.core.resources.prefs
+     /sample/.settings/org.eclipse.jdt.core.prefs
+     /sample/.settings/org.eclipse.m2e.core.prefs
+     /sample/target/classes/META-INF/MANIFEST.MF
+     /sample/target/classes/com/bwsoft/iris/sample/Car$BooleanType.class
+     /sample/target/classes/com/bwsoft/iris/sample/Car$Model.class
+     /sample/target/classes/com/bwsoft/iris/sample/Car.class

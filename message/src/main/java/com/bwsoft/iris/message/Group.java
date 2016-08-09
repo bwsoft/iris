@@ -26,12 +26,21 @@ import java.util.List;
  *
  */
 public interface Group extends Field {
-	public List<Field> getChildFields();
+	public List<Field> getFields();
 	/**
+	 * Get a subfield that belongs to this group.
+	 * 
 	 * @param id
-	 * @return
+	 * @return the field or null if no such Field
 	 */
-	public Field getChildField(short id);
+	public Field getField(short id);
+	/**
+	 * Get a subfield that belongs to this group.
+	 * 
+	 * @param name
+	 * @return the field or null if no such Field
+	 */
+	public Field getField(String name);
 	/**
 	 * The factory class to add a field to this group. It returns the added Field object 
 	 * for application to further modify its attributes.
@@ -44,7 +53,7 @@ public interface Group extends Field {
 	 * @param arrayLength
 	 * @return
 	 */
-	public Field addChildField(short id, FieldType type, short arrayLength);	
+	public Field addField(short id, FieldType type, short arrayLength);	
 
 	public default short length() {
 		return 1;

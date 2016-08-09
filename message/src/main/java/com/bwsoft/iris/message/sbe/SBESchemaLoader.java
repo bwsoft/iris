@@ -346,7 +346,7 @@ public class SBESchemaLoader {
 
 			if( null != FieldType.getType(fieldType.getType()) ) {
 				// field of primitive type
-				group.addChildField((short)fieldType.getId(), FieldType.getType(fieldType.getType()), (short)1).setName(fieldType.getName());
+				group.addField((short)fieldType.getId(), FieldType.getType(fieldType.getType()), (short)1).setName(fieldType.getName());
 			} else if( schemaCache.sbeTypes.containsKey(fieldType.getType())) {
 				// a simple type
 				EncodedDataType dataType = schemaCache.sbeTypes.get(fieldType.getType());
@@ -356,25 +356,25 @@ public class SBESchemaLoader {
 					if( primitiveType == null ) {
 						throw new IllegalArgumentException("unrecognized primitive type: "+dataType.getPrimitiveType());
 					}
-					group.addChildField((short)fieldType.getId(),primitiveType,dataType.getLength().shortValue()).setName(fieldType.getName());
+					group.addField((short)fieldType.getId(),primitiveType,dataType.getLength().shortValue()).setName(fieldType.getName());
 				} else {
 					// handle constant simple field
-					SBEField field = (SBEField) group.addChildField((short)fieldType.getId(),FieldType.CONSTANT,dataType.getLength().shortValue()).setName(fieldType.getName());
+					SBEField field = (SBEField) group.addField((short)fieldType.getId(),FieldType.CONSTANT,dataType.getLength().shortValue()).setName(fieldType.getName());
 					field.setConstantValue(dataType.getValue()).setConstantType(FieldType.getType(dataType.getPrimitiveType()));
 				}
 			} else if( schemaCache.sbeEnums.containsKey(fieldType.getType())) {
 				// an enum type
 				SBEEnum sbeEnum = schemaCache.sbeEnums.get(fieldType.getType());
-				SBEField enumField = (SBEField) group.addChildField((short)fieldType.getId(), sbeEnum.primitiveType, (short) 1).setName(fieldType.getName());
+				SBEField enumField = (SBEField) group.addField((short)fieldType.getId(), sbeEnum.primitiveType, (short) 1).setName(fieldType.getName());
 				enumField.setEnumLookupTable(sbeEnum.enumLookup);
 			} else if( schemaCache.sbeChoices.containsKey(fieldType.getType())) {
 				// a set bit field
 				SBESet sbeSet = schemaCache.sbeChoices.get(fieldType.getType());
-				SBEField choiceField = (SBEField) group.addChildField((short)fieldType.getId(), sbeSet.primitiveType, (short) 1).setName(fieldType.getName());
+				SBEField choiceField = (SBEField) group.addField((short)fieldType.getId(), sbeSet.primitiveType, (short) 1).setName(fieldType.getName());
 				choiceField.setSetLookupTable(sbeSet.bitLookup);
 			} else if( schemaCache.sbeComposites.containsKey(fieldType.getType()) && ! "data".equals(elementName)) {
 				// composite field
-				SBECompositeField compositeField = (SBECompositeField) group.addChildField((short)fieldType.getId(),FieldType.COMPOSITE, (short) 1).setName(fieldType.getName());
+				SBECompositeField compositeField = (SBECompositeField) group.addField((short)fieldType.getId(),FieldType.COMPOSITE, (short) 1).setName(fieldType.getName());
 				List<EncodedDataType> eTypes = schemaCache.sbeComposites.get(fieldType.getType());
 				for( EncodedDataType eType : eTypes ) {			
 					if( null == eType.getPresence() || ! "constant".equals(eType.getPresence().toLowerCase())) {
@@ -383,22 +383,22 @@ public class SBESchemaLoader {
 						if( primitiveType == null ) {
 							throw new IllegalArgumentException("unrecognized primitive type: "+eType.getPrimitiveType());
 						}
-						compositeField.addChildField((short)fieldType.getId(),primitiveType,eType.getLength().shortValue()).setName(eType.getName());
+						compositeField.addField((short)fieldType.getId(),primitiveType,eType.getLength().shortValue()).setName(eType.getName());
 					} else {
 						// handle constant simple field
-						SBEField field = (SBEField) compositeField.addChildField((short)fieldType.getId(),FieldType.CONSTANT,eType.getLength().shortValue()).setName(eType.getName());
+						SBEField field = (SBEField) compositeField.addField((short)fieldType.getId(),FieldType.CONSTANT,eType.getLength().shortValue()).setName(eType.getName());
 						field.setConstantValue(eType.getValue()).setConstantType(FieldType.getType(eType.getPrimitiveType()));
 					}
 				}
 			} else if(schemaCache.sbeComposites.containsKey(fieldType.getType()) && "data".equals(elementName) ) {
 				// variable length field
-				group.addChildField((short)fieldType.getId(),FieldType.RAW, (short) 1).setName(fieldType.getName());
+				group.addField((short)fieldType.getId(),FieldType.RAW, (short) 1).setName(fieldType.getName());
 			} else {
 				throw new IllegalArgumentException("unrecognized primitive type: "+fieldType.getType());				
 			}
 		} else if( elementType instanceof GroupType ) {
 			GroupType groupType = (GroupType) elementType;
-			SBEGroup childGroup = (SBEGroup) group.addChildField((short)groupType.getId(),FieldType.GROUP, (short) 1).setName(groupType.getName());
+			SBEGroup childGroup = (SBEGroup) group.addField((short)groupType.getId(),FieldType.GROUP, (short) 1).setName(groupType.getName());
 			List<org.fix.sbe.FieldType> childFieldList = groupType.getField();
 			for( org.fix.sbe.FieldType type : childFieldList ) {
 				processFieldsOfAGroup(schemaCache, childGroup, "field", type);
@@ -420,13 +420,5 @@ public class SBESchemaLoader {
 	private static class SBESet {
 		FieldType primitiveType;
 		HashMap<String, Integer> bitLookup = new HashMap<String, Integer>();
-	}
-	
-	public static void main(String[] args) throws FileNotFoundException, JAXBException {
-		SBEMessageSchema factory = SBESchemaLoader.loadSchema("src/test/resources/example-schema.xml");
-		HashMap<Integer, SBEMessage> lookup = factory.getMsgLookup();
-		lookup.forEach((k,v) -> {
-			System.out.println(v);
-		});
 	}
 }

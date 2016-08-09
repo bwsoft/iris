@@ -17,7 +17,6 @@ package com.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
-import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
@@ -57,7 +56,9 @@ class SBEObjectFactory {
 	
 	SBEObjectArray get() {
 		if( currentCount < pool.length ) {
-			return pool[currentCount++];
+			SBEObjectArray array = pool[currentCount++];
+			array.reset();
+			return array;
 		} else {
 			SBEObjectArray[] nPool = new SBEObjectArray[pool.length+initialCapacity];
 			System.arraycopy(pool, 0, nPool, 0, pool.length);
@@ -78,9 +79,6 @@ class SBEObjectFactory {
 	}
 	
 	void returnAll() {
-		for( int i = 0; i < currentCount; i ++ ) {
-			pool[i].reset();
-		}
 		currentCount = 0;
 	}
 }

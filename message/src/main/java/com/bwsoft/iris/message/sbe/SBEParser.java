@@ -21,7 +21,6 @@ import java.util.List;
 
 import com.bwsoft.iris.message.Field;
 import com.bwsoft.iris.message.FieldType;
-import com.bwsoft.iris.message.GroupObject;
 
 import uk.co.real_logic.agrona.DirectBuffer;
 import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
@@ -115,7 +114,7 @@ public class SBEParser {
 		rowAttr.setBlockSize(blockSize);
 		message.setBlockSize(blockSize);
 
-		List<Field> fieldList = message.getChildFields();
+		List<Field> fieldList = message.getFields();
 		int numFixedSizeFields = message.getNumFixedSizeFields();
 		int currentOffset = rowAttr.getValueOffset()+rowAttr.getBlockSize();
 		for( int k = numFixedSizeFields; k < fieldList.size(); k ++ ) {
@@ -149,7 +148,7 @@ public class SBEParser {
 		if( numRows > 0 ) {
 			int currentOffset = offset + size;
 
-			List<Field> fieldList = field.getChildFields();
+			List<Field> fieldList = field.getFields();
 			int numFixedSizeFields = field.getNumFixedSizeFields();
 
 			for( short i = 0; i < numRows; i ++ ) {	
@@ -196,7 +195,7 @@ public class SBEParser {
 
 	void wrapGroupObject(SBEObject rowAttr, SBEGroup field, SBEObjectArray parent, int parentIndex) {	
 		int currentOffset = field.getBlockSize() + rowAttr.getValueOffset();
-		List<Field> fieldList = field.getChildFields();
+		List<Field> fieldList = field.getFields();
 		for( int k = field.getNumFixedSizeFields(); k < fieldList.size(); k ++ ) {
 			Field subfield = fieldList.get(k);
 			if( FieldType.GROUP == subfield.getType() ) {

@@ -25,15 +25,13 @@ import com.bwsoft.iris.message.Group;
 
 public class SBEGroup extends SBEField implements Group {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 6161858305622927888L;
 
 	private final SBEHeader header;
 	
 	// child field definition
 	private final LinkedHashMap<Short,Field> groupFieldLookup = new LinkedHashMap<>(); 
+	private final LinkedHashMap<String,Field> groupFieldLookupByName = new LinkedHashMap<>(); 
 	private short numFixedSizeFields;
 	private short numGroupFields;
 	private short numRawFields;
@@ -62,19 +60,31 @@ public class SBEGroup extends SBEField implements Group {
 	short getNumRawFields() {
 		return numRawFields;
 	}
+
+	void buildNameIndex(String name, Field field) {
+		if( groupFieldLookupByName.containsKey(name) ) {
+			throw new IllegalArgumentException("cannot have fields of the same name in a group");
+		}
+		this.groupFieldLookupByName.put(name, field);
+	}
 	
 	@Override
-	public List<Field> getChildFields() {
+	public List<Field> getFields() {
 		return new ArrayList<>(this.groupFieldLookup.values());
 	}
 	
 	@Override
-	public Field getChildField(short id) {
+	public Field getField(short id) {
 		return groupFieldLookup.get(id);
 	}
 
 	@Override
-	public Field addChildField(short id, FieldType type, short arrayLength) {
+	public Field getField(String name) {
+		return groupFieldLookupByName.get(name);
+	}
+	
+	@Override
+	public Field addField(short id, FieldType type, short arrayLength) {
 		if( arrayLength < 1 ) {
 			throw new IllegalArgumentException("zero length is not allowed");
 		}
@@ -100,7 +110,7 @@ public class SBEGroup extends SBEField implements Group {
 		case DOUBLE:
 		case CONSTANT:
 			if( groupFieldLookup.size() > 0 ) {
-				SBEField lastField = (SBEField) getChildFields().get(groupFieldLookup.size()-1);
+				SBEField lastField = (SBEField) getFields().get(groupFieldLookup.size()-1);
 				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 
 			}
 			newField = new SBEField(this, type, arrayLength).setRelativeOffset(currentOffset);
@@ -114,7 +124,7 @@ public class SBEGroup extends SBEField implements Group {
 			break;
 		case COMPOSITE:
 			if( groupFieldLookup.size() > 0 ) {
-				SBEField lastField = (SBEField) getChildFields().get(groupFieldLookup.size()-1);
+				SBEField lastField = (SBEField) getFields().get(groupFieldLookup.size()-1);
 				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 
 			}
 			newField = new SBECompositeField(this,arrayLength).setRelativeOffset(currentOffset);
@@ -138,19 +148,5 @@ public class SBEGroup extends SBEField implements Group {
 			throw new IllegalArgumentException("unrecognized type: "+type.name());
 		}
 		return newField;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("{");
-		sb.append("name:").append(getName());
-		sb.append(",id:").append(this.getID());
-		sb.append(",type:").append(this.getType());
-		for( Field field : getChildFields() ) {
-			sb.append(",").append(field);
-		}
-		sb.append("}");
-		return sb.toString();
 	}
 }

@@ -29,12 +29,9 @@ import com.bwsoft.iris.message.Group;
  *
  */
 public class SBEField implements Field {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	
+	private static final long serialVersionUID = 2777827335710316701L;
+
 	private short id;
 	private String name;
 	private FieldType type;
@@ -182,6 +179,17 @@ public class SBEField implements Field {
 	@Override
 	public Field setName(String name) {
 		this.name = name;
+		
+		// build name index
+		if( null != this.parent ) {
+			if( parent instanceof SBEGroup ) {
+				((SBEGroup) parent).buildNameIndex(name, this);
+			} else if( parent instanceof SBECompositeField ) {
+				((SBECompositeField) parent).buildNameIndex(name, this);
+			} else {
+				throw new InternalError("unrecognized group type in SBE");
+			}
+		}
 		return this;
 	}
 
@@ -198,17 +206,5 @@ public class SBEField implements Field {
 	@Override
 	public Group getParent() {
 		return parent;
-	}
-	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("{");
-		sb.append("name:").append(name);
-		sb.append(",id:").append(id);
-		sb.append(",type:").append(type.name());
-		sb.append(",dimension:").append(length());
-		sb.append("}");
-		return sb.toString();
 	}
 }

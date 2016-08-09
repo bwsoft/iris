@@ -24,7 +24,7 @@ import java.io.Serializable;
  * The field id, field type, its array length, and its parent are determined upon 
  * construction. It is typically created by the group it belongs to. 
  * 
- * @see com.bwsoft.iris.message.Group#addChildField(short, FieldType, short)
+ * @see com.bwsoft.iris.message.Group#addField(short, FieldType, short)
  * 
  * @author yzhou
  *

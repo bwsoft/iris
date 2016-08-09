@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.bwsoft.iris.message.sbe;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -110,7 +112,7 @@ public class SBEObject implements GroupObject {
 
 	@Override
 	public SBEField getField(short fieldId) {
-		SBEField field = (SBEField) ((SBEGroup) getDefinition()).getChildField(fieldId);
+		SBEField field = (SBEField) ((SBEGroup) getDefinition()).getField(fieldId);
 		if( null != field ) 
 			return field;
 		else
@@ -759,7 +761,13 @@ public class SBEObject implements GroupObject {
 	public String getEnumName(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( sfield.isEnumField() ) {
-			String value = getString(field);
+			String value = null;
+			try {
+				value = getString(field, Charset.defaultCharset().name());
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			value = sfield.getEnumName(value);
 			if( null != value ) 
 				return value;
@@ -781,8 +789,17 @@ public class SBEObject implements GroupObject {
 		throw new IllegalArgumentException("not a choice field");
 	}
 
-	@Override
+	@Override 
 	public String getString(Field field) {
+		try {
+			return getString(field, Charset.defaultCharset().name());
+		} catch (UnsupportedEncodingException e) {
+			return null;
+		}
+	}
+	
+	@Override
+	public String getString(Field field, String encodingType) throws UnsupportedEncodingException {
 		SBEField sfield = (SBEField) field;
 		
 		switch( field.getType() ) {
@@ -794,7 +811,7 @@ public class SBEObject implements GroupObject {
 			if( nsize == 0 ) 
 				return null;
 			byte buf[] = new byte[nsize];
-			String str = new String(buf,0,this.getBytes(field, buf, 0, buf.length));
+			String str = new String(buf,0,this.getBytes(field, buf, 0, buf.length), encodingType);
 			return str.trim();
 				
 		case CONSTANT:
@@ -873,64 +890,6 @@ public class SBEObject implements GroupObject {
 		return childFields;
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("{");
-		SBEGroup group = (SBEGroup) this.getDefinition();
-		boolean addComma = false;
-		for( Field field : group.getChildFields() ) {
-			if( addComma ) 
-				sb.append(",");
-			else
-				addComma = true;
-			switch( field.getType() ) {
-			case I8:
-			case U8:
-			case I16:
-			case U16:
-			case I32:
-			case U32:
-			case I64:
-			case U64:
-			case FLOAT:
-			case DOUBLE:
-			case CHAR:
-			case BYTE:
-			case RAW:
-			case CONSTANT:
-				sb.append(simpleFieldToJsonElement(field));
-				break;
-				
-			case GROUP:
-				sb.append("\"").append(field.getName()).append("\"").append(":");
-				sb.append(getGroupArray(field));
-				break;
-				
-			case COMPOSITE:
-				sb.append("\"").append(field.getName()).append("\"").append(":");
-				SBECompositeField compField = (SBECompositeField) field;
-				sb.append("{");
-				boolean addComma1 = false;
-				for( Field cfield : compField.getChildFields() ) {
-					if( addComma1 ) 
-						sb.append(",");
-					else
-						addComma1 = true;
-					sb.append(simpleFieldToJsonElement(cfield));
-				}
-				sb.append("}");
-				break;
-				
-			default:
-				sb.append("\"").append(field.getName()).append("\"").append(":");
-				sb.append("\"INTERNAL ERROR - UNPROCESSED FIELD TYPE\"");
-			}
-		}
-		sb.append("}");
-		return sb.toString();
-	}
-	
 	private boolean validateField(SBEField field) {
 		return  ! safeMode ||
 				( field.getParent() == this.getDefinition() ||
@@ -941,59 +900,5 @@ public class SBEObject implements GroupObject {
 				     field.getParent().getParent() == this.getDefinition()
 				   )
 				 );
-	}
-	
-	private String simpleFieldToJsonElement(Field field) {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("\"").append(field.getName()).append("\"").append(":");
-		switch( field.getType() ) {
-		case I8:
-		case U8:
-		case I16:
-		case U16:
-		case I32:
-		case U32:
-		case I64:
-		case U64:
-		case FLOAT:
-		case DOUBLE:
-			String value = getString(field);
-			if( ((SBEField) field).isEnumField() ) {
-				value = ((SBEField) field).getEnumName(value);
-			}
-			sb.append(value);
-			break;
-			
-		case CHAR:
-			if( ((SBEField) field).isEnumField() ) {
-				sb.append(((SBEField) field).getEnumName(getString(field)));
-				break;
-			} // if not, handle the same way as BYTE
-		case BYTE:
-			sb.append("\"").append(getString(field)).append("\"");
-			break;
-
-		case RAW:
-			String rawField = getString(field);
-			if( null != rawField ) 
-				sb.append("\"").append(getString(field)).append("\"");
-			else
-				sb.append("null");
-			break;
-					
-		case CONSTANT:
-			if( ((SBEField) field).getConstantType() == FieldType.BYTE ||
-					((SBEField) field).getConstantType() == FieldType.CHAR )
-				sb.append("\"").append(((SBEField) field).getConstantValue()).append("\"");
-			else
-				sb.append(((SBEField) field).getConstantValue());
-			break;
-			
-		default:
-			sb.append("\"OPAQUE\"");
-			break;
-		}	
-		return sb.toString();
 	}
 }

@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.bwsoft.iris.message;
 
+import java.io.UnsupportedEncodingException;
+
 public interface GroupObject {
 	
 	/**
@@ -502,6 +504,18 @@ public interface GroupObject {
 	/**
 	 * This is applicable to all type of fields. If the field is a number/raw, it returns its 
 	 * string representation. 
+	 * 
+	 * It is not designed for high performance usage. Use getBytes instead.
+	 * 
+	 * @param field
+	 * @param encodingType the encoding type to convert byte array
+	 * @return
+	 */
+	public String getString(Field field, String encodingType)  throws UnsupportedEncodingException;
+	
+	/**
+	 * This is applicable to all type of fields. If the field is a number/raw, it returns its 
+	 * string representation. It uses the default charset encoding type.
 	 * 
 	 * It is not designed for high performance usage. Use getBytes instead.
 	 * 

@@ -91,6 +91,8 @@ public class SBEMessageSchema {
 	 * If safeMode is true, there are additional checks against the runtime error 
 	 * caused by erroneous logic implementation. 
 	 * 
+	 * This value can also be turned on/off by specifying -DsafeMode=ture/false
+	 * 
 	 * @param safeMode false to turn off the safe mode for better performance
 	 */
 	public static void configSafeMode(boolean safeMode) {
@@ -98,6 +100,34 @@ public class SBEMessageSchema {
 			SBESchemaLoader.safeModeOn();
 		else
 			SBESchemaLoader.safeModeOff();
+	}
+	
+	/**
+	 * Set an optimized value for number of groups. It is a balance between the memory usage
+	 * and occasionally performance impact. There is a performance punishment to increase
+	 * the internal memory when the number of groups in a message exceeds
+	 * this value.
+	 *  
+	 * This value can also be set by specifying -DoptimizedNumOfGroups=128 (default)
+	 * 
+	 * @param number optimized value
+	 */
+	public static void setOptimizedNumOfGroups(int number) {
+		SBESchemaLoader.setOptimizedNumOfGroups(number);
+	}
+	
+	/**
+	 * Set an optimized value for number of group rows. It is a balance between the memory usage
+	 * and occasionally performance impact. There is a performance punishment to increase
+	 * the internal memory when the number of group rows for a group in a message exceeds
+	 * this value.
+	 *  
+	 * This value can also be set by specifying -DoptimizedNumOfGroupRows=8 (default)
+	 * 
+	 * @param number optimized value
+	 */
+	public static void setOptimizedNumOfGroupRows(int number) {
+		SBESchemaLoader.setOptimizedNumOfGroupRows(number);
 	}
 	
 	/**
@@ -224,6 +254,23 @@ public class SBEMessageSchema {
 		}
 	}
 	
+	/**
+	 * Create a SBE message using the provided buffer. 
+	 * 
+	 * @param templateId the target message template ID
+	 * @param buffer the buffer for building SBE message
+	 * @param offset the starting position of the message
+	 * @return a GroupObject to set values for fields in this message or null if the message cannot be created. 
+	 */
+	public GroupObject createSbeBuffer(int templateId, byte[] buffer, int offset) {
+		SBEMessage message = this.lookupTable.get(templateId);
+		if( null != message ) {
+			return message.createSbeBuffer(buffer, offset);
+		} else {
+			return null;
+		}
+	}
+
 	private SBEMessage wrapSbeBuffer(DirectBuffer buffer, int offset) {
 		int schemaId = this.msgHeader.getSchemaId(buffer, offset, order);
 		int templateId = this.msgHeader.getTemplateId(buffer, offset, order);

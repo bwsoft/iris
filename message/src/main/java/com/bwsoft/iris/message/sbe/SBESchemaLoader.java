@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -57,7 +58,17 @@ public class SBESchemaLoader {
 	HashMap<String, SBEEnum> sbeEnums; // contains all the map between enum name and its values
 	HashMap<String, SBESet> sbeChoices; // contains all the map between a set/choice name and its corresponding bit set.
 	
-	private static boolean safeMode = true;
+	static final String SAFE_MODE = "safeMode";
+	static final String OPTIMIZED_NUM_OF_GROUPS = "optimizedNumOfGroups";
+	static final String OPTIMIZED_NUM_OF_GROUP_ROWS = "optimizedNumOfGroupRows";
+	
+	static final Properties properties = new Properties();
+	
+	static {
+		properties.setProperty(SAFE_MODE, System.getProperty(SAFE_MODE, "true"));
+		properties.setProperty(OPTIMIZED_NUM_OF_GROUP_ROWS, System.getProperty(OPTIMIZED_NUM_OF_GROUP_ROWS, "8"));
+		properties.setProperty(OPTIMIZED_NUM_OF_GROUPS, System.getProperty(OPTIMIZED_NUM_OF_GROUPS,"128"));
+	}
 	
 	private SBESchemaLoader() {
 		
@@ -67,7 +78,7 @@ public class SBESchemaLoader {
 	 * Turn on the safe mode that enables the additional check for runtime errors.
 	 */
 	public static void safeModeOn() {
-		safeMode = true;
+		properties.setProperty(SAFE_MODE, "true");
 	}
 	
 	/**
@@ -75,7 +86,31 @@ public class SBESchemaLoader {
 	 * performance.
 	 */
 	public static void safeModeOff() {
-		safeMode = false;
+		properties.setProperty(SAFE_MODE, "false");
+	}
+	
+	/**
+	 * Set an optimized value for number of groups. It is a balance between the memory usage
+	 * and occasionally performance impact. There is a performance punishment to increase
+	 * the internal memory when the number of groups in a message exceeds
+	 * this value.
+	 *  
+	 * @param number optimized value
+	 */
+	public static void setOptimizedNumOfGroups(int number) {
+		properties.setProperty(OPTIMIZED_NUM_OF_GROUPS, String.valueOf(number));
+	}
+	
+	/**
+	 * Set an optimized value for number of group rows. It is a balance between the memory usage
+	 * and occasionally performance impact. There is a performance punishment to increase
+	 * the internal memory when the number of group rows for a group in a message exceeds
+	 * this value.
+	 *  
+	 * @param number optimized value
+	 */
+	public static void setOptimizedNumOfGroupRows(int number) {
+		properties.setProperty(OPTIMIZED_NUM_OF_GROUP_ROWS, String.valueOf(number));		
 	}
 	
 	/**
@@ -133,7 +168,7 @@ public class SBESchemaLoader {
 		// parsing message
 		List<Message> messageList = schema.getMessage();
 		for( Message message : messageList ) {
-			SBEMessage sbeMessage = new SBEMessage(schemaHeader, msgHeader, grpHeader, varHeader, SBESchemaLoader.safeMode);
+			SBEMessage sbeMessage = new SBEMessage(schemaHeader, msgHeader, grpHeader, varHeader);
 			sbeMessage.setID((short) message.getId()).setName(message.getName());
 			lookupTable.put(message.getId(), sbeMessage);
 			

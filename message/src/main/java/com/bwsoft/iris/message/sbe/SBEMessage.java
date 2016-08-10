@@ -54,14 +54,14 @@ public class SBEMessage extends SBEGroup implements Message {
 		}
 	};
 	
-	SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader, boolean safeMode) {
+	SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader) {
 		super(null, header, FieldType.MESSAGE);
 		
 		this.schema = schema;
 		this.msgHeader = header;
 		this.grpHeader = grpHeader;
 		this.varLengthFieldHeader = vHeader;
-		this.safeMode = safeMode;
+		this.safeMode = Boolean.valueOf(SBESchemaLoader.properties.getProperty(SBESchemaLoader.SAFE_MODE));
 	}
 
 	SBEParser getParser() {
@@ -76,10 +76,6 @@ public class SBEMessage extends SBEGroup implements Message {
 		return schema;
 	}
 	
-	public SBEMessageHeader getMsgHeader() {
-		return msgHeader;
-	}
-
 	SBEGroupHeader getGrpHeader() {
 		return grpHeader;
 	}
@@ -122,6 +118,11 @@ public class SBEMessage extends SBEGroup implements Message {
 	
 	@Override
 	public GroupObject createSbeBuffer(ByteBuffer buffer, int offset) {
+		return this.parser.get().createSbeBuffer(buffer, offset).getGroupObject(0);
+	}
+	
+	@Override
+	public GroupObject createSbeBuffer(byte[] buffer, int offset) {
 		return this.parser.get().createSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 }

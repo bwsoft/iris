@@ -30,7 +30,7 @@ import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
  *
  */
 class SBEObjectFactory {
-	private int initialCapacity = 100;
+	private int initialCapacity;
 	
 	private int currentCount;
 	private SBEObjectArray[] pool;
@@ -38,9 +38,9 @@ class SBEObjectFactory {
 	private final UnsafeBuffer buffer;
 	private final ByteOrder order;
 	
-	private final boolean safeMode;
-	
-	SBEObjectFactory(UnsafeBuffer buffer, ByteOrder order, boolean safeMode) {
+	SBEObjectFactory(UnsafeBuffer buffer, ByteOrder order) {
+		this.initialCapacity = Integer.parseInt(SBESchemaLoader.properties.getProperty(SBESchemaLoader.OPTIMIZED_NUM_OF_GROUPS));
+		
 		this.buffer = buffer;
 		this.order = order;
 		
@@ -49,9 +49,8 @@ class SBEObjectFactory {
 		pool = new SBEObjectArray[initialCapacity];
 		
 		for( int i = 0; i < initialCapacity; i ++ ) {
-			pool[i] = new SBEObjectArray(buffer,order, safeMode);
+			pool[i] = new SBEObjectArray(buffer,order);
 		}
-		this.safeMode = safeMode;
 	}
 	
 	SBEObjectArray get() {
@@ -63,7 +62,7 @@ class SBEObjectFactory {
 			SBEObjectArray[] nPool = new SBEObjectArray[pool.length+initialCapacity];
 			System.arraycopy(pool, 0, nPool, 0, pool.length);
 			for( int i = pool.length; i < nPool.length; i ++ ) {
-				nPool[i] = new SBEObjectArray(buffer, order, safeMode);
+				nPool[i] = new SBEObjectArray(buffer, order);
 			}
 			pool = nPool;
 			return get();

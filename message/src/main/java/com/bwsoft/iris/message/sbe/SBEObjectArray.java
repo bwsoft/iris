@@ -37,7 +37,7 @@ import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
  *
  */
 class SBEObjectArray implements GroupObjectArray {
-	private final static int OPTIMIZED_DIMMENSION = 8;
+	private final int OPTIMIZED_DIMMENSION;
 	private SBEField definition; // Field definition, name, id, etc.
 
 	private final UnsafeBuffer buffer;
@@ -51,17 +51,16 @@ class SBEObjectArray implements GroupObjectArray {
 	private short parentRow;
 	private int offset;
 	
-	private final boolean safeMode;
+	SBEObjectArray(UnsafeBuffer buffer, ByteOrder order) {
+		OPTIMIZED_DIMMENSION = Integer.parseInt(SBESchemaLoader.properties.getProperty(SBESchemaLoader.OPTIMIZED_NUM_OF_GROUP_ROWS));
 
-	SBEObjectArray(UnsafeBuffer buffer, ByteOrder order, boolean safeMode) {
 		this.buffer = buffer;
 		this.order = order;
 		this.dimmension = 0;
 		this.attrs = new SBEObject[OPTIMIZED_DIMMENSION];
 		for( int i = 0; i < OPTIMIZED_DIMMENSION; i ++ ) {
-			this.attrs[i] = new SBEObject(this, safeMode);
+			this.attrs[i] = new SBEObject(this);
 		}
-		this.safeMode = safeMode;
 	}
 
 	int getOffset() {
@@ -136,7 +135,7 @@ class SBEObjectArray implements GroupObjectArray {
 				SBEObject[] eAttrs = new SBEObject[attrs.length+OPTIMIZED_DIMMENSION];
 				System.arraycopy(attrs, 0, eAttrs, 0, attrs.length);
 				for( int i = attrs.length; i < eAttrs.length; i ++ ) {
-					eAttrs[i] = new SBEObject(this, this.safeMode);
+					eAttrs[i] = new SBEObject(this);
 				}
 				attrs = eAttrs;
 			}

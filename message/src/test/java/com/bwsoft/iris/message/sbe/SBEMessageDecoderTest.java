@@ -201,7 +201,7 @@ public class SBEMessageDecoderTest {
 		SBEGroupHeader groupHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
 		SBEVarLengthFieldHeader varLengthFieldHeader = new SBEVarLengthFieldHeader(FieldType.U8);
 
-		SBEMessage message = (SBEMessage) new SBEMessage(schema, msgHeader, groupHeader, varLengthFieldHeader, true).setName("Car").setID((short) 1);
+		SBEMessage message = (SBEMessage) new SBEMessage(schema, msgHeader, groupHeader, varLengthFieldHeader).setName("Car").setID((short) 1);
 		message.addField((short)1,FieldType.U64, (short) 1).setName("serialNumber");
 		message.addField((short)2,FieldType.U16, (short) 1).setName("modelYear");
 		message.addField((short)3,FieldType.U8, (short) 1).setName("available");
@@ -341,7 +341,7 @@ public class SBEMessageDecoderTest {
 			Assert.assertEquals(sbeMsgInJson[testCase], MessageUtil.toJsonString(obj, Charset.defaultCharset().name()));
 
 			// move offset to the end and process the next message
-			currentOffset += (obj.getSize() + ((SBEMessage) obj.getDefinition()).getMsgHeader().getSize());
+			currentOffset += (obj.getSize() + ((SBEMessage) obj.getDefinition()).getHeader().getSize());
 			obj = factory.wrapSbeBuffer(sbeBuffer, currentOffset);
 			testCase ++;
 		}

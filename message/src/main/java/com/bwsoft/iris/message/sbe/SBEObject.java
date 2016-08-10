@@ -37,10 +37,10 @@ class SBEObject implements GroupObject {
 	
 	private final boolean safeMode;
 	
-	SBEObject(SBEObjectArray array, boolean safeMode)  {
+	SBEObject(SBEObjectArray array)  {
 		childFields = new LinkedHashMap<>();
 		this.array = array;
-		this.safeMode = safeMode;
+		this.safeMode = Boolean.valueOf(SBESchemaLoader.properties.getProperty(SBESchemaLoader.SAFE_MODE));
 	}
 	
 	void reset() {

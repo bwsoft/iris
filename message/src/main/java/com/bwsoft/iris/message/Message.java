@@ -85,4 +85,15 @@ public interface Message extends Group {
 	 * @return a GroupObject to set fields in the message
 	 */
 	public GroupObject createSbeBuffer(ByteBuffer buffer, int offset);
+	/**
+	 * Create a SBE buffer using the provided buffer. It returns a GroupObject for setting the 
+	 * field values. Typically this is not directly called. Instead 
+	 * one should use a factory method such as {@link SBEMessageSchema#createSbeBuffer(int, ByteBuffer, int)} to wrap 
+	 * a buffer. 
+	 * 
+	 * @param buffer a buffer to hold the SBE message
+	 * @param offset the starting position to create the SBE message in the buffer
+	 * @return a GroupObject to set fields in the message
+	 */
+	public GroupObject createSbeBuffer(byte[] buffer, int offset);
 }

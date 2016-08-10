@@ -40,9 +40,9 @@ class SBEParser {
 		this.message = message;
 		this.buffer = new UnsafeBuffer(new byte[0]);
 		this.order = message.getByteOrder();
-		sbeObjFactory = new SBEObjectFactory(buffer, order, message.safeMode());
+		sbeObjFactory = new SBEObjectFactory(buffer, order);
 		
-		messageHeaderSize = message.getMsgHeader().getSize();
+		messageHeaderSize = message.getHeader().getSize();
 		groupHeaderSize = message.getGrpHeader().getSize();
 		varFieldHeaderSize = message.getVarLengthFieldHeader().getSize();
 	}
@@ -87,8 +87,23 @@ class SBEParser {
 		return parse(offset);
 	}
 	
+	SBEObjectArray createSbeBuffer(byte[] buffer, int offset) {
+		this.buffer.wrap(buffer);
+		
+		// create message header
+		writeMessageHeader(offset);
+		
+		// null out array in its necessary positions
+		int nsize = this.message.getNumGroupFields()*this.message.getGrpHeader().getSize() 
+				+ this.message.getNumRawFields()*this.message.getVarLengthFieldHeader().getSize();
+		int startOffset = this.message.getBlockSize() + offset;
+		SBEObjectArray.fillArray(this.buffer, startOffset, nsize, (byte) 0);
+		
+		return parse(offset);
+	}
+
 	private void writeMessageHeader(int offset) {
-		SBEMessageHeader header = this.message.getMsgHeader();
+		SBEMessageHeader header = (SBEMessageHeader) this.message.getHeader();
 		SBEMessageSchemaHeader schemaHeader = this.message.getMsgSchemaHeader();
 		
 		header.putSchemaId(this.buffer, offset, order, schemaHeader.getId());
@@ -110,7 +125,7 @@ class SBEParser {
 		rowAttr.setOffset(offset);
 		rowAttr.setValueOffset(offset+messageHeaderSize);
 		
-		int blockSize = message.getMsgHeader().getBlockSize(this.buffer, offset, order);
+		int blockSize = ((SBEMessageHeader) message.getHeader()).getBlockSize(this.buffer, offset, order);
 		rowAttr.setBlockSize(blockSize);
 		message.setBlockSize(blockSize);
 

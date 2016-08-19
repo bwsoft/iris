@@ -1,34 +1,21 @@
-/*******************************************************************************
- * Copyright 2016 bwsoft and others
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
 /* Generated SBE (Simple Binary Encoding) message codec */
 package com.github.bwsoft.iris.message.sbe.rl_logic;
 
-import uk.co.real_logic.sbe.codec.java.*;
-import uk.co.real_logic.agrona.DirectBuffer;
+import org.agrona.DirectBuffer;
 
+@javax.annotation.Generated(value = {"com.github.bwsoft.iris.message.sbe.rl_logic.EngineDecoder"})
 @SuppressWarnings("all")
 public class EngineDecoder
 {
     public static final int ENCODED_LENGTH = 6;
     private DirectBuffer buffer;
     private int offset;
+
     public EngineDecoder wrap(final DirectBuffer buffer, final int offset)
     {
         this.buffer = buffer;
         this.offset = offset;
+
         return this;
     }
 
@@ -54,7 +41,7 @@ public class EngineDecoder
 
     public int capacity()
     {
-        return CodecUtil.uint16Get(buffer, offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN);
+        return (buffer.getShort(offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
     }
 
 
@@ -75,7 +62,7 @@ public class EngineDecoder
 
     public short numCylinders()
     {
-        return CodecUtil.uint8Get(buffer, offset + 2);
+        return ((short)(buffer.getByte(offset + 2) & 0xFF));
     }
 
 
@@ -126,7 +113,9 @@ public class EngineDecoder
             throw new IndexOutOfBoundsException("index out of range: index=" + index);
         }
 
-        return CodecUtil.charGet(buffer, this.offset + 3 + (index * 1));
+        final int pos = this.offset + 3 + (index * 1);
+
+        return buffer.getByte(pos);
     }
 
 
@@ -143,7 +132,8 @@ public class EngineDecoder
             throw new IndexOutOfBoundsException("dstOffset out of range for copy: offset=" + dstOffset);
         }
 
-        CodecUtil.charsGet(buffer, this.offset + 3, dst, dstOffset, length);
+        buffer.getBytes(this.offset + 3, dst, dstOffset, length);
+
         return length;
     }
 
@@ -179,6 +169,36 @@ public class EngineDecoder
     {
         final int bytesCopied = Math.min(length, 6);
         System.arraycopy(FUEL_VALUE, 0, dst, offset, bytesCopied);
+
         return bytesCopied;
+    }
+    public String toString()
+    {
+        return appendTo(new StringBuilder(100)).toString();
+    }
+
+    public StringBuilder appendTo(final StringBuilder builder)
+    {
+        builder.append('(');
+        //Token{signal=ENCODING, name='capacity', description='null', id=-1, version=0, encodedLength=2, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=UINT16, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("capacity=");
+        builder.append(capacity());
+        builder.append('|');
+        //Token{signal=ENCODING, name='numCylinders', description='null', id=-1, version=0, encodedLength=1, offset=2, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=UINT8, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("numCylinders=");
+        builder.append(numCylinders());
+        builder.append('|');
+        //Token{signal=ENCODING, name='maxRpm', description='null', id=-1, version=0, encodedLength=0, offset=3, componentTokenCount=1, encoding=Encoding{presence=CONSTANT, primitiveType=UINT16, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=9000, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='manufacturerCode', description='null', id=-1, version=0, encodedLength=3, offset=3, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=CHAR, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("manufacturerCode=");
+        for (int i = 0; i < manufacturerCodeLength() && manufacturerCode(i) > 0; i++)
+        {
+            builder.append((char)manufacturerCode(i));
+        }
+        builder.append('|');
+        //Token{signal=ENCODING, name='fuel', description='null', id=-1, version=0, encodedLength=0, offset=6, componentTokenCount=1, encoding=Encoding{presence=CONSTANT, primitiveType=CHAR, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=Petrol, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append(')');
+
+        return builder;
     }
 }

@@ -1,25 +1,10 @@
-/*******************************************************************************
- * Copyright 2016 bwsoft and others
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *******************************************************************************/
 /* Generated SBE (Simple Binary Encoding) message codec */
 package com.github.bwsoft.iris.message.sbe.rl_logic;
 
-import uk.co.real_logic.sbe.codec.java.*;
-import uk.co.real_logic.agrona.MutableDirectBuffer;
+import org.agrona.MutableDirectBuffer;
+import org.agrona.DirectBuffer;
 
-@GroupOrder({CarEncoder.FuelFiguresEncoder.class, CarEncoder.PerformanceFiguresEncoder.class})
+@javax.annotation.Generated(value = {"com.github.bwsoft.iris.message.sbe.rl_logic.CarEncoder"})
 @SuppressWarnings("all")
 public class CarEncoder
 {
@@ -70,6 +55,7 @@ public class CarEncoder
         this.buffer = buffer;
         this.offset = offset;
         limit(offset + BLOCK_LENGTH);
+
         return this;
     }
 
@@ -85,7 +71,6 @@ public class CarEncoder
 
     public void limit(final int limit)
     {
-        buffer.checkLimit(limit);
         this.limit = limit;
     }
 
@@ -103,11 +88,13 @@ public class CarEncoder
     {
         return 0xfffffffffffffffeL;
     }
+
     public CarEncoder serialNumber(final long value)
     {
-        CodecUtil.uint64Put(buffer, offset + 0, value, java.nio.ByteOrder.LITTLE_ENDIAN);
+        buffer.putLong(offset + 0, value, java.nio.ByteOrder.LITTLE_ENDIAN);
         return this;
     }
+
 
     public static int modelYearNullValue()
     {
@@ -123,19 +110,21 @@ public class CarEncoder
     {
         return 65534;
     }
+
     public CarEncoder modelYear(final int value)
     {
-        CodecUtil.uint16Put(buffer, offset + 8, value, java.nio.ByteOrder.LITTLE_ENDIAN);
+        buffer.putShort(offset + 8, (short)value, java.nio.ByteOrder.LITTLE_ENDIAN);
         return this;
     }
+
     public CarEncoder available(final BooleanType value)
     {
-        CodecUtil.uint8Put(buffer, offset + 10, value.value());
+        buffer.putByte(offset + 10, (byte)value.value());
         return this;
     }
     public CarEncoder code(final Model value)
     {
-        CodecUtil.charPut(buffer, offset + 11, value.value());
+        buffer.putByte(offset + 11, value.value());
         return this;
     }
 
@@ -166,7 +155,8 @@ public class CarEncoder
             throw new IndexOutOfBoundsException("index out of range: index=" + index);
         }
 
-        CodecUtil.int32Put(buffer, this.offset + 12 + (index * 4), value, java.nio.ByteOrder.LITTLE_ENDIAN);
+        final int pos = this.offset + 12 + (index * 4);
+        buffer.putInt(pos, value, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
     public static byte vehicleCodeNullValue()
@@ -196,7 +186,8 @@ public class CarEncoder
             throw new IndexOutOfBoundsException("index out of range: index=" + index);
         }
 
-        CodecUtil.charPut(buffer, this.offset + 32 + (index * 1), value);
+        final int pos = this.offset + 32 + (index * 1);
+        buffer.putByte(pos, value);
     }
 
     public static String vehicleCodeCharacterEncoding()
@@ -211,7 +202,8 @@ public class CarEncoder
             throw new IndexOutOfBoundsException("srcOffset out of range for copy: offset=" + srcOffset);
         }
 
-        CodecUtil.charsPut(buffer, this.offset + 32, src, srcOffset, length);
+        buffer.putBytes(this.offset + 32, src, srcOffset, length);
+
         return this;
     }
 
@@ -256,8 +248,14 @@ public class CarEncoder
         private int index;
         private int offset;
 
-        public void wrap(final CarEncoder parentMessage, final MutableDirectBuffer buffer, final int count)
+        public void wrap(
+            final CarEncoder parentMessage, final MutableDirectBuffer buffer, final int count)
         {
+            if (count < 0 || count > 254)
+            {
+                throw new IllegalArgumentException("count outside allowed range: count=" + count);
+            }
+
             this.parentMessage = parentMessage;
             this.buffer = buffer;
             actingVersion = SCHEMA_VERSION;
@@ -308,11 +306,13 @@ public class CarEncoder
         {
             return 65534;
         }
+
         public FuelFiguresEncoder speed(final int value)
         {
-            CodecUtil.uint16Put(buffer, offset + 0, value, java.nio.ByteOrder.LITTLE_ENDIAN);
+            buffer.putShort(offset + 0, (short)value, java.nio.ByteOrder.LITTLE_ENDIAN);
             return this;
         }
+
 
         public static float mpgNullValue()
         {
@@ -328,11 +328,13 @@ public class CarEncoder
         {
             return 3.4028234663852886E38f;
         }
+
         public FuelFiguresEncoder mpg(final float value)
         {
-            CodecUtil.floatPut(buffer, offset + 2, value, java.nio.ByteOrder.LITTLE_ENDIAN);
+            buffer.putFloat(offset + 2, value, java.nio.ByteOrder.LITTLE_ENDIAN);
             return this;
         }
+
     }
 
     private final PerformanceFiguresEncoder performanceFigures = new PerformanceFiguresEncoder();
@@ -347,7 +349,6 @@ public class CarEncoder
         performanceFigures.wrap(parentMessage, buffer, count);
         return performanceFigures;
     }
-@GroupOrder({PerformanceFiguresEncoder.AccelerationEncoder.class})
 
     public static class PerformanceFiguresEncoder
     {
@@ -361,8 +362,14 @@ public class CarEncoder
         private int index;
         private int offset;
 
-        public void wrap(final CarEncoder parentMessage, final MutableDirectBuffer buffer, final int count)
+        public void wrap(
+            final CarEncoder parentMessage, final MutableDirectBuffer buffer, final int count)
         {
+            if (count < 0 || count > 254)
+            {
+                throw new IllegalArgumentException("count outside allowed range: count=" + count);
+            }
+
             this.parentMessage = parentMessage;
             this.buffer = buffer;
             actingVersion = SCHEMA_VERSION;
@@ -413,11 +420,13 @@ public class CarEncoder
         {
             return (short)110;
         }
+
         public PerformanceFiguresEncoder octaneRating(final short value)
         {
-            CodecUtil.uint8Put(buffer, offset + 0, value);
+            buffer.putByte(offset + 0, (byte)value);
             return this;
         }
+
 
         private final AccelerationEncoder acceleration = new AccelerationEncoder();
 
@@ -444,8 +453,14 @@ public class CarEncoder
             private int index;
             private int offset;
 
-            public void wrap(final CarEncoder parentMessage, final MutableDirectBuffer buffer, final int count)
+            public void wrap(
+                final CarEncoder parentMessage, final MutableDirectBuffer buffer, final int count)
             {
+                if (count < 0 || count > 254)
+                {
+                    throw new IllegalArgumentException("count outside allowed range: count=" + count);
+                }
+
                 this.parentMessage = parentMessage;
                 this.buffer = buffer;
                 actingVersion = SCHEMA_VERSION;
@@ -496,11 +511,13 @@ public class CarEncoder
             {
                 return 65534;
             }
+
             public AccelerationEncoder mph(final int value)
             {
-                CodecUtil.uint16Put(buffer, offset + 0, value, java.nio.ByteOrder.LITTLE_ENDIAN);
+                buffer.putShort(offset + 0, (short)value, java.nio.ByteOrder.LITTLE_ENDIAN);
                 return this;
             }
+
 
             public static float secondsNullValue()
             {
@@ -516,11 +533,13 @@ public class CarEncoder
             {
                 return 3.4028234663852886E38f;
             }
+
             public AccelerationEncoder seconds(final float value)
             {
-                CodecUtil.floatPut(buffer, offset + 2, value, java.nio.ByteOrder.LITTLE_ENDIAN);
+                buffer.putFloat(offset + 2, value, java.nio.ByteOrder.LITTLE_ENDIAN);
                 return this;
             }
+
         }
     }
 
@@ -546,26 +565,41 @@ public class CarEncoder
         return "";
     }
 
-    public int putMake(final uk.co.real_logic.agrona.DirectBuffer src, final int srcOffset, final int length)
+    public static int makeHeaderLength()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, src, srcOffset, length);
-
-        return length;
+        return 1;
     }
 
-    public int putMake(final byte[] src, final int srcOffset, final int length)
+    public CarEncoder putMake(final DirectBuffer src, final int srcOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, src, srcOffset, length);
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
 
-        return length;
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public CarEncoder putMake(final byte[] src, final int srcOffset, final int length)
+    {
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
+
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
     }
 
     public CarEncoder make(final String value)
@@ -581,11 +615,16 @@ public class CarEncoder
         }
 
         final int length = bytes.length;
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, bytes, 0, length);
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
+
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, bytes, 0, length);
 
         return this;
     }
@@ -612,26 +651,41 @@ public class CarEncoder
         return "";
     }
 
-    public int putModel(final uk.co.real_logic.agrona.DirectBuffer src, final int srcOffset, final int length)
+    public static int modelHeaderLength()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, src, srcOffset, length);
-
-        return length;
+        return 1;
     }
 
-    public int putModel(final byte[] src, final int srcOffset, final int length)
+    public CarEncoder putModel(final DirectBuffer src, final int srcOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, src, srcOffset, length);
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
 
-        return length;
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public CarEncoder putModel(final byte[] src, final int srcOffset, final int length)
+    {
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
+
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
     }
 
     public CarEncoder model(final String value)
@@ -647,11 +701,16 @@ public class CarEncoder
         }
 
         final int length = bytes.length;
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, bytes, 0, length);
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
+
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, bytes, 0, length);
 
         return this;
     }
@@ -678,26 +737,41 @@ public class CarEncoder
         return "";
     }
 
-    public int putActivationCode(final uk.co.real_logic.agrona.DirectBuffer src, final int srcOffset, final int length)
+    public static int activationCodeHeaderLength()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, src, srcOffset, length);
-
-        return length;
+        return 1;
     }
 
-    public int putActivationCode(final byte[] src, final int srcOffset, final int length)
+    public CarEncoder putActivationCode(final DirectBuffer src, final int srcOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, src, srcOffset, length);
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
 
-        return length;
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
+    }
+
+    public CarEncoder putActivationCode(final byte[] src, final int srcOffset, final int length)
+    {
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
+
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, src, srcOffset, length);
+
+        return this;
     }
 
     public CarEncoder activationCode(final String value)
@@ -713,12 +787,29 @@ public class CarEncoder
         }
 
         final int length = bytes.length;
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        limit(limit + sizeOfLengthField + length);
-        CodecUtil.uint8Put(buffer, limit, (short)length);
-        buffer.putBytes(limit + sizeOfLengthField, bytes, 0, length);
+        if (length > 254)
+        {
+            throw new IllegalArgumentException("length > max value for type: " + length);
+        }
+
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        parentMessage.limit(limit + headerLength + length);
+        buffer.putByte(limit, (byte)length);
+        buffer.putBytes(limit + headerLength, bytes, 0, length);
 
         return this;
+    }
+    public String toString()
+    {
+        return appendTo(new StringBuilder(100)).toString();
+    }
+
+    public StringBuilder appendTo(final StringBuilder builder)
+    {
+        CarDecoder writer = new CarDecoder();
+        writer.wrap(buffer, offset, BLOCK_LENGTH, SCHEMA_VERSION);
+
+        return writer.appendTo(builder);
     }
 }

@@ -1,34 +1,21 @@
-/*******************************************************************************
- * Copyright 2016 bwsoft and others
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
 /* Generated SBE (Simple Binary Encoding) message codec */
 package com.github.bwsoft.iris.message.sbe.rl_logic;
 
-import uk.co.real_logic.sbe.codec.java.*;
-import uk.co.real_logic.agrona.MutableDirectBuffer;
+import org.agrona.MutableDirectBuffer;
 
+@javax.annotation.Generated(value = {"com.github.bwsoft.iris.message.sbe.rl_logic.GroupSizeEncodingEncoder"})
 @SuppressWarnings("all")
 public class GroupSizeEncodingEncoder
 {
     public static final int ENCODED_LENGTH = 3;
     private MutableDirectBuffer buffer;
     private int offset;
+
     public GroupSizeEncodingEncoder wrap(final MutableDirectBuffer buffer, final int offset)
     {
         this.buffer = buffer;
         this.offset = offset;
+
         return this;
     }
 
@@ -51,11 +38,13 @@ public class GroupSizeEncodingEncoder
     {
         return 65534;
     }
+
     public GroupSizeEncodingEncoder blockLength(final int value)
     {
-        CodecUtil.uint16Put(buffer, offset + 0, value, java.nio.ByteOrder.LITTLE_ENDIAN);
+        buffer.putShort(offset + 0, (short)value, java.nio.ByteOrder.LITTLE_ENDIAN);
         return this;
     }
+
 
     public static short numInGroupNullValue()
     {
@@ -71,9 +60,23 @@ public class GroupSizeEncodingEncoder
     {
         return (short)254;
     }
+
     public GroupSizeEncodingEncoder numInGroup(final short value)
     {
-        CodecUtil.uint8Put(buffer, offset + 2, value);
+        buffer.putByte(offset + 2, (byte)value);
         return this;
+    }
+
+    public String toString()
+    {
+        return appendTo(new StringBuilder(100)).toString();
+    }
+
+    public StringBuilder appendTo(final StringBuilder builder)
+    {
+        GroupSizeEncodingDecoder writer = new GroupSizeEncodingDecoder();
+        writer.wrap(buffer, offset);
+
+        return writer.appendTo(builder);
     }
 }

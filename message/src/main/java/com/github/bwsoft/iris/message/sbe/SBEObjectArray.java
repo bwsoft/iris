@@ -17,11 +17,11 @@ package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
+import org.agrona.concurrent.UnsafeBuffer;
+
 import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.GroupObject;
 import com.github.bwsoft.iris.message.GroupObjectArray;
-
-import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
  * A SBEObject is a representation of a SBE message field on the byte array. It contains all

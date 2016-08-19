@@ -17,11 +17,11 @@ package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
+import org.agrona.DirectBuffer;
+import org.agrona.concurrent.UnsafeBuffer;
+
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
-
-import uk.co.real_logic.agrona.DirectBuffer;
-import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
  * Header for the SBE message.

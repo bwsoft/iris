@@ -18,11 +18,11 @@ package com.github.bwsoft.iris.message.sbe;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import org.agrona.DirectBuffer;
+
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.GroupObject;
 import com.github.bwsoft.iris.message.Message;
-
-import uk.co.real_logic.agrona.DirectBuffer;
 
 /**
  * The representation of a SBE message. It contains the definition of a SBE message. 

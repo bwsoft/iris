@@ -22,13 +22,14 @@ import java.util.HashMap;
 
 import javax.xml.bind.JAXBException;
 
+import org.agrona.DirectBuffer;
+import org.agrona.concurrent.UnsafeBuffer;
+
 import com.github.bwsoft.iris.message.sbe.SBEMessage;
 import com.github.bwsoft.iris.message.sbe.SBEMessageHeader;
 import com.github.bwsoft.iris.message.sbe.SBEMessageSchemaHeader;
 import com.github.bwsoft.iris.message.sbe.SBESchemaLoader;
 
-import uk.co.real_logic.agrona.DirectBuffer;
-import uk.co.real_logic.agrona.concurrent.UnsafeBuffer;
 
 /**
  * A factory class to create SBE messages within a scope of a message schema.

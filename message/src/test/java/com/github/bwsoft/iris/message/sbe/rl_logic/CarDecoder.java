@@ -1,25 +1,10 @@
-/*******************************************************************************
- * Copyright 2016 bwsoft and others
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
 /* Generated SBE (Simple Binary Encoding) message codec */
 package com.github.bwsoft.iris.message.sbe.rl_logic;
 
-import uk.co.real_logic.sbe.codec.java.*;
-import uk.co.real_logic.agrona.DirectBuffer;
+import org.agrona.MutableDirectBuffer;
+import org.agrona.DirectBuffer;
 
-@GroupOrder({CarDecoder.FuelFiguresDecoder.class, CarDecoder.PerformanceFiguresDecoder.class})
+@javax.annotation.Generated(value = {"com.github.bwsoft.iris.message.sbe.rl_logic.CarDecoder"})
 @SuppressWarnings("all")
 public class CarDecoder
 {
@@ -89,7 +74,6 @@ public class CarDecoder
 
     public void limit(final int limit)
     {
-        buffer.checkLimit(limit);
         this.limit = limit;
     }
 
@@ -127,7 +111,7 @@ public class CarDecoder
 
     public long serialNumber()
     {
-        return CodecUtil.uint64Get(buffer, offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN);
+        return buffer.getLong(offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
 
@@ -165,7 +149,7 @@ public class CarDecoder
 
     public int modelYear()
     {
-        return CodecUtil.uint16Get(buffer, offset + 8, java.nio.ByteOrder.LITTLE_ENDIAN);
+        return (buffer.getShort(offset + 8, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
     }
 
 
@@ -188,7 +172,7 @@ public class CarDecoder
 
     public BooleanType available()
     {
-        return BooleanType.get(CodecUtil.uint8Get(buffer, offset + 10));
+        return BooleanType.get(((short)(buffer.getByte(offset + 10) & 0xFF)));
     }
 
 
@@ -211,7 +195,7 @@ public class CarDecoder
 
     public Model code()
     {
-        return Model.get(CodecUtil.charGet(buffer, offset + 11));
+        return Model.get(buffer.getByte(offset + 11));
     }
 
 
@@ -259,7 +243,9 @@ public class CarDecoder
             throw new IndexOutOfBoundsException("index out of range: index=" + index);
         }
 
-        return CodecUtil.int32Get(buffer, this.offset + 12 + (index * 4), java.nio.ByteOrder.LITTLE_ENDIAN);
+        final int pos = this.offset + 12 + (index * 4);
+
+        return buffer.getInt(pos, java.nio.ByteOrder.LITTLE_ENDIAN);
     }
 
 
@@ -307,7 +293,9 @@ public class CarDecoder
             throw new IndexOutOfBoundsException("index out of range: index=" + index);
         }
 
-        return CodecUtil.charGet(buffer, this.offset + 32 + (index * 1));
+        final int pos = this.offset + 32 + (index * 1);
+
+        return buffer.getByte(pos);
     }
 
 
@@ -324,7 +312,8 @@ public class CarDecoder
             throw new IndexOutOfBoundsException("dstOffset out of range for copy: offset=" + dstOffset);
         }
 
-        CodecUtil.charsGet(buffer, this.offset + 32, dst, dstOffset, length);
+        buffer.getBytes(this.offset + 32, dst, dstOffset, length);
+
         return length;
     }
 
@@ -393,7 +382,7 @@ public class CarDecoder
     }
 
     public static class FuelFiguresDecoder
-    implements Iterable<FuelFiguresDecoder>, java.util.Iterator<FuelFiguresDecoder>
+        implements Iterable<FuelFiguresDecoder>, java.util.Iterator<FuelFiguresDecoder>
     {
         private static final int HEADER_SIZE = 3;
         private final GroupSizeEncodingDecoder dimensions = new GroupSizeEncodingDecoder();
@@ -437,25 +426,21 @@ public class CarDecoder
             return count;
         }
 
-        @Override
         public java.util.Iterator<FuelFiguresDecoder> iterator()
         {
             return this;
         }
 
-        @Override
         public void remove()
         {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public boolean hasNext()
         {
             return (index + 1) < count;
         }
 
-        @Override
         public FuelFiguresDecoder next()
         {
             if (index + 1 >= count)
@@ -504,7 +489,7 @@ public class CarDecoder
 
         public int speed()
         {
-            return CodecUtil.uint16Get(buffer, offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN);
+            return (buffer.getShort(offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
         }
 
 
@@ -542,9 +527,30 @@ public class CarDecoder
 
         public float mpg()
         {
-            return CodecUtil.floatGet(buffer, offset + 2, java.nio.ByteOrder.LITTLE_ENDIAN);
+            return buffer.getFloat(offset + 2, java.nio.ByteOrder.LITTLE_ENDIAN);
         }
 
+
+        public String toString()
+        {
+            return appendTo(new StringBuilder(100)).toString();
+        }
+
+        public StringBuilder appendTo(final StringBuilder builder)
+        {
+            builder.append('(');
+            //Token{signal=BEGIN_FIELD, name='speed', description='null', id=10, version=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            //Token{signal=ENCODING, name='uint16', description='null', id=-1, version=0, encodedLength=2, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=UINT16, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            builder.append("speed=");
+            builder.append(speed());
+            builder.append('|');
+            //Token{signal=BEGIN_FIELD, name='mpg', description='null', id=11, version=0, encodedLength=0, offset=2, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            //Token{signal=ENCODING, name='float', description='null', id=-1, version=0, encodedLength=4, offset=2, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=FLOAT, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            builder.append("mpg=");
+            builder.append(mpg());
+            builder.append(')');
+            return builder;
+        }
     }
 
     private final PerformanceFiguresDecoder performanceFigures = new PerformanceFiguresDecoder();
@@ -559,10 +565,9 @@ public class CarDecoder
         performanceFigures.wrap(parentMessage, buffer);
         return performanceFigures;
     }
-@GroupOrder({PerformanceFiguresDecoder.AccelerationDecoder.class})
 
     public static class PerformanceFiguresDecoder
-    implements Iterable<PerformanceFiguresDecoder>, java.util.Iterator<PerformanceFiguresDecoder>
+        implements Iterable<PerformanceFiguresDecoder>, java.util.Iterator<PerformanceFiguresDecoder>
     {
         private static final int HEADER_SIZE = 3;
         private final GroupSizeEncodingDecoder dimensions = new GroupSizeEncodingDecoder();
@@ -606,25 +611,21 @@ public class CarDecoder
             return count;
         }
 
-        @Override
         public java.util.Iterator<PerformanceFiguresDecoder> iterator()
         {
             return this;
         }
 
-        @Override
         public void remove()
         {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public boolean hasNext()
         {
             return (index + 1) < count;
         }
 
-        @Override
         public PerformanceFiguresDecoder next()
         {
             if (index + 1 >= count)
@@ -673,7 +674,7 @@ public class CarDecoder
 
         public short octaneRating()
         {
-            return CodecUtil.uint8Get(buffer, offset + 0);
+            return ((short)(buffer.getByte(offset + 0) & 0xFF));
         }
 
 
@@ -691,7 +692,7 @@ public class CarDecoder
         }
 
         public static class AccelerationDecoder
-        implements Iterable<AccelerationDecoder>, java.util.Iterator<AccelerationDecoder>
+            implements Iterable<AccelerationDecoder>, java.util.Iterator<AccelerationDecoder>
         {
             private static final int HEADER_SIZE = 3;
             private final GroupSizeEncodingDecoder dimensions = new GroupSizeEncodingDecoder();
@@ -735,25 +736,21 @@ public class CarDecoder
                 return count;
             }
 
-            @Override
             public java.util.Iterator<AccelerationDecoder> iterator()
             {
                 return this;
             }
 
-            @Override
             public void remove()
             {
                 throw new UnsupportedOperationException();
             }
 
-            @Override
             public boolean hasNext()
             {
                 return (index + 1) < count;
             }
 
-            @Override
             public AccelerationDecoder next()
             {
                 if (index + 1 >= count)
@@ -802,7 +799,7 @@ public class CarDecoder
 
             public int mph()
             {
-                return CodecUtil.uint16Get(buffer, offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN);
+                return (buffer.getShort(offset + 0, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF);
             }
 
 
@@ -840,9 +837,60 @@ public class CarDecoder
 
             public float seconds()
             {
-                return CodecUtil.floatGet(buffer, offset + 2, java.nio.ByteOrder.LITTLE_ENDIAN);
+                return buffer.getFloat(offset + 2, java.nio.ByteOrder.LITTLE_ENDIAN);
             }
 
+
+            public String toString()
+            {
+                return appendTo(new StringBuilder(100)).toString();
+            }
+
+            public StringBuilder appendTo(final StringBuilder builder)
+            {
+                builder.append('(');
+                //Token{signal=BEGIN_FIELD, name='mph', description='null', id=15, version=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+                //Token{signal=ENCODING, name='uint16', description='null', id=-1, version=0, encodedLength=2, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=UINT16, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+                builder.append("mph=");
+                builder.append(mph());
+                builder.append('|');
+                //Token{signal=BEGIN_FIELD, name='seconds', description='null', id=16, version=0, encodedLength=0, offset=2, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+                //Token{signal=ENCODING, name='float', description='null', id=-1, version=0, encodedLength=4, offset=2, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=FLOAT, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+                builder.append("seconds=");
+                builder.append(seconds());
+                builder.append(')');
+                return builder;
+            }
+        }
+
+        public String toString()
+        {
+            return appendTo(new StringBuilder(100)).toString();
+        }
+
+        public StringBuilder appendTo(final StringBuilder builder)
+        {
+            builder.append('(');
+            //Token{signal=BEGIN_FIELD, name='octaneRating', description='null', id=13, version=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            //Token{signal=ENCODING, name='Ron', description='null', id=-1, version=0, encodedLength=1, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=UINT8, byteOrder=LITTLE_ENDIAN, minValue=90, maxValue=110, nullValue=null, constValue=null, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+            builder.append("octaneRating=");
+            builder.append(octaneRating());
+            builder.append('|');
+            //Token{signal=BEGIN_GROUP, name='acceleration', description='null', id=14, version=0, encodedLength=6, offset=1, componentTokenCount=12, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+            builder.append("acceleration=[");
+            AccelerationDecoder acceleration = acceleration();
+            if (acceleration.count() > 0)
+            {
+                while (acceleration.hasNext())
+                {
+                    acceleration.next().appendTo(builder);
+                    builder.append(',');
+                }
+                builder.setLength(builder.length() - 1);
+            }
+            builder.append(']');
+            builder.append(')');
+            return builder;
         }
     }
 
@@ -875,48 +923,42 @@ public class CarDecoder
 
     public int makeLength()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-
-        return CodecUtil.uint8Get(buffer, limit);
+        final int limit = parentMessage.limit();
+        return (int)((short)(buffer.getByte(limit) & 0xFF));
     }
 
-    public int getMake(final uk.co.real_logic.agrona.MutableDirectBuffer dst, final int dstOffset, final int length)
+    public int getMake(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
         final int bytesCopied = Math.min(length, dataLength);
-        limit(limit + sizeOfLengthField + dataLength);
-        buffer.getBytes(limit + sizeOfLengthField, dst, dstOffset, bytesCopied);
+        parentMessage.limit(limit + headerLength + dataLength);
+        buffer.getBytes(limit + headerLength, dst, dstOffset, bytesCopied);
 
         return bytesCopied;
     }
 
     public int getMake(final byte[] dst, final int dstOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
         final int bytesCopied = Math.min(length, dataLength);
-        limit(limit + sizeOfLengthField + dataLength);
-        buffer.getBytes(limit + sizeOfLengthField, dst, dstOffset, bytesCopied);
+        parentMessage.limit(limit + headerLength + dataLength);
+        buffer.getBytes(limit + headerLength, dst, dstOffset, bytesCopied);
 
         return bytesCopied;
     }
 
     public String make()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
-        limit(limit + sizeOfLengthField + dataLength);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
+        parentMessage.limit(limit + headerLength + dataLength);
         final byte[] tmp = new byte[dataLength];
-        buffer.getBytes(limit + sizeOfLengthField, tmp, 0, dataLength);
+        buffer.getBytes(limit + headerLength, tmp, 0, dataLength);
 
         final String value;
         try
@@ -960,48 +1002,42 @@ public class CarDecoder
 
     public int modelLength()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-
-        return CodecUtil.uint8Get(buffer, limit);
+        final int limit = parentMessage.limit();
+        return (int)((short)(buffer.getByte(limit) & 0xFF));
     }
 
-    public int getModel(final uk.co.real_logic.agrona.MutableDirectBuffer dst, final int dstOffset, final int length)
+    public int getModel(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
         final int bytesCopied = Math.min(length, dataLength);
-        limit(limit + sizeOfLengthField + dataLength);
-        buffer.getBytes(limit + sizeOfLengthField, dst, dstOffset, bytesCopied);
+        parentMessage.limit(limit + headerLength + dataLength);
+        buffer.getBytes(limit + headerLength, dst, dstOffset, bytesCopied);
 
         return bytesCopied;
     }
 
     public int getModel(final byte[] dst, final int dstOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
         final int bytesCopied = Math.min(length, dataLength);
-        limit(limit + sizeOfLengthField + dataLength);
-        buffer.getBytes(limit + sizeOfLengthField, dst, dstOffset, bytesCopied);
+        parentMessage.limit(limit + headerLength + dataLength);
+        buffer.getBytes(limit + headerLength, dst, dstOffset, bytesCopied);
 
         return bytesCopied;
     }
 
     public String model()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
-        limit(limit + sizeOfLengthField + dataLength);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
+        parentMessage.limit(limit + headerLength + dataLength);
         final byte[] tmp = new byte[dataLength];
-        buffer.getBytes(limit + sizeOfLengthField, tmp, 0, dataLength);
+        buffer.getBytes(limit + headerLength, tmp, 0, dataLength);
 
         final String value;
         try
@@ -1045,48 +1081,42 @@ public class CarDecoder
 
     public int activationCodeLength()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-
-        return CodecUtil.uint8Get(buffer, limit);
+        final int limit = parentMessage.limit();
+        return (int)((short)(buffer.getByte(limit) & 0xFF));
     }
 
-    public int getActivationCode(final uk.co.real_logic.agrona.MutableDirectBuffer dst, final int dstOffset, final int length)
+    public int getActivationCode(final MutableDirectBuffer dst, final int dstOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
         final int bytesCopied = Math.min(length, dataLength);
-        limit(limit + sizeOfLengthField + dataLength);
-        buffer.getBytes(limit + sizeOfLengthField, dst, dstOffset, bytesCopied);
+        parentMessage.limit(limit + headerLength + dataLength);
+        buffer.getBytes(limit + headerLength, dst, dstOffset, bytesCopied);
 
         return bytesCopied;
     }
 
     public int getActivationCode(final byte[] dst, final int dstOffset, final int length)
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
         final int bytesCopied = Math.min(length, dataLength);
-        limit(limit + sizeOfLengthField + dataLength);
-        buffer.getBytes(limit + sizeOfLengthField, dst, dstOffset, bytesCopied);
+        parentMessage.limit(limit + headerLength + dataLength);
+        buffer.getBytes(limit + headerLength, dst, dstOffset, bytesCopied);
 
         return bytesCopied;
     }
 
     public String activationCode()
     {
-        final int sizeOfLengthField = 1;
-        final int limit = limit();
-        buffer.checkLimit(limit + sizeOfLengthField);
-        final int dataLength = CodecUtil.uint8Get(buffer, limit);
-        limit(limit + sizeOfLengthField + dataLength);
+        final int headerLength = 1;
+        final int limit = parentMessage.limit();
+        final int dataLength = (int)((short)(buffer.getByte(limit) & 0xFF));
+        parentMessage.limit(limit + headerLength + dataLength);
         final byte[] tmp = new byte[dataLength];
-        buffer.getBytes(limit + sizeOfLengthField, tmp, 0, dataLength);
+        buffer.getBytes(limit + headerLength, tmp, 0, dataLength);
 
         final String value;
         try
@@ -1099,5 +1129,131 @@ public class CarDecoder
         }
 
         return value;
+    }
+
+    public String toString()
+    {
+        return appendTo(new StringBuilder(100)).toString();
+    }
+
+    public StringBuilder appendTo(final StringBuilder builder)
+    {
+        final int originalLimit = limit();
+        limit(offset + actingBlockLength);
+        builder.append("[Car](sbeTemplateId=");
+        builder.append(TEMPLATE_ID);
+        builder.append("|sbeSchemaId=");
+        builder.append(SCHEMA_ID);
+        builder.append("|sbeSchemaVersion=");
+        if (actingVersion != SCHEMA_VERSION)
+        {
+            builder.append(actingVersion);
+            builder.append('/');
+        }
+        builder.append(SCHEMA_VERSION);
+        builder.append("|sbeBlockLength=");
+        if (actingBlockLength != BLOCK_LENGTH)
+        {
+            builder.append(actingBlockLength);
+            builder.append('/');
+        }
+        builder.append(BLOCK_LENGTH);
+        builder.append("):");
+        //Token{signal=BEGIN_FIELD, name='serialNumber', description='null', id=1, version=0, encodedLength=0, offset=0, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='uint64', description='null', id=-1, version=0, encodedLength=8, offset=0, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=UINT64, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("serialNumber=");
+        builder.append(serialNumber());
+        builder.append('|');
+        //Token{signal=BEGIN_FIELD, name='modelYear', description='null', id=2, version=0, encodedLength=0, offset=8, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='ModelYear', description='null', id=-1, version=0, encodedLength=2, offset=8, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=UINT16, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("modelYear=");
+        builder.append(modelYear());
+        builder.append('|');
+        //Token{signal=BEGIN_FIELD, name='available', description='null', id=3, version=0, encodedLength=0, offset=10, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='BooleanType', description='null', id=-1, version=0, encodedLength=1, offset=10, componentTokenCount=4, encoding=Encoding{presence=REQUIRED, primitiveType=UINT8, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.append("available=");
+        builder.append(available());
+        builder.append('|');
+        //Token{signal=BEGIN_FIELD, name='code', description='null', id=4, version=0, encodedLength=0, offset=11, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_ENUM, name='Model', description='null', id=-1, version=0, encodedLength=1, offset=11, componentTokenCount=5, encoding=Encoding{presence=REQUIRED, primitiveType=CHAR, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.append("code=");
+        builder.append(code());
+        builder.append('|');
+        //Token{signal=BEGIN_FIELD, name='someNumbers', description='null', id=5, version=0, encodedLength=0, offset=12, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='someNumbers', description='null', id=-1, version=0, encodedLength=20, offset=12, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=INT32, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='UTF-8', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("someNumbers=");
+        builder.append('[');
+        if (someNumbersLength() > 0)
+        {
+            for (int i = 0; i < someNumbersLength(); i++)
+            {
+                builder.append(someNumbers(i));
+                builder.append(',');
+            }
+            builder.setLength(builder.length() - 1);
+        }
+        builder.append(']');
+        builder.append('|');
+        //Token{signal=BEGIN_FIELD, name='vehicleCode', description='null', id=6, version=0, encodedLength=0, offset=32, componentTokenCount=3, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=ENCODING, name='VehicleCode', description='null', id=-1, version=0, encodedLength=6, offset=32, componentTokenCount=1, encoding=Encoding{presence=REQUIRED, primitiveType=CHAR, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='ASCII', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("vehicleCode=");
+        for (int i = 0; i < vehicleCodeLength() && vehicleCode(i) > 0; i++)
+        {
+            builder.append((char)vehicleCode(i));
+        }
+        builder.append('|');
+        //Token{signal=BEGIN_FIELD, name='extras', description='null', id=7, version=0, encodedLength=0, offset=38, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_SET, name='OptionalExtras', description='null', id=-1, version=0, encodedLength=1, offset=38, componentTokenCount=5, encoding=Encoding{presence=REQUIRED, primitiveType=UINT8, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.append("extras=");
+        builder.append(extras());
+        builder.append('|');
+        //Token{signal=BEGIN_FIELD, name='engine', description='null', id=8, version=0, encodedLength=0, offset=39, componentTokenCount=9, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        //Token{signal=BEGIN_COMPOSITE, name='Engine', description='null', id=-1, version=0, encodedLength=6, offset=39, componentTokenCount=7, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.append("engine=");
+        engine().appendTo(builder);
+        builder.append('|');
+        //Token{signal=BEGIN_GROUP, name='fuelFigures', description='null', id=9, version=0, encodedLength=6, offset=45, componentTokenCount=12, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.append("fuelFigures=[");
+        FuelFiguresDecoder fuelFigures = fuelFigures();
+        if (fuelFigures.count() > 0)
+        {
+            while (fuelFigures.hasNext())
+            {
+                fuelFigures.next().appendTo(builder);
+                builder.append(',');
+            }
+            builder.setLength(builder.length() - 1);
+        }
+        builder.append(']');
+        builder.append('|');
+        //Token{signal=BEGIN_GROUP, name='performanceFigures', description='null', id=12, version=0, encodedLength=1, offset=-1, componentTokenCount=21, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='null', timeUnit=null, semanticType='null'}}
+        builder.append("performanceFigures=[");
+        PerformanceFiguresDecoder performanceFigures = performanceFigures();
+        if (performanceFigures.count() > 0)
+        {
+            while (performanceFigures.hasNext())
+            {
+                performanceFigures.next().appendTo(builder);
+                builder.append(',');
+            }
+            builder.setLength(builder.length() - 1);
+        }
+        builder.append(']');
+        builder.append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='make', description='null', id=17, version=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("make=");
+        builder.append(make());
+        builder.append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='model', description='null', id=18, version=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("model=");
+        builder.append(model());
+        builder.append('|');
+        //Token{signal=BEGIN_VAR_DATA, name='activationCode', description='null', id=19, version=0, encodedLength=0, offset=-1, componentTokenCount=6, encoding=Encoding{presence=REQUIRED, primitiveType=null, byteOrder=LITTLE_ENDIAN, minValue=null, maxValue=null, nullValue=null, constValue=null, characterEncoding='null', epoch='unix', timeUnit=nanosecond, semanticType='null'}}
+        builder.append("activationCode=");
+        builder.append(activationCode());
+
+        limit(originalLimit);
+
+        return builder;
     }
 }

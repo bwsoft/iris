@@ -56,7 +56,7 @@ public interface Group extends Field {
 	public Field addField(short id, FieldType type, short arrayLength);	
 
 	/* (non-Javadoc)
-	 * @see com.bwsoft.iris.message.Field#length()
+	 * @see com.github.bwsoft.iris.message.Field#length()
 	 */
 	public default short length() {
 		return 1;

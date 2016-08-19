@@ -26,7 +26,7 @@ import uk.co.real_logic.agrona.DirectBuffer;
 
 /**
  * The representation of a SBE message. It contains the definition of a SBE message. 
- * Use {@link com.github.bwsoft.iris.util.MessageUtil#toJsonString(com.bwsoft.iris.message.Group)}
+ * Use {@link com.github.bwsoft.iris.util.MessageUtil#toJsonString(com.github.bwsoft.iris.message.Group)}
  * to obtain the Json representation of the message definition. It provides wrap calls
  * to wrap the existing SBE message buffer for read and modification. It provides create 
  * calls to create a SBE message. Typically do not make direct calls to wraps or creates in

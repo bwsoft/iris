@@ -2,6 +2,8 @@
  * 
  */
 /**
+ * Utilities for copying and printing messages. 
+ * 
  * @author yzhou
  *
  */

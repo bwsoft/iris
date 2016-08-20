@@ -12,7 +12,7 @@ Use following maven dependency to use the codec
 	  <artifactId>message</artifactId>
 	  <version>1.0.0.0</version>
 	</dependency>
-	```
+```
 	
 	For quick start, take a look at the sample code [Car.java] (https://github.com/bwsoft/iris/blob/master/sample/src/main/java/com/github/bwsoft/iris/sample/Car.java) which is based upon a sample SBE XML template, [example-schema.xml](https://github.com/bwsoft/iris/blob/master/sample/src/main/resources/example-schema.xml). It requires a basic understanding of the SBE and the structure of a SBE XML template. A brief tutorial is [here](https://github.com/bwsoft/iris/wiki/Brief-Introduction-on-SBE).
 

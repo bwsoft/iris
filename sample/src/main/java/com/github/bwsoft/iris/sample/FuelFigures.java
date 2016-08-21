@@ -54,7 +54,7 @@ public class FuelFigures {
 		figures.clear();
 		GroupObjectArray fuelFiguresGroup = msgObj.getGroupArray(fuelFigures);
 		for( int i = 0; i < fuelFiguresGroup.getNumOfGroups(); i ++ ) {
-			GroupObject aFigureObj = fuelFiguresGroup.getGroupObject(0);
+			GroupObject aFigureObj = fuelFiguresGroup.getGroupObject(i);
 			FuelFigure aFigure = new FuelFigure();
 			aFigure.speed = aFigureObj.getFloat(speed);
 			aFigure.mpg = aFigureObj.getFloat(mpg);

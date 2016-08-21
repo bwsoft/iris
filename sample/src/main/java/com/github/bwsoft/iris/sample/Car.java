@@ -17,12 +17,15 @@ package com.github.bwsoft.iris.sample;
 
 import java.nio.ByteBuffer;
 import java.util.BitSet;
+import java.util.List;
 
 import com.github.bwsoft.iris.message.Group;
 import com.github.bwsoft.iris.message.GroupObject;
 import com.github.bwsoft.iris.message.GroupObjectArray;
+import com.github.bwsoft.iris.message.Message;
 import com.github.bwsoft.iris.message.SBEMessageSchema;
 import com.github.bwsoft.iris.message.sbe.SBEMessage;
+import com.github.bwsoft.iris.sample.FuelFigures.FuelFigure;
 import com.github.bwsoft.iris.util.MessageUtil;
 
 /**
@@ -87,7 +90,8 @@ public class Car {
 	 * @param offset
 	 * @return the length of the encoded message
 	 */
-	public int encode(ByteBuffer buffer, int offset) {
+	public static int encode(ByteBuffer buffer, int offset) {
+		
 		// create the SBE message for Car
 		GroupObject msgObj = schema.createSbeBuffer(1, buffer, offset);
 		System.out.println("Empty message: "+MessageUtil.toJsonString(msgObj));
@@ -176,7 +180,7 @@ public class Car {
 	 * @param buffer
 	 * @param offset
 	 */
-	public void decode(ByteBuffer buffer, int offset) {
+	public static void decode(ByteBuffer buffer, int offset) {
 		// wrap the SBE message
 		GroupObject msgObj = schema.wrapSbeBuffer(buffer, offset);
 		System.out.println("The message template Id: "+msgObj.getDefinition().getID());
@@ -243,11 +247,17 @@ public class Car {
 		System.out.println("Field: performanceFigures[0].accleration[0], Value: mph="+mph.intValue()+", seconds="+seconds.floatValue());
 	}
 	
-	public void modify(ByteBuffer buffer, int offset) {
+	/**
+	 * Modify a SBE message
+	 * 
+	 * @param buffer
+	 * @param offset
+	 */
+	public static void modify(ByteBuffer buffer, int offset) {
 		// wrap the SBE message
 		GroupObject msgObj = schema.wrapSbeBuffer(buffer, offset);
 		System.out.println("The message template Id: "+msgObj.getDefinition().getID());
-		System.out.println("The message is: "+MessageUtil.toJsonString(msgObj));
+		System.out.println("The message is:         "+MessageUtil.toJsonString(msgObj));
 		
 		// Field: modelYear - to update to 2018
 		msgObj.setNumber(msgObj.getField((short) 2), 2018); 
@@ -279,13 +289,40 @@ public class Car {
 		System.out.println("The altered message is: "+MessageUtil.toJsonString(msgObj));
 	}
 	
+	/**
+	 * This demonstrates on how to cache the field definitions for better performance. See 
+	 * {@link FuelFigures} for the code structure.
+	 *  
+	 * @param sbeBuffer
+	 * @param offset
+	 */
+	public static void demonstrateOfBetterCoding(ByteBuffer sbeBuffer, int offset) {
+		// obtain the message definition from the schema
+		Message sbeMessage = schema.getMsgLookup().get(1);
+		
+		// create and init FuelFigures
+		FuelFigures fuelFigures = new FuelFigures();
+		fuelFigures.init(sbeMessage);
+		
+		// Obtain the GroupObject from the sbeBuffer
+		GroupObject msgObj = schema.wrapSbeBuffer(sbeBuffer, offset);
+		if( null != msgObj && 1 == msgObj.getDefinition().getID() ) {
+			// Use FuelFigures to obtain the fuel figures from Car message
+			List<FuelFigure> figures = fuelFigures.getFuelFigures(msgObj);
+			for( FuelFigure figure : figures ) {
+				System.out.format("Fuel figure: speed=%d mpg=%f\n", figure.speed, figure.mpg);
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
+		// a direct buffer to hold SBE message
 		ByteBuffer buffer = ByteBuffer.allocateDirect(1028);
 		
-		Car car = new Car();
-		
 		// populate buffer with a sbe message
-		int msgLength = car.encode(buffer, 0);
+		System.out.println("Demonstrate on how to encode a message");
+		int msgLength = Car.encode(buffer, 0);
+		System.out.println();
 		
 		// the created message can be copied. We will show how to use byte array
 		// To avoid create garbage, it is better to obtain byte array of a ByteBuffer
@@ -293,9 +330,22 @@ public class Car {
 		MessageUtil.messageCopy(buffer, 0, 0, dupBuffer.array(), 0, schema);
 		
 		// parse message
-		car.decode(dupBuffer, 0);
+		System.out.println("Demonstrate decoder by decoding various types of fields");
+		Car.decode(dupBuffer, 0);
+		System.out.println();
 		
 		// modify message
-		car.modify(buffer, 0);
+		System.out.println("Demonstrate on how to alter a message by adding/removing rows from repeating groups");
+		Car.modify(buffer, 0);
+		System.out.println();
+		
+		// use a better structure that improves the performance and the code structure 
+		System.out.println("Demonstrate better coding using FuelFigures to list rows in the repeating group");
+		System.out.println("Fuel figures in the original encoded message: ");
+		Car.demonstrateOfBetterCoding(dupBuffer, 0);
+		System.out.println();
+		
+		System.out.println("Fuel figures in the modified message: ");
+		Car.demonstrateOfBetterCoding(buffer, 0);
 	}
 }

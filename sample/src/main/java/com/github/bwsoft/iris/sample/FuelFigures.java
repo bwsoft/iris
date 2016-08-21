@@ -56,7 +56,7 @@ public class FuelFigures {
 		for( int i = 0; i < fuelFiguresGroup.getNumOfGroups(); i ++ ) {
 			GroupObject aFigureObj = fuelFiguresGroup.getGroupObject(i);
 			FuelFigure aFigure = new FuelFigure();
-			aFigure.speed = aFigureObj.getFloat(speed);
+			aFigure.speed = aFigureObj.getNumber(speed).intValue();
 			aFigure.mpg = aFigureObj.getFloat(mpg);
 			figures.add(aFigure);
 		}
@@ -83,7 +83,7 @@ public class FuelFigures {
 	 *
 	 */
 	public static class FuelFigure {
-		public float speed;
+		public int speed;
 		public float mpg;
 	}
 }

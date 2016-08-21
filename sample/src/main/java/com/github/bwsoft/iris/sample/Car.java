@@ -176,7 +176,7 @@ public class Car {
 	 * @param buffer
 	 * @param offset
 	 */
-	public void decode(byte[] buffer, int offset) {
+	public void decode(ByteBuffer buffer, int offset) {
 		// wrap the SBE message
 		GroupObject msgObj = schema.wrapSbeBuffer(buffer, offset);
 		System.out.println("The message template Id: "+msgObj.getDefinition().getID());
@@ -287,9 +287,10 @@ public class Car {
 		// populate buffer with a sbe message
 		int msgLength = car.encode(buffer, 0);
 		
-		// the created message can be copied
-		byte[] dupBuffer = new byte[1028];
-		MessageUtil.messageCopy(buffer, 0, 0, dupBuffer, 0, schema);
+		// the created message can be copied. We will show how to use byte array
+		// To avoid create garbage, it is better to obtain byte array of a ByteBuffer
+		ByteBuffer dupBuffer = ByteBuffer.allocate(1028);
+		MessageUtil.messageCopy(buffer, 0, 0, dupBuffer.array(), 0, schema);
 		
 		// parse message
 		car.decode(dupBuffer, 0);

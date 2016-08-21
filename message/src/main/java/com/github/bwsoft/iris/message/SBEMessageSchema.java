@@ -22,9 +22,6 @@ import java.util.HashMap;
 
 import javax.xml.bind.JAXBException;
 
-import org.agrona.DirectBuffer;
-import org.agrona.concurrent.UnsafeBuffer;
-
 import com.github.bwsoft.iris.message.sbe.SBEMessage;
 import com.github.bwsoft.iris.message.sbe.SBEMessageHeader;
 import com.github.bwsoft.iris.message.sbe.SBEMessageSchemaHeader;
@@ -71,7 +68,6 @@ public class SBEMessageSchema {
 	private final ByteOrder order;
 	private final int schemaId;
 	private final int version;
-	private final DirectBuffer buffer;
 
 	// contains the map between the template id and the message definition
 	private final HashMap<Integer, SBEMessage> lookupTable;
@@ -153,7 +149,6 @@ public class SBEMessageSchema {
 		this.schemaId = this.schemaHeader.getId();
 		this.version = this.schemaHeader.getVersion();
 		this.lookupTable = lookupTable;
-		this.buffer = new UnsafeBuffer(new byte[0]);
 	}
 
 	/**
@@ -162,84 +157,37 @@ public class SBEMessageSchema {
 	 * 
 	 * The current SBE message size is the sum of the GroupObject size
 	 * and the SBE message header size. 
+	 * 
+	 * The limit of the ByteBuffer is untouched. It is users' responsibility to ensure an adequate 
+	 * setting of limit in case the message is needed to be altered to a different size 
+	 * before invoking the call. It is also users' responsibility to re-adjust the limit 
+	 * after the call is returned if needed. The size of the message can be obtained by 
+	 * the {@link GroupObject#getSize()} call with an addition of the message header size. 
+	 * 
+	 * The position of the ByteBuffer is altered by the routine as needed. 
 	 * 
 	 * @param buffer containing a complete SBE message. 
 	 * @param offset the starting position of the message.
 	 * @return GroupObject to access SBE fields
 	 */
 	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset) {
-		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
+		SBEMessage msg = this.getSBEMessage(buffer, offset);
 		if( null != msg ) {
 			return msg.wrapSbeBuffer(buffer, offset);
 		}
 		return null;
 	}
 	
-	/**
-	 * Create a GroupObject based upon a buffer. All SBE fields in the 
-	 * buffer are accessible via the GroupObject.
-	 * 
-	 * The current SBE message size is the sum of the GroupObject size
-	 * and the SBE message header size. 
-	 * 
-	 * @param buffer containing a complete SBE message. 
-	 * @param offset the starting position of the message.
-	 * @return GroupObject to access SBE fields
-	 */
-	public GroupObject wrapSbeBuffer(byte[] buffer, int offset) {
-		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
-		if( null != msg ) {
-			return msg.wrapSbeBuffer(buffer, offset);
-		}
-		return null;
-	}
-
-	/**
-	 * Create a GroupObject based upon a buffer. All SBE fields in the 
-	 * buffer are accessible via the GroupObject.
-	 * 
-	 * The current SBE message size is the sum of the GroupObject size
-	 * and the SBE message header size. 
-	 * 
-	 * @param buffer containing a complete SBE message. 
-	 * @param offset the starting position of the message.
-	 * @param length it is no less than the size of the whole SBE message including the message header. 
-	 * @return GroupObject to access SBE fields
-	 */
-	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset, int length) {
-		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
-		if( null != msg ) {
-			return msg.wrapSbeBuffer(buffer, offset, length);
-		}
-		return null;
-	}
-	
-	/**
-	 * Create a GroupObject based upon a buffer. All SBE fields in the 
-	 * buffer are accessible via the GroupObject.
-	 * 
-	 * The current SBE message size is the sum of the GroupObject size
-	 * and the SBE message header size. 
-	 * 
-	 * @param buffer containing a complete SBE message. 
-	 * @param offset the starting position of the message.
-	 * @param length it is no less than the size of the whole SBE message including the message header. 
-	 * @return GroupObject to access SBE fields
-	 */
-	public GroupObject wrapSbeBuffer(byte[] buffer, int offset, int length) {
-		this.buffer.wrap(buffer);
-		SBEMessage msg = this.wrapSbeBuffer(this.buffer, offset);
-		if( null != msg ) {
-			return msg.wrapSbeBuffer(buffer, offset, length);
-		}
-		return null;
-	}
-
 	/**
 	 * Create a SBE message using the provided buffer. 
+	 * 
+	 * The limit of the ByteBuffer is untouched. It is users' responsibility to ensure an adequate 
+	 * setting of limit to hold the newly created message before invoking the call. 
+	 * It is also users' responsibility to re-adjust the limit 
+	 * after the call is returned if needed. The size of the message can be obtained by 
+	 * the {@link GroupObject#getSize()} call with an addition of the message header size. 
+	 * 
+	 * The position of the ByteBuffer is altered by the routine as needed. 
 	 * 
 	 * @param templateId the target message template ID
 	 * @param buffer the buffer for building SBE message
@@ -255,26 +203,10 @@ public class SBEMessageSchema {
 		}
 	}
 	
-	/**
-	 * Create a SBE message using the provided buffer. 
-	 * 
-	 * @param templateId the target message template ID
-	 * @param buffer the buffer for building SBE message
-	 * @param offset the starting position of the message
-	 * @return a GroupObject to set values for fields in this message or null if the message cannot be created. 
-	 */
-	public GroupObject createSbeBuffer(int templateId, byte[] buffer, int offset) {
-		SBEMessage message = this.lookupTable.get(templateId);
-		if( null != message ) {
-			return message.createSbeBuffer(buffer, offset);
-		} else {
-			return null;
-		}
-	}
-
-	private SBEMessage wrapSbeBuffer(DirectBuffer buffer, int offset) {
-		int schemaId = this.msgHeader.getSchemaId(buffer, offset, order);
-		int templateId = this.msgHeader.getTemplateId(buffer, offset, order);
+	private SBEMessage getSBEMessage(ByteBuffer buffer, int offset) {
+		buffer.order(order);
+		int schemaId = this.msgHeader.getSchemaId(buffer, offset);
+		int templateId = this.msgHeader.getTemplateId(buffer, offset);
 		if( schemaId == this.schemaId ) {
 			return this.lookupTable.get(templateId);
 		} else {

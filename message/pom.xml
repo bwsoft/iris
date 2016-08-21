@@ -35,6 +35,7 @@
 	    <groupId>org.agrona</groupId>
 	    <artifactId>Agrona</artifactId>
 	    <version>0.5.3</version>
+	    <scope>test</scope>
 	</dependency>
 
     <dependency>

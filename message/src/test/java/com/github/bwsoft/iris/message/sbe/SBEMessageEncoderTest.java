@@ -36,7 +36,8 @@ public class SBEMessageEncoderTest {
 	// a buffer that is populated with SBE message before all tests. 
 	private final static ByteBuffer sbeBuffer = ByteBuffer.allocateDirect(4096);
 	private final static int bufferOffset = 0;
-	private final static ByteBuffer newSbeBuffer = ByteBuffer.allocateDirect(4096);
+	private final static ByteBuffer newSbeBuffer1 = ByteBuffer.allocateDirect(4096);
+	private final static ByteBuffer newSbeBuffer2 = ByteBuffer.allocate(4096);
 
 	// create SBEMessageSchema based upon the schema.
 	private final static SBEMessageSchema factory;
@@ -53,7 +54,7 @@ public class SBEMessageEncoderTest {
 	@Rule
 	public TestRule watcher = new TestWatcher() {
 		protected void starting(Description description) {
-			System.out.format("\nStarting test: %s\n", description.getMethodName());
+			System.out.format("\nStarting test: %s", description.getMethodName());
 		}
 	};
 	
@@ -62,16 +63,18 @@ public class SBEMessageEncoderTest {
 	 */
 	@BeforeClass
 	public static void createSBEMessage() {
+		System.out.println("Description: testing encoder by modifying SBE messages created from RL SBE encoder");
 		SBEMessageTestUtil.createSBEMessageUsingRLEncoder(sbeBuffer, bufferOffset);
 	}
 	
 	@Test
 	public void alterExistingSbeMessageByAddingRowsToNoneEmptyRepeatingGroup() throws UnsupportedEncodingException {
 		// copy the first sbe message to a new buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer, 0, factory);
+		int offset = 34;
+		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer1, offset, factory);
 		
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		String expectedMsg = "{" +
 				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
 				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
@@ -111,7 +114,7 @@ public class SBEMessageEncoderTest {
 
 		// re-warp message to verify the re-wrap produces the same result
 		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
 		
 		// add a row to the accleration group of the second row of the performanceFigure group
@@ -146,8 +149,9 @@ public class SBEMessageEncoderTest {
 
 		// re-warp message to verify the re-wrap produces the same result
 		unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
+		System.out.println(" ...... passed");
 	}	
 	
 	/**
@@ -156,11 +160,12 @@ public class SBEMessageEncoderTest {
 	 */
 	@Test
 	public void alterExistingSbeMessageByAddingRowsToGroupsThatDoNotHaveAnyRowBefore() throws UnsupportedEncodingException {
+		int offset = 632;
 		// copy the second new SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer, 0, factory);
+		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer2, offset, factory);
 		
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
 		String expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
 				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
 				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
@@ -190,7 +195,7 @@ public class SBEMessageEncoderTest {
 		
 		// re-warp message to verify the re-wrap produces the same result
 		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
 		
 		// add another row
@@ -236,8 +241,9 @@ public class SBEMessageEncoderTest {
 
 		// re-warp message to verify the re-wrap produces the same result
 		unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
+		System.out.println(" ...... passed");
 	}	
 	
 	/**
@@ -247,10 +253,10 @@ public class SBEMessageEncoderTest {
 	@Test
 	public void alterExistingSbeMessageByAddingARowToARepeatingGroupThatContainsANestedRepeatingGroup() throws UnsupportedEncodingException {
 		// copy the second new SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer, 0, factory);
+		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer1, 0, factory);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer1, 0);
 		String expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
 				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
 				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
@@ -278,7 +284,7 @@ public class SBEMessageEncoderTest {
 
 		// re-warp message to verify the re-wrap produces the same result
 		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, 0);
 		Assert.assertEquals(unparsedMsg, msgObj.toString());
 
 		// populate the nested subgroup
@@ -297,16 +303,19 @@ public class SBEMessageEncoderTest {
 
 		// re-warp message to verify the re-wrap produces the same result
 		String originalMsg = msgObj.toString();
-		Assert.assertEquals(originalMsg, factory.wrapSbeBuffer(newSbeBuffer, 0).toString());
+		Assert.assertEquals(originalMsg, factory.wrapSbeBuffer(newSbeBuffer1, 0).toString());
+		System.out.println(" ...... passed");
 	}	
 	
 	@Test
 	public void deleteExistingSbeGroup() throws UnsupportedEncodingException {
+		int offset = 127;
+		
 		// copy the first SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer, 0, factory);
+		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer1, offset, factory);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		String expectedMsg = "{" +
 				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
 				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
@@ -339,7 +348,7 @@ public class SBEMessageEncoderTest {
 				"\"activationCode\":\"deadbeef\"}";
 		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
 		String beforeWrap = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		Assert.assertEquals(beforeWrap, msgObj.toString());
 		Assert.assertEquals(sizeBefore-6, msgObj.getSize());
 		
@@ -399,7 +408,7 @@ public class SBEMessageEncoderTest {
 
 		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
 		beforeWrap = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		Assert.assertEquals(beforeWrap, msgObj.toString());
 		
 		// delete the performance figure 
@@ -433,17 +442,20 @@ public class SBEMessageEncoderTest {
 
 		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
 		beforeWrap = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		Assert.assertEquals(beforeWrap, msgObj.toString());
+		System.out.println(" ...... passed");
 	}
 	
 	@Test
 	public void addRemoveRawField() throws UnsupportedEncodingException {
+		int offset = 672;
+		
 		// copy the 2nd SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer, 0, factory);
+		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer2, offset, factory);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
 		String expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
 				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
 				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
@@ -497,6 +509,7 @@ public class SBEMessageEncoderTest {
 			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":null,\"model\":null,\"activationCode\":\"cafe\"}";
 		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
 		String beforeWrap = msgObj.toString();
-		Assert.assertEquals(beforeWrap, factory.wrapSbeBuffer(newSbeBuffer, 0).toString());
+		Assert.assertEquals(beforeWrap, factory.wrapSbeBuffer(newSbeBuffer2, offset).toString());
+		System.out.println(" ...... passed");
 	}
 }

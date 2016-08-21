@@ -15,9 +15,7 @@
  *******************************************************************************/
 package com.github.bwsoft.iris.message.sbe;
 
-import java.nio.ByteOrder;
-
-import org.agrona.concurrent.UnsafeBuffer;
+import java.nio.ByteBuffer;
 
 import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.GroupObject;
@@ -40,34 +38,36 @@ class SBEObjectArray implements GroupObjectArray {
 	private final int OPTIMIZED_DIMMENSION;
 	private SBEField definition; // Field definition, name, id, etc.
 
-	private final UnsafeBuffer buffer;
-	private final ByteOrder order;
-	
 	private short dimmension;
 	private SBEObject[] attrs;
 	
 	// attributes required for mutable update
 	private SBEObjectArray parent;
 	private short parentRow;
+	
+	private ByteBuffer buffer;
 	private int offset;
 	
-	SBEObjectArray(UnsafeBuffer buffer, ByteOrder order) {
+	SBEObjectArray() {
 		OPTIMIZED_DIMMENSION = Integer.parseInt(SBESchemaLoader.properties.getProperty(SBESchemaLoader.OPTIMIZED_NUM_OF_GROUP_ROWS));
 
-		this.buffer = buffer;
-		this.order = order;
 		this.dimmension = 0;
 		this.attrs = new SBEObject[OPTIMIZED_DIMMENSION];
 		for( int i = 0; i < OPTIMIZED_DIMMENSION; i ++ ) {
 			this.attrs[i] = new SBEObject(this);
 		}
 	}
+	
+	ByteBuffer getBuffer() {
+		return this.buffer;
+	}
 
 	int getOffset() {
 		return this.offset;
 	}
 
-	void setOffset(int offset) {
+	void setBufferAndOffset(ByteBuffer buffer, int offset) {
+		this.buffer = buffer;
 		this.offset = offset;
 	}
 
@@ -142,14 +142,6 @@ class SBEObjectArray implements GroupObjectArray {
 			return addObject(index);
 		}
 	}
-	
-	UnsafeBuffer getBuffer() {
-		return buffer;
-	}
-
-	ByteOrder getOrder() {
-		return order;
-	}
 
 	@Override
 	public SBEField getDefinition() {
@@ -189,7 +181,7 @@ class SBEObjectArray implements GroupObjectArray {
 			// TODO: exception out if version is not the same
 			valueOffset = this.offset + grp.getHeader().getSize();
 			blockSize = grp.getBlockSize();
-			((SBEGroupHeader) grp.getHeader()).putBlockSize(buffer, offset, order, blockSize);
+			((SBEGroupHeader) grp.getHeader()).putBlockSize(buffer, offset, blockSize);
 		}
 		SBEObject newObj = this.addObject(dimmension);
 		newObj.setOffset(this.offset);
@@ -198,7 +190,7 @@ class SBEObjectArray implements GroupObjectArray {
 		newObj.setSize(nsize);
 
 		// update header to record both block size and the number of rows
-		((SBEGroupHeader) grp.getHeader()).putNumRows(buffer, offset, order, dimmension);
+		((SBEGroupHeader) grp.getHeader()).putNumRows(buffer, offset, dimmension);
 		
 		// shift the array
 		shiftArray(newObj.getValueOffset(), nsize);
@@ -228,7 +220,7 @@ class SBEObjectArray implements GroupObjectArray {
 						
 			// update header to record both block size and the number of rows
 			SBEGroup grp = (SBEGroup) definition;
-			((SBEGroupHeader) grp.getHeader()).putNumRows(buffer, offset, order, dimmension-1);
+			((SBEGroupHeader) grp.getHeader()).putNumRows(buffer, offset, dimmension-1);
 			
 			// shift the array
 			shiftArray(toBeDeleted.getValueOffset()+nsize, -nsize);
@@ -260,7 +252,7 @@ class SBEObjectArray implements GroupObjectArray {
 		if( nsize == 0 ) 
 			return raw;
 		
-		((SBEVarLengthFieldHeader) field.getHeader()).putBlockSize(buffer, offset, order, newSize);
+		((SBEVarLengthFieldHeader) field.getHeader()).putBlockSize(buffer, offset, newSize);
 		
 		// shift the array
 		shiftArray(raw.getValueOffset()+raw.getSize(), nsize);
@@ -277,27 +269,31 @@ class SBEObjectArray implements GroupObjectArray {
 	}
 	
 	private void shiftArray(int offset, int nsize) {
-		byte[] array = this.buffer.byteArray();
-		int length = this.definition.getMessage().getRootObject().getSize() + this.definition.getMessage().getHeader().getSize() - offset;		
-		if( null != array ) {
-			System.arraycopy(array, offset, array, offset+nsize, length);
+		SBEObject root = this.definition.getMessage().getRootObject();
+		int remaining = root.getSize() + this.definition.getMessage().getHeader().getSize() + root.getOffset() - offset;		
+		if( this.buffer.hasArray() ) {
+			byte[] array = this.buffer.array();
+			System.arraycopy(array, offset, array, offset+nsize, remaining);
 		} else {
-			array = new byte[length];
-			this.buffer.getBytes(offset, array, 0, length);
-			this.buffer.putBytes(offset+nsize, array, 0, length);
+			byte[] array = new byte[remaining];
+			this.buffer.position(offset);
+			this.buffer.get(array, 0, remaining);
+			
+			this.buffer.position(offset+nsize);
+			this.buffer.put(array, 0, remaining);
 		}
 	}
 	
-	static void fillArray(UnsafeBuffer buffer, int offset, int nsize, byte value) {
-		byte[] array = buffer.byteArray();
-		if( null != array ) {
+	static void fillArray(ByteBuffer buffer, int offset, int nsize, byte value) {
+		if( buffer.hasArray() ) {
+			byte[] array = buffer.array();
 			array[offset] = value;
 		    for( int i = 1; i < nsize; i += i ) {
 		    	System.arraycopy(array, offset, array, i+offset, ((nsize - i) < i) ? (nsize - i) : i);
 		    }
 		} else {
 			for( int i = 0; i < nsize; i ++ ) {
-				buffer.putByte(offset+i, value);
+				buffer.put(offset+i, value);
 			}
 		}		
 	}

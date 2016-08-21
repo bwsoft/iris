@@ -15,10 +15,7 @@
  *******************************************************************************/
 package com.github.bwsoft.iris.message.sbe;
 
-import java.nio.ByteOrder;
-
-import org.agrona.DirectBuffer;
-import org.agrona.concurrent.UnsafeBuffer;
+import java.nio.ByteBuffer;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
@@ -37,25 +34,25 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 		return headerSize;
 	}
 	
-	int getBlockSize(DirectBuffer buffer, int startOffset, ByteOrder order) {
+	int getBlockSize(ByteBuffer buffer, int startOffset) {
 		switch( headerSize ) {
 		case 1:
-			return buffer.getByte(startOffset);
+			return buffer.get(startOffset);
 		case 2:
-			return buffer.getShort(startOffset,order);
+			return buffer.getShort(startOffset);
 		default:
 			throw new IllegalArgumentException("SBE VAR field header size can only be 1 or 2 (default)");
 		}
 	}
 	
-	void putBlockSize(UnsafeBuffer buffer, int startOffset, ByteOrder order, int value) {
+	void putBlockSize(ByteBuffer buffer, int startOffset, int value) {
 		switch( headerSize ) {
 		case 1:
-			buffer.putByte(startOffset, (byte) value); 
+			buffer.put(startOffset, (byte) value); 
 			break;
 			
 		case 2:
-			buffer.putShort(startOffset, (short) value, order);
+			buffer.putShort(startOffset, (short) value);
 			break;
 			
 		default:

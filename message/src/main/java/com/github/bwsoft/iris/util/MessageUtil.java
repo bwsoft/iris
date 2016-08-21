@@ -42,11 +42,8 @@ public class MessageUtil {
 	 * @return true if copy is successful
 	 */
 	public static boolean messageCopy(ByteBuffer original, int startOffset, int nth,
-			ByteBuffer dest, int destOffset, SBEMessageSchema schema) {
-		if( dest.hasArray() ) {
-			return messageCopy(original, startOffset, nth, dest.array(), destOffset, schema);
-		}
-		
+			ByteBuffer dest, int destOffset, SBEMessageSchema schema) {		
+		// move to the nth message in the source buffer
 		for( int i = 0; i < nth; i ++ ) {
 			GroupObject msgObj = schema.wrapSbeBuffer(original, startOffset);
 			if( msgObj == null )
@@ -62,10 +59,10 @@ public class MessageUtil {
 		original.position(startOffset);
 		
 		byte[] array = new byte[msgLength];
-		original.slice().get(array, 0, msgLength);
+		original.get(array, 0, msgLength);
 		
 		dest.position(destOffset);
-		dest.slice().put(array,0,msgLength);
+		dest.put(array,0,msgLength);
 		return true;
 	}
 	
@@ -95,39 +92,10 @@ public class MessageUtil {
 				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
 
 		original.position(startOffset);
-		original.slice().get(dest, destOffset, msgLength);
+		original.get(dest, destOffset, msgLength);
 		return true;
 	}
 	
-	/**
-	 * Copy a SBE message to a byte array
-	 * 
-	 * @param original a buffer containing one or more SBE messages
-	 * @param startOffset the start offset of the first message
-	 * @param nth  nth message in this byte array. Starts from zero for the first message.
-	 * @param dest the destination buffer
-	 * @param destOffset the start position in the destination buffer
-	 * @param schema schema to parse this message
-	 * @return true if copy is successful
-	 */
-	public static boolean messageCopy(byte[] original, int startOffset, int nth,
-			byte[] dest, int destOffset, SBEMessageSchema schema) {
-		for( int i = 0; i < nth; i ++ ) {
-			GroupObject msgObj = schema.wrapSbeBuffer(original, startOffset);
-			if( null == msgObj )
-				return false;
-			startOffset += msgObj.getSize();
-			startOffset += ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
-		}
-
-		GroupObject msgObj = schema.wrapSbeBuffer(original, startOffset);
-		int msgLength = msgObj.getSize() 
-				+ ((SBEMessage) msgObj.getDefinition()).getHeader().getSize();
-
-		System.arraycopy(original, startOffset, dest, destOffset, msgLength);
-		return true;
-	}
-
 	/**
 	 * Create a Json expression for a GroupObject, including all of the nested
 	 * subgroups. Handle byte arrays as String using platform default encoding type.

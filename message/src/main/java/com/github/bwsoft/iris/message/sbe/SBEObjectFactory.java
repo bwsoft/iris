@@ -17,8 +17,6 @@ package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteOrder;
 
-import org.agrona.concurrent.UnsafeBuffer;
-
 /**
  * This factory class is to recycle all SBEObject created to reduce the chance of GC collection.
  * It assumes that objects are leased one by one. And all leased objects are returned at the 
@@ -35,21 +33,15 @@ class SBEObjectFactory {
 	private int currentCount;
 	private SBEObjectArray[] pool;
 	
-	private final UnsafeBuffer buffer;
-	private final ByteOrder order;
-	
-	SBEObjectFactory(UnsafeBuffer buffer, ByteOrder order) {
+	SBEObjectFactory() {
 		this.initialCapacity = Integer.parseInt(SBESchemaLoader.properties.getProperty(SBESchemaLoader.OPTIMIZED_NUM_OF_GROUPS));
-		
-		this.buffer = buffer;
-		this.order = order;
 		
 		currentCount = 0;
 		
 		pool = new SBEObjectArray[initialCapacity];
 		
 		for( int i = 0; i < initialCapacity; i ++ ) {
-			pool[i] = new SBEObjectArray(buffer,order);
+			pool[i] = new SBEObjectArray();
 		}
 	}
 	
@@ -62,7 +54,7 @@ class SBEObjectFactory {
 			SBEObjectArray[] nPool = new SBEObjectArray[pool.length+initialCapacity];
 			System.arraycopy(pool, 0, nPool, 0, pool.length);
 			for( int i = pool.length; i < nPool.length; i ++ ) {
-				nPool[i] = new SBEObjectArray(buffer, order);
+				nPool[i] = new SBEObjectArray();
 			}
 			pool = nPool;
 			return get();

@@ -127,7 +127,8 @@ class SBEObject implements GroupObject {
 	@Override
 	public int getBytes(byte[] dest, int destOffset, int length) {
 		length = length > size ? size : length;
-		array.getBuffer().getBytes(this.valueOffset, dest, destOffset, length);
+		array.getBuffer().position(this.valueOffset);
+		array.getBuffer().get(dest, destOffset, length);
 		return length;
 	}
 
@@ -196,7 +197,7 @@ class SBEObject implements GroupObject {
 	public byte getByte(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			return array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset());
+			return array.getBuffer().get(valueOffset+sfield.getRelativeOffset());
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}
@@ -206,7 +207,7 @@ class SBEObject implements GroupObject {
 	public void setByte(Field field, byte value) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			array.getBuffer().putByte(valueOffset+sfield.getRelativeOffset(), value);
+			array.getBuffer().put(valueOffset+sfield.getRelativeOffset(), value);
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}		
@@ -219,35 +220,35 @@ class SBEObject implements GroupObject {
 			switch(field.getType()) {
 			case BYTE:
 			case U8:
-				short sv = (short) (0xff & array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset()));
+				short sv = (short) (0xff & array.getBuffer().get(valueOffset+sfield.getRelativeOffset()));
 				return sv;
 
 			case I8:
-				return (short) array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset());
+				return (short) array.getBuffer().get(valueOffset+sfield.getRelativeOffset());
 				
 			case I16:
-				return (short) array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+				return (short) array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset());
 				
 			case U16:
-				return (0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset(), array.getOrder()));
+				return (0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()));
 
 			case I32:
-				return array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+				return array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset());
 
 			case U32:
-				long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+				long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset());
 				lv = lv & 0xffffffff;
 				return lv;
 
 			case U64:
 			case I64:
-				return array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+				return array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset());
 				
 			case FLOAT:
-				return array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+				return array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset());
 
 			case DOUBLE:
-				return array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+				return array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset());
 				
 			default:
 				throw new IllegalArgumentException("type, "+field.getType().name()+", cannot be converted to a number");
@@ -265,36 +266,36 @@ class SBEObject implements GroupObject {
 			case BYTE:
 			case U8:
 			case I8:
-				array.getBuffer().putByte(valueOffset+sfield.getRelativeOffset(), (byte) value.shortValue());
+				array.getBuffer().put(valueOffset+sfield.getRelativeOffset(), (byte) value.shortValue());
 				break;
 				
 			case I16:
-				array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset(), value.shortValue(), array.getOrder());
+				array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset(), value.shortValue());
 				break;
 				
 			case U16:
-				array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset(), (short) value.intValue(), array.getOrder());
+				array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset(), (short) value.intValue());
 				break;
 
 			case I32:
-				array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset(), value.intValue(), array.getOrder());
+				array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset(), value.intValue());
 				break;
 				
 			case U32:
-				array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset(), (int) value.longValue(), array.getOrder());
+				array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset(), (int) value.longValue());
 				break;
 
 			case U64:
 			case I64:
-				array.getBuffer().putLong(valueOffset+sfield.getRelativeOffset(), value.longValue(), array.getOrder());
+				array.getBuffer().putLong(valueOffset+sfield.getRelativeOffset(), value.longValue());
 				break;
 				
 			case FLOAT:
-				array.getBuffer().putFloat(valueOffset+sfield.getRelativeOffset(), value.floatValue(), array.getOrder());
+				array.getBuffer().putFloat(valueOffset+sfield.getRelativeOffset(), value.floatValue());
 				break;
 				
 			case DOUBLE:
-				array.getBuffer().putDouble(valueOffset+sfield.getRelativeOffset(), value.doubleValue(), array.getOrder());
+				array.getBuffer().putDouble(valueOffset+sfield.getRelativeOffset(), value.doubleValue());
 				break;
 				
 			default:
@@ -309,7 +310,7 @@ class SBEObject implements GroupObject {
 	public int getU16(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			return 0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+			return 0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset());
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}
@@ -319,7 +320,7 @@ class SBEObject implements GroupObject {
 	public short getI16(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			return array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+			return array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset());
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}
@@ -329,7 +330,7 @@ class SBEObject implements GroupObject {
 	public int getInt(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			return array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+			return array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset());
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}
@@ -339,7 +340,7 @@ class SBEObject implements GroupObject {
 	public long getU32(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+			long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset());
 			lv = lv & 0xffffffff;
 			return lv;
 		} else {
@@ -351,7 +352,7 @@ class SBEObject implements GroupObject {
 	public long getLong(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			return array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+			return array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset());
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}
@@ -361,7 +362,7 @@ class SBEObject implements GroupObject {
 	public float getFloat(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			return array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+			return array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset());
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}		
@@ -371,7 +372,7 @@ class SBEObject implements GroupObject {
 	public double getDouble(Field field) {
 		SBEField sfield = (SBEField) field;
 		if( validateField(sfield) ) {
-			return array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset(), array.getOrder());
+			return array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset());
 		} else {
 			throw new IllegalArgumentException("field, "+field.getID()+", does not belong to this group, "+this.getDefinition().getID());
 		}		
@@ -383,7 +384,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = (char) array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
+				dest[destOffset+i] = (char) array.getBuffer().get(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {
@@ -416,7 +417,8 @@ class SBEObject implements GroupObject {
 				if( null != objArray ) {
 					SBEObject obj = (SBEObject) objArray.getGroupObject(0);
 					length = length > obj.getSize() ? obj.getSize() : length;
-					array.getBuffer().getBytes(obj.getValueOffset(), dest, destOffset, length);
+					array.getBuffer().position(obj.getValueOffset());
+					array.getBuffer().get(dest, destOffset, length);
 					return length;								
 				} else {
 					return 0;
@@ -431,7 +433,8 @@ class SBEObject implements GroupObject {
 					}
 					SBEObject obj = (SBEObject) objArray.getGroupObject(0);
 					length = length > len ? len : length;
-					array.getBuffer().getBytes(obj.getValueOffset(), dest, destOffset, length);
+					array.getBuffer().position(obj.getValueOffset());
+					array.getBuffer().get(dest, destOffset, length);
 					return length;								
 				} else {
 					return 0;
@@ -439,7 +442,8 @@ class SBEObject implements GroupObject {
 				
 			case MESSAGE:
 				length = length > getSize() ? getSize() : length;
-				array.getBuffer().getBytes(getValueOffset(), dest, destOffset, length);
+				array.getBuffer().position(getValueOffset());
+				array.getBuffer().get(dest, destOffset, length);
 				return length;								
 				
 			case CONSTANT:
@@ -449,7 +453,8 @@ class SBEObject implements GroupObject {
 						
 			default:
 				length = length > field.length()*sfield.getBlockSize() ? field.length()*sfield.getBlockSize() : length;		
-				array.getBuffer().getBytes(valueOffset+sfield.getRelativeOffset(), dest, destOffset, length);
+				array.getBuffer().position(valueOffset+sfield.getRelativeOffset());
+				array.getBuffer().get(dest, destOffset, length);
 				return length;			
 			}
 		} else {
@@ -469,7 +474,8 @@ class SBEObject implements GroupObject {
 					objArray.adjustRawGroupSize(length);
 					
 					if( length > 0 ) {
-						array.getBuffer().putBytes(obj.getValueOffset(), src, srcOffset, length);
+						array.getBuffer().position(obj.getValueOffset());
+						array.getBuffer().put(src, srcOffset, length);
 					}
 					return length;								
 				} else {
@@ -483,7 +489,8 @@ class SBEObject implements GroupObject {
 						
 			default:
 				length = length > field.length()*sfield.getBlockSize() ? field.length()*sfield.getBlockSize() : length;		
-				array.getBuffer().putBytes(valueOffset+sfield.getRelativeOffset(), src, srcOffset, length);
+				array.getBuffer().position(valueOffset+sfield.getRelativeOffset());
+				array.getBuffer().put(src, srcOffset, length);
 				return length;			
 			}
 		} else {
@@ -514,38 +521,38 @@ class SBEObject implements GroupObject {
 			case BYTE:
 			case U8:
 				for( int i = 0; i < len; i ++ ) {
-					short sv = (short) (0xff & array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize()));
+					short sv = (short) (0xff & array.getBuffer().get(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize()));
 					dest[destOffset+i] = sv;
 				}
 				return len;
 
 			case I8:
 				for( int i = 0; i < len; i ++ ) {
-					dest[destOffset+i] = (short) array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
+					dest[destOffset+i] = (short) array.getBuffer().get(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				}
 				return len;
 
 			case I16:
 				for( int i = 0; i < len; i ++ ) {
-					dest[destOffset+i] = array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+					dest[destOffset+i] = array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				}
 				return len;
 
 			case U16:
 				for( int i = 0; i < len; i ++ ) {
-					dest[destOffset+i] = 0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+					dest[destOffset+i] = 0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				}
 				return len;
 				
 			case I32:
 				for( int i = 0; i < len; i ++ ) {
-					dest[destOffset+i] = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+					dest[destOffset+i] = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				}
 				return len;
 
 			case U32:
 				for( int i = 0; i < len; i ++ ) {
-					long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+					long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 					lv = lv & 0xffffffff;
 					dest[destOffset+i] = lv;
 				}
@@ -554,19 +561,19 @@ class SBEObject implements GroupObject {
 			case U64:
 			case I64:
 				for( int i = 0; i < len; i ++ ) {
-					dest[destOffset+i] = array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+					dest[destOffset+i] = array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				}
 				return len;
 
 			case FLOAT:
 				for( int i = 0; i < len; i ++ ) {
-					dest[destOffset+i] = array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+					dest[destOffset+i] = array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				}
 				return len;
 
 			case DOUBLE:
 				for( int i = 0; i < len; i ++ ) {
-					dest[destOffset+i] = array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+					dest[destOffset+i] = array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				}
 				return len;
 				
@@ -589,50 +596,50 @@ class SBEObject implements GroupObject {
 			case U8:
 			case I8:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (byte) src[srcOffset+i].shortValue());
+					array.getBuffer().put(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (byte) src[srcOffset+i].shortValue());
 				}
 				return len;
 
 			case I16:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].shortValue(), array.getOrder());
+					array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].shortValue());
 				}
 				return len;
 
 			case U16:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (short) src[srcOffset+i].intValue(), array.getOrder());
+					array.getBuffer().putShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (short) src[srcOffset+i].intValue());
 				}
 				return len;
 				
 			case I32:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].intValue(), array.getOrder());
+					array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].intValue());
 				}
 				return len;
 
 			case U32:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (int) src[srcOffset+i].longValue(), array.getOrder());
+					array.getBuffer().putInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), (int) src[srcOffset+i].longValue());
 				}
 				return len;
 
 			case U64:
 			case I64:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putLong(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].longValue(), array.getOrder());
+					array.getBuffer().putLong(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].longValue());
 				}
 				return len;
 
 			case FLOAT:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putFloat(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].floatValue(), array.getOrder());
+					array.getBuffer().putFloat(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].floatValue());
 				}
 				return len;
 
 			case DOUBLE:
 				for( int i = 0; i < len; i ++ ) {
-					array.getBuffer().putDouble(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].doubleValue(), array.getOrder());
+					array.getBuffer().putDouble(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), src[srcOffset+i].doubleValue());
 				}
 				return len;
 				
@@ -650,7 +657,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = (short) (0xff & array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize()));
+				dest[destOffset+i] = (short) (0xff & array.getBuffer().get(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize()));
 			}		
 			return len;
 		} else {
@@ -664,7 +671,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = array.getBuffer().getByte(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
+				dest[destOffset+i] = array.getBuffer().get(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {
@@ -678,7 +685,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = 0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+				dest[destOffset+i] = 0xffff & array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {
@@ -692,7 +699,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+				dest[destOffset+i] = array.getBuffer().getShort(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {
@@ -706,7 +713,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+				dest[destOffset+i] = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {
@@ -720,7 +727,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+				long lv = array.getBuffer().getInt(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 				dest[destOffset+i] = lv & 0xffffffff;
 			}		
 			return len;
@@ -735,7 +742,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+				dest[destOffset+i] = array.getBuffer().getLong(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {
@@ -749,7 +756,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+				dest[destOffset+i] = array.getBuffer().getFloat(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {
@@ -763,7 +770,7 @@ class SBEObject implements GroupObject {
 		if( validateField(sfield) ) {
 			int len = length > field.length() ? field.length() : length;
 			for( int i = 0; i < len; i ++ ) {
-				dest[destOffset+i] = array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize(), array.getOrder());
+				dest[destOffset+i] = array.getBuffer().getDouble(valueOffset+sfield.getRelativeOffset()+i*sfield.getBlockSize());
 			}		
 			return len;
 		} else {

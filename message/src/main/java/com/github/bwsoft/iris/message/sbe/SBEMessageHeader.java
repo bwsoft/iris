@@ -15,10 +15,7 @@
  *******************************************************************************/
 package com.github.bwsoft.iris.message.sbe;
 
-import java.nio.ByteOrder;
-
-import org.agrona.DirectBuffer;
-import org.agrona.concurrent.UnsafeBuffer;
+import java.nio.ByteBuffer;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
@@ -62,32 +59,31 @@ public class SBEMessageHeader implements FieldHeader {
 	 * 
 	 * @param buffer SBE message buffer
 	 * @param offset the start position in the buffer
-	 * @param order ByteOrder
 	 * @return the message block size in bytes
 	 */
-	public int getBlockSize(DirectBuffer buffer, int offset, ByteOrder order) {
+	public int getBlockSize(ByteBuffer buffer, int offset) {
 		switch( this.blockSizeType ) {
 		case U8:
 		case I8:
-			return buffer.getByte(offset+blockSizeOffset);
+			return buffer.get(offset+blockSizeOffset);
 		case U16:
 		case I16:
-			return buffer.getShort(offset+blockSizeOffset,order);
+			return buffer.getShort(offset+blockSizeOffset);
 		default:
 			throw new UnsupportedOperationException("Enum type, "+this.blockSizeType.name()+", not supported for block size");
 		}
 	}
 
-	void putBlockSize(UnsafeBuffer buffer, int offset, ByteOrder order, int blockSize) {
+	void putBlockSize(ByteBuffer buffer, int offset, int blockSize) {
 		switch( this.blockSizeType ) {
 		case U8:
 		case I8:
-			buffer.putByte(offset+blockSizeOffset, (byte) blockSize);
+			buffer.put(offset+blockSizeOffset, (byte) blockSize);
 			break;
 
 		case U16:
 		case I16:
-			buffer.putShort(offset+blockSizeOffset, (short) blockSize, order);
+			buffer.putShort(offset+blockSizeOffset, (short) blockSize);
 			break;
 			
 		default:
@@ -100,32 +96,31 @@ public class SBEMessageHeader implements FieldHeader {
 	 * 
 	 * @param buffer the SBE buffer 
 	 * @param offset the start position of the SBE message in the buffer
-	 * @param order ByteOrder
 	 * @return the template ID of the message
 	 */
-	public int getTemplateId(DirectBuffer buffer, int offset, ByteOrder order) {
+	public int getTemplateId(ByteBuffer buffer, int offset) {
 		switch( this.templateIdType ) {
 		case U8:
 		case I8:
-			return buffer.getByte(offset+templateIdOffset);
+			return buffer.get(offset+templateIdOffset);
 		case U16:
 		case I16:
-			return buffer.getShort(offset+templateIdOffset,order);
+			return buffer.getShort(offset+templateIdOffset);
 		default:
 			throw new UnsupportedOperationException("Enum type, "+this.templateIdType.name()+", not supported for templateId");
 		}
 	}
 
-	void putTemplateId(UnsafeBuffer buffer, int offset, ByteOrder order, int templateId) {
+	void putTemplateId(ByteBuffer buffer, int offset, int templateId) {
 		switch( this.templateIdType ) {
 		case U8:
 		case I8:
-			buffer.putByte(offset+templateIdOffset, (byte) templateId);
+			buffer.put(offset+templateIdOffset, (byte) templateId);
 			break;
 			
 		case U16:
 		case I16:
-			buffer.putShort(offset+templateIdOffset, (short) templateId, order);
+			buffer.putShort(offset+templateIdOffset, (short) templateId);
 			break;
 			
 		default:
@@ -138,32 +133,31 @@ public class SBEMessageHeader implements FieldHeader {
 	 * 
 	 * @param buffer the SBE buffer
 	 * @param offset the start position of the SBE message in the buffer
-	 * @param order ByteOrder
 	 * @return the schema ID of the message
 	 */
-	public int getSchemaId(DirectBuffer buffer, int offset, ByteOrder order) {
+	public int getSchemaId(ByteBuffer buffer, int offset) {
 		switch( this.schemaIdType ) {
 		case U8:
 		case I8:
-			return buffer.getByte(offset+schemaIdOffset);
+			return buffer.get(offset+schemaIdOffset);
 		case U16:
 		case I16:
-			return buffer.getShort(offset+schemaIdOffset,order);
+			return buffer.getShort(offset+schemaIdOffset);
 		default:
 			throw new UnsupportedOperationException("Enum type, "+this.schemaIdType.name()+", not supported for schema");
 		}
 	}
 
-	void putSchemaId(UnsafeBuffer buffer, int offset, ByteOrder order, int schemaId) {
+	void putSchemaId(ByteBuffer buffer, int offset, int schemaId) {
 		switch( this.schemaIdType ) {
 		case U8:
 		case I8:
-			buffer.putByte(offset+schemaIdOffset, (byte) schemaId);
+			buffer.put(offset+schemaIdOffset, (byte) schemaId);
 			break;
 			
 		case U16:
 		case I16:
-			buffer.putShort(offset+schemaIdOffset,(short) schemaId, order);
+			buffer.putShort(offset+schemaIdOffset,(short) schemaId);
 			break;
 			
 		default:
@@ -176,32 +170,31 @@ public class SBEMessageHeader implements FieldHeader {
 	 * 
 	 * @param buffer the SBE buffer
 	 * @param offset the starting position of the SBE message in the buffer
-	 * @param order ByteOrder 
 	 * @return the version of the message
 	 */
-	public int getVersion(DirectBuffer buffer, int offset, ByteOrder order) {
+	public int getVersion(ByteBuffer buffer, int offset) {
 		switch( this.versionType ) {
 		case U8:
 		case I8:
-			return buffer.getByte(offset+versionOffset);
+			return buffer.get(offset+versionOffset);
 		case U16:
 		case I16:
-			return buffer.getShort(offset+versionOffset,order);
+			return buffer.getShort(offset+versionOffset);
 		default:
 			throw new UnsupportedOperationException("Enum type, "+this.versionType.name()+", not supported for version");
 		}
 	}
 
-	void putVersion(UnsafeBuffer buffer, int offset, ByteOrder order, int version) {
+	void putVersion(ByteBuffer buffer, int offset, int version) {
 		switch( this.versionType ) {
 		case U8:
 		case I8:
-			buffer.putByte(offset+versionOffset, (byte) version);
+			buffer.put(offset+versionOffset, (byte) version);
 			break;
 			
 		case U16:
 		case I16:
-			buffer.putShort(offset+versionOffset,(short) version, order);
+			buffer.putShort(offset+versionOffset,(short) version);
 			break;
 			
 		default:

@@ -18,8 +18,6 @@ package com.github.bwsoft.iris.message.sbe;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import org.agrona.DirectBuffer;
-
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.GroupObject;
 import com.github.bwsoft.iris.message.Message;
@@ -92,37 +90,13 @@ public class SBEMessage extends SBEGroup implements Message {
 		return this.safeMode;
 	}
 	
-	SBEObject warpSbeBuffer(DirectBuffer buffer, int offset) {
-		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset).getGroupObject(0);
-	}
-
 	@Override
 	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset) {
 		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 
 	@Override
-	public GroupObject wrapSbeBuffer(ByteBuffer buffer, int offset, int length) {
-		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset, length).getGroupObject(0);
-	}
-	
-	@Override
-	public GroupObject wrapSbeBuffer(byte[] buffer, int offset) {
-		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset).getGroupObject(0);
-	}
-
-	@Override
-	public GroupObject wrapSbeBuffer(byte[] buffer, int offset, int length) {
-		return (SBEObject) this.parser.get().wrapSbeBuffer(buffer, offset, length).getGroupObject(0);
-	}
-	
-	@Override
 	public GroupObject createSbeBuffer(ByteBuffer buffer, int offset) {
-		return this.parser.get().createSbeBuffer(buffer, offset).getGroupObject(0);
-	}
-	
-	@Override
-	public GroupObject createSbeBuffer(byte[] buffer, int offset) {
 		return this.parser.get().createSbeBuffer(buffer, offset).getGroupObject(0);
 	}
 }

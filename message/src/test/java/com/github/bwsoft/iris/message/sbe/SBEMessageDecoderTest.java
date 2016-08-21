@@ -107,7 +107,7 @@ public class SBEMessageDecoderTest {
 	@Rule
 	public TestRule watcher = new TestWatcher() {
 		protected void starting(Description description) {
-			System.out.format("\nStarting test: %s\n", description.getMethodName());
+			System.out.format("\nStarting test: %s", description.getMethodName());
 		}
 	};
 	
@@ -237,6 +237,7 @@ public class SBEMessageDecoderTest {
 		
 		// compare two messages to ensure that they are the same
 		Assert.assertEquals(MessageUtil.toJsonString(sbeMessage), MessageUtil.toJsonString(message));
+		System.out.println(" ...... passed");
 	}
 	
 	/**
@@ -248,10 +249,13 @@ public class SBEMessageDecoderTest {
 	public void fieldByFieldVerificationOfADecodingResult() throws UnsupportedEncodingException {
 		// copy the first sbe message to a byte array to test the copy facility
 		byte[] firstSBE = new byte[1024];
+		// test the copy utility
 		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, firstSBE, 0, factory);
 		
+		ByteBuffer firstSBEBuffer = ByteBuffer.wrap(firstSBE);
+		
 		// wrap message to obtain GroupObject
-		GroupObject msgObj = factory.wrapSbeBuffer(firstSBE, 0);
+		GroupObject msgObj = factory.wrapSbeBuffer(firstSBEBuffer, 0);
 		Assert.assertEquals(1, msgObj.getDefinition().getID()); // assert the message is the Car message
 		
 		Assert.assertEquals(1234, msgObj.getNumber(serialNumber).longValue());
@@ -319,6 +323,7 @@ public class SBEMessageDecoderTest {
 		byte[] activationCodeValue = new byte[8];
 		msgObj.getBytes(activationCode, activationCodeValue, 0, 8);
 		Assert.assertArrayEquals("deadbeef".getBytes(), activationCodeValue);
+		System.out.println(" ...... passed");
 	}
 	
 	/**
@@ -351,6 +356,7 @@ public class SBEMessageDecoderTest {
 			testCase ++;
 		}
 		Assert.assertEquals(3, testCase);
+		System.out.println(" ...... passed");
 	}
 	
 	@AfterClass

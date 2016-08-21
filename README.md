@@ -4,7 +4,19 @@ IRIS provides a SBE ([Simple Binary Encoding](https://github.com/FIXTradingCommu
 
 #Usage
 
-Refer to [wiki](https://github.com/bwsoft/iris/wiki) page for the usage reference. View [API doc](http://bwsoft.github.io/iris/doc/index.html) online.
+Use following maven dependency to use the codec
+
+```
+	<dependency>
+	  <groupId>com.github.bwsoft.iris</groupId>
+	  <artifactId>message</artifactId>
+	  <version>1.0.0.0</version>
+	</dependency>
+```
+
+For quick start, take a look at the sample code [Car.java] (https://github.com/bwsoft/iris/blob/master/sample/src/main/java/com/github/bwsoft/iris/sample/Car.java) which is based upon a sample SBE XML template, [example-schema.xml](https://github.com/bwsoft/iris/blob/master/sample/src/main/resources/example-schema.xml). It requires a basic understanding of the SBE and the structure of a SBE XML template. A brief tutorial is [here](https://github.com/bwsoft/iris/wiki/Brief-Introduction-on-SBE).
+
+For more details, refer to the [wiki](https://github.com/bwsoft/iris/wiki) page for the usage reference. The [API doc](http://bwsoft.github.io/iris/doc/index.html) is available online and can be downloaded from maven central repostiory.
 
 #Directory Layout
 

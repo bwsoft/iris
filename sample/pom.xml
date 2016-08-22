@@ -33,7 +33,22 @@
 	<dependency>
 	  <groupId>com.github.bwsoft.iris</groupId>
 	  <artifactId>message</artifactId>
-	  <version>1.1.0</version>
+	  <version>1.1-SNAPSHOT</version>
 	</dependency>
   </dependencies>
+  
+  <build>
+    <plugins>
+  		<plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-compiler-plugin</artifactId>
+  			<version>3.1</version>
+  			<configuration>
+  				<source>1.8</source>
+  				<target>1.8</target>
+  				<skip>false</skip>
+  			</configuration>
+  		</plugin>
+    </plugins>
+  </build>  
 </project>

@@ -18,6 +18,8 @@ package com.github.bwsoft.iris.util;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.function.BiConsumer;
 
 import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.FieldType;
@@ -240,6 +242,51 @@ public class MessageUtil {
 		}
 		sb.append("}");
 		return sb.toString();
+	}
+	
+	/**
+	 * Loop through every field in its packing sequence within the provided GroupObject and invoke
+	 * the consumer callback with the current field definition and the current GroupObject 
+	 * that contains this field. The provided field and GroupObject can be used by the 
+	 * consumer to directly retrieve the value of the field. 
+	 * 
+	 * @param grpObj the GroupObject whose fields and nested fields are visited one by one
+	 * @param consumer the callback to handle the field and its value.
+	 */
+	public static void loopThroughAllFields(GroupObject grpObj, BiConsumer<Field, GroupObject> consumer) {
+		Field definition = grpObj.getDefinition();
+		if( FieldType.GROUP == definition.getType() || FieldType.MESSAGE == definition.getType() ) {
+			Group group = (Group) definition;
+			List<Field> fieldList = group.getFields();
+			for( Field field : fieldList ){
+				if( FieldType.GROUP == field.getType() ) {
+					GroupObjectArray grpArray = grpObj.getGroupArray(field);
+					
+					// inform the consumer about the group
+					consumer.accept(field, grpObj);
+					
+					// loop through the nested fields
+					for( int i = 0; i < grpArray.getNumOfGroups(); i ++ ) {
+						loopThroughAllFields(grpArray.getGroupObject(i), consumer);
+					}
+					
+				} else {
+					// accept a simple field
+					consumer.accept(field, grpObj);
+				}
+			}
+		} else if( FieldType.COMPOSITE == definition.getType() ) {
+			Group group = (Group) definition;
+			// inform consumer about the composite type
+			consumer.accept(group, grpObj);
+			
+			List<Field> fieldList = group.getFields();
+			for( Field field : fieldList ){
+				consumer.accept(field, grpObj);
+			}			
+		} else {
+			consumer.accept(definition, grpObj);
+		}
 	}
 	
 	private static String toJsonString(Field field) {

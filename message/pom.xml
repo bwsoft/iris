@@ -19,7 +19,7 @@
 
   <groupId>com.github.bwsoft.iris</groupId>
   <artifactId>message</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1.1</version>
   <packaging>jar</packaging>
 
   <name>iris</name>

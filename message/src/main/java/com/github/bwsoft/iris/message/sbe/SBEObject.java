@@ -60,7 +60,7 @@ class SBEObject implements GroupObject {
 	 * 
 	 * @param nbytes
 	 */
-	void shift(int nbytes) {
+	void shiftDueToAChangeOutOfMyGroup(int nbytes) {
 		this.offset += nbytes;
 		this.valueOffset += nbytes;
 		for( SBEObjectArray arr : childFields.values() ) {
@@ -69,12 +69,29 @@ class SBEObject implements GroupObject {
 	}
 	
 	/**
+	 * This reacts to the other SBEObject expansion/shrink shift. 
+	 * All fields nbyte down to expand array or nbytes up to shrink array with a new 
+	 * parent Id.
+	 * 
+	 * @param nbytes
+	 * @param newParentId
+	 */
+	void shiftDueToAChangeInMyGroup(int nbytes, short newParentId) {
+		this.offset += nbytes;
+		this.valueOffset += nbytes;
+		for( SBEObjectArray arr : childFields.values() ) {
+			arr.shift(nbytes);
+			arr.setParentRow(newParentId);
+		}
+	}
+
+	/**
 	 * This reacts to the expansion/shrink of a field internally. 
 	 * 
 	 * @param field the field that is expanded or shrunk.
 	 * @param nbytes
 	 */
-	void shift(Field field, int nbytes) {
+	void shiftDueToASiblingChangeAheadOfMe(Field field, int nbytes) {
 		boolean startShift = false;
 		for( SBEObjectArray array : childFields.values() ) {
 			if( startShift ) {
@@ -119,6 +136,15 @@ class SBEObject implements GroupObject {
 			throw new IllegalArgumentException("child field, "+fieldId+", not defined.");
 	}
 
+	@Override
+	public SBEField getField(String name) {
+		SBEField field = (SBEField) ((SBEGroup) getDefinition()).getField(name);
+		if( null != field ) 
+			return field;
+		else
+			throw new IllegalArgumentException("child field, "+name+", not defined.");
+	}
+	
 	@Override
 	public int getSize() {
 		return size;

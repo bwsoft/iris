@@ -347,6 +347,7 @@ public class SBEMessageEncoderTest {
 				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
 				"\"activationCode\":\"deadbeef\"}";
 		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		fuelFigures = msgObj.getGroupArray(msgObj.getField((short) 9));
 		String beforeWrap = msgObj.toString();
 		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
 		Assert.assertEquals(beforeWrap, msgObj.toString());

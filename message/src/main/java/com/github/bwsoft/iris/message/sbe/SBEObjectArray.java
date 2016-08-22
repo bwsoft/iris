@@ -87,7 +87,7 @@ class SBEObjectArray implements GroupObjectArray {
 	void shift(int nbytes) {
 		this.offset += nbytes;
 		for( int i = 0; i < dimmension; i ++ ) {
-			attrs[i].shift(nbytes);
+			attrs[i].shiftDueToAChangeOutOfMyGroup(nbytes);
 		}
 	}
 	
@@ -100,11 +100,11 @@ class SBEObjectArray implements GroupObjectArray {
 	 */
 	void shift(short nth, Field field, int nbytes) {
 		// shift the remaining bytes in the same row down
-		attrs[nth].shift(field, nbytes);
+		attrs[nth].shiftDueToASiblingChangeAheadOfMe(field, nbytes);
 		
 		// all other rows need to be shifted
 		for( short i = (short) (nth+1); i < dimmension; i ++ ) {
-			attrs[i].shift(nbytes);
+			attrs[i].shiftDueToAChangeOutOfMyGroup(nbytes);
 		}
 		
 		// inform parent to shift
@@ -213,6 +213,63 @@ class SBEObjectArray implements GroupObjectArray {
 	}
 	
 	@Override
+	public GroupObject addGroupObject(int n) {
+		if( n > dimmension )
+			throw new IllegalArgumentException("cannot insert a new row to pass the group boundary");
+		else if( n == dimmension ) {
+			return this.addGroupObject();
+		}
+		
+		SBEGroup grp = (SBEGroup) definition;
+		
+		// get size of an empty row
+		int nsize = grp.getBlockSize() 
+				+ grp.getNumGroupFields()*grp.getHeader().getSize() 
+				+ grp.getNumRawFields()*grp.getMessage().getVarLengthFieldHeader().getSize();
+		
+		// add attr
+		SBEObject nextObj = attrs[n];
+		int valueOffset = nextObj.getValueOffset();
+		int blockSize = nextObj.getBlockSize();
+		
+		// add an element 
+		SBEObject newObj = this.addObject(dimmension);
+		newObj.setOffset(this.offset);
+		newObj.setValueOffset(valueOffset);
+		newObj.setBlockSize(blockSize);
+		newObj.setSize(nsize);		
+		
+		// shift all elements down starting at n
+		for( int i = dimmension-1; i > n; i -- ) {
+			attrs[i] = attrs[i-1];
+			attrs[i].shiftDueToAChangeInMyGroup(nsize,(short) i);
+		}	
+		attrs[n] = newObj;
+
+		// update header to record both block size and the number of rows
+		((SBEGroupHeader) grp.getHeader()).putNumRows(buffer, offset, dimmension);
+		
+		// shift the array
+		shiftArray(newObj.getValueOffset(), nsize);
+		
+		if( nsize - blockSize > 0 ) {
+			// fill array with zero for the section of groups and raws	
+			fillArray(this.buffer, newObj.getValueOffset()+blockSize, nsize-blockSize, (byte) 0);
+			
+			// wrap new array
+			SBEParser parser = this.definition.getMessage().getParser();
+			parser.wrapGroupObject(newObj, grp, this, n);
+		}
+		
+		// notify the parent about the shift of nsize
+		if( null != this.parent ) {
+			this.parent.shift(parentRow, this.definition, nsize);
+		}
+		
+		return newObj;		
+	}
+
+	@Override
 	public void deleteGroupObject(int n) {
 		if( n < dimmension ) {
 			SBEObject toBeDeleted = attrs[n];
@@ -227,7 +284,7 @@ class SBEObjectArray implements GroupObjectArray {
 			
 			// shift remaining attrs up
 			for( int i = n+1; i < dimmension; i ++ ) {
-				attrs[i].shift(-nsize);
+				attrs[i].shiftDueToAChangeInMyGroup(-nsize, (short)(i-1));
 				attrs[i-1] = attrs[i]; 
 			}
 			

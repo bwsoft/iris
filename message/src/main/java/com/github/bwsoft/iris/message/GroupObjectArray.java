@@ -52,7 +52,15 @@ public interface GroupObjectArray {
 	 * @return the newly added GroupObject to set values
 	 */
 	public GroupObject addGroupObject();
-	
+
+	/**
+	 * Add a new row to the specific position of the existing group list. 
+	 * 
+	 * @param n the nth row to be inserted. It starts with zero and has to be less than the number of rows.
+	 * @return the newly added GroupObject to set values
+	 */
+	public GroupObject addGroupObject(int n);
+
 	/**
 	 * Delete a group object at nth position. It starts from zero and has to be less than getNumOfGroups.
 	 * 

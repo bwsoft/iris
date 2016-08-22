@@ -70,6 +70,15 @@ public interface GroupObject {
 	public Field getField(short id);
 	
 	/**
+	 * Get the definition of a field that belongs to this group. 
+	 * 
+	 * @param name name of the field
+	 * @return the field definition or an IllegalArgumentException is thrown if the field does 
+	 * not belong to this group. 
+	 */
+	public Field getField(String name);
+	
+	/**
 	 * The storage size of the current GroupObject. It does not include the size of 
 	 * header if there is.
 	 * 

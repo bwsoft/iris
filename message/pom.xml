@@ -23,8 +23,8 @@
   <packaging>jar</packaging>
 
   <name>iris</name>
-  <description>A generic SBE (simple binary encoding) codec</description>
-  <url>http://maven.apache.org</url>
+  <description>A SBE message structure and codec for high performance business programming</description>
+  <url>https://github.com/bwsoft/iris</url>
 
   <licenses>
     <license>
@@ -40,9 +40,11 @@
   
   <developers>
   	<developer>
-  		<id>Yuan Zhou</id>
+  	    <name>Yuan Zhou</name>
+  		<id>yzhou</id>
   		<email>yuan60101@gmail.com</email>
   		<roles>
+  			<role>owner</role>
   			<role>architect</role>
   			<role>developer</role>
   		</roles>

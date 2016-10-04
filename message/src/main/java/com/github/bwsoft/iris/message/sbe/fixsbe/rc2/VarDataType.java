@@ -21,7 +21,7 @@
 //
 
 
-package com.github.bwsoft.iris.message.sbe.fixsbe;
+package com.github.bwsoft.iris.message.sbe.fixsbe.rc2;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,22 +30,22 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * 
- *                 Standard message header layout
+ *                 Variable length data consists of a pair elements:
+ *                 length field and data field. Length of varData field is transmitted
+ *                 in length field.
  *             
  * 
- * <p>Java class for messageHeaderType complex type.
+ * <p>Java class for varDataType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="messageHeaderType">
+ * &lt;complexType name="varDataType">
  *   &lt;complexContent>
  *     &lt;extension base="{http://www.fixprotocol.org/ns/simple/1.0}compositeDataType">
  *       &lt;sequence>
- *         &lt;element name="blockLength" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType"/>
- *         &lt;element name="templateId" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType"/>
- *         &lt;element name="version" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType"/>
- *         &lt;element name="reserved" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType"/>
+ *         &lt;element name="length" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType"/>
+ *         &lt;element name="varData" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType"/>
  *       &lt;/sequence>
  *     &lt;/extension>
  *   &lt;/complexContent>
@@ -55,8 +55,8 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "messageHeaderType")
-public class MessageHeaderType
+@XmlType(name = "varDataType")
+public class VarDataType
     extends CompositeDataType
 {
 

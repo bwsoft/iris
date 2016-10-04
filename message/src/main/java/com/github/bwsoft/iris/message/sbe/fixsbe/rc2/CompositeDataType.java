@@ -21,7 +21,7 @@
 //
 
 
-package com.github.bwsoft.iris.message.sbe.fixsbe;
+package com.github.bwsoft.iris.message.sbe.fixsbe.rc2;
 
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -34,33 +34,33 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlMixed;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 
 /**
- * <p>Java class for anonymous complex type.
+ * 
+ *                 A derived data type; composed of two or more types
+ *             
+ * 
+ * <p>Java class for compositeDataType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType>
+ * &lt;complexType name="compositeDataType">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="field" type="{http://www.fixprotocol.org/ns/simple/1.0}fieldType" maxOccurs="unbounded" minOccurs="0"/>
- *         &lt;element name="group" type="{http://www.fixprotocol.org/ns/simple/1.0}groupType" maxOccurs="unbounded" minOccurs="0"/>
- *         &lt;element name="data" type="{http://www.fixprotocol.org/ns/simple/1.0}fieldType" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="type" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="composite" type="{http://www.fixprotocol.org/ns/simple/1.0}compositeDataType" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
+ *       &lt;attGroup ref="{http://www.fixprotocol.org/ns/simple/1.0}fieldAttributes"/>
  *       &lt;attribute name="name" use="required" type="{http://www.fixprotocol.org/ns/simple/1.0}symbolicName_t" />
- *       &lt;attribute name="id" use="required" type="{http://www.w3.org/2001/XMLSchema}unsignedShort" />
  *       &lt;attribute name="description" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="blockLength" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" />
- *       &lt;attribute name="semanticType" type="{http://www.w3.org/2001/XMLSchema}token" />
- *       &lt;attribute name="sinceVersion" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" default="0" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -69,39 +69,37 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = {
+@XmlType(name = "compositeDataType", propOrder = {
     "content"
 })
-@XmlRootElement(name = "message")
-public class Message {
+@XmlSeeAlso({
+    MessageHeaderType.class,
+    VarDataType.class,
+    GroupSizeType.class
+})
+public class CompositeDataType {
 
     @XmlElementRefs({
-        @XmlElementRef(name = "group", type = JAXBElement.class, required = false),
-        @XmlElementRef(name = "data", type = JAXBElement.class, required = false),
-        @XmlElementRef(name = "field", type = JAXBElement.class, required = false)
+        @XmlElementRef(name = "type", type = JAXBElement.class, required = false),
+        @XmlElementRef(name = "composite", type = JAXBElement.class, required = false)
     })
     @XmlMixed
     protected List<Serializable> content;
     @XmlAttribute(name = "name", required = true)
     protected String name;
-    @XmlAttribute(name = "id", required = true)
-    @XmlSchemaType(name = "unsignedShort")
-    protected int id;
     @XmlAttribute(name = "description")
     protected String description;
-    @XmlAttribute(name = "blockLength")
-    @XmlSchemaType(name = "nonNegativeInteger")
-    protected BigInteger blockLength;
-    @XmlAttribute(name = "semanticType")
-    @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-    @XmlSchemaType(name = "token")
-    protected String semanticType;
     @XmlAttribute(name = "sinceVersion")
     @XmlSchemaType(name = "nonNegativeInteger")
     protected BigInteger sinceVersion;
+    @XmlAttribute(name = "semanticType")
+    @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
+    protected String semanticType;
 
     /**
-     * Gets the value of the content property.
+     * 
+     *                 A derived data type; composed of two or more types
+     *             Gets the value of the content property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
@@ -118,9 +116,8 @@ public class Message {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link JAXBElement }{@code <}{@link FieldType }{@code >}
-     * {@link JAXBElement }{@code <}{@link GroupType }{@code >}
-     * {@link JAXBElement }{@code <}{@link FieldType }{@code >}
+     * {@link JAXBElement }{@code <}{@link EncodedDataType }{@code >}
+     * {@link JAXBElement }{@code <}{@link CompositeDataType }{@code >}
      * {@link String }
      * 
      * 
@@ -157,22 +154,6 @@ public class Message {
     }
 
     /**
-     * Gets the value of the id property.
-     * 
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Sets the value of the id property.
-     * 
-     */
-    public void setId(int value) {
-        this.id = value;
-    }
-
-    /**
      * Gets the value of the description property.
      * 
      * @return
@@ -194,54 +175,6 @@ public class Message {
      */
     public void setDescription(String value) {
         this.description = value;
-    }
-
-    /**
-     * Gets the value of the blockLength property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link BigInteger }
-     *     
-     */
-    public BigInteger getBlockLength() {
-        return blockLength;
-    }
-
-    /**
-     * Sets the value of the blockLength property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link BigInteger }
-     *     
-     */
-    public void setBlockLength(BigInteger value) {
-        this.blockLength = value;
-    }
-
-    /**
-     * Gets the value of the semanticType property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getSemanticType() {
-        return semanticType;
-    }
-
-    /**
-     * Sets the value of the semanticType property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setSemanticType(String value) {
-        this.semanticType = value;
     }
 
     /**
@@ -270,6 +203,30 @@ public class Message {
      */
     public void setSinceVersion(BigInteger value) {
         this.sinceVersion = value;
+    }
+
+    /**
+     * Gets the value of the semanticType property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getSemanticType() {
+        return semanticType;
+    }
+
+    /**
+     * Sets the value of the semanticType property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setSemanticType(String value) {
+        this.semanticType = value;
     }
 
 }

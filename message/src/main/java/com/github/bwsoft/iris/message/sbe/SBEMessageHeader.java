@@ -16,9 +16,11 @@
 package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 
 /**
  * Header for the SBE message.
@@ -37,7 +39,47 @@ public class SBEMessageHeader implements FieldHeader {
 	private final int versionOffset;
 	private final short headerSize;
 	
-	SBEMessageHeader(FieldType templateIdType, FieldType schemaIdType, FieldType blockSizeType, FieldType versionType) {
+	/**
+	 * Get SBEMessageHeader definition
+	 * 
+	 * @param cache the loaded schema.
+	 * @return
+	 */
+	static SBEMessageHeader getMessageHeader(SBESchemaFieldTypes cache) {
+		SBEMessageHeader msgHeader = null;
+		if( cache.getCompositeDataTypes().containsKey("messageHeader") ) {
+			List<Object> eTypes = cache.getCompositeDataTypes().get("messageHeader");
+			FieldType blockLength = FieldType.U16;
+			FieldType templateId = FieldType.U16;
+			FieldType schemaId = FieldType.U16;
+			FieldType version = FieldType.U16;
+			for( Object rawType : eTypes ) {
+				if( ! (rawType instanceof EncodedDataType) ) {
+					throw new IllegalArgumentException("Unsupported SBE type in messageHeader definition");
+				}
+				EncodedDataType type = (EncodedDataType) rawType;
+				if( "blockLength".equals(type.getName()) )
+					blockLength = FieldType.getType(type.getPrimitiveType());
+				else if( "templateId".equals(type.getName()) )
+					templateId = FieldType.getType(type.getPrimitiveType());
+				else if( "schemaId".equals(type.getName()) )
+					schemaId = FieldType.getType(type.getPrimitiveType());
+				else if( "version".equals(type.getName()) )
+					version = FieldType.getType(type.getPrimitiveType());
+			}
+			
+			if( null == blockLength || null == templateId || null == schemaId || null == version ) {
+				throw new IllegalArgumentException("unrecgnized primitive type in message header definition");
+			}
+			
+			msgHeader = new SBEMessageHeader(templateId, schemaId, blockLength, version);
+		} else {
+			msgHeader = new SBEMessageHeader(FieldType.U16, FieldType.U16, FieldType.U16, FieldType.U16);
+		}
+		return msgHeader;
+	}
+	
+	private SBEMessageHeader(FieldType templateIdType, FieldType schemaIdType, FieldType blockSizeType, FieldType versionType) {
 		this.templateIdType = templateIdType;
 		this.schemaIdType = schemaIdType;
 		this.blockSizeType = blockSizeType;

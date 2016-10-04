@@ -21,4 +21,4 @@
 //
 
 @javax.xml.bind.annotation.XmlSchema(namespace = "http://www.fixprotocol.org/ns/simple/1.0")
-package com.github.bwsoft.iris.message.sbe.fixsbe;
+package com.github.bwsoft.iris.message.sbe.fixsbe.rc2;

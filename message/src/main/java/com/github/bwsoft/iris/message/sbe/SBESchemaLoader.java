@@ -32,16 +32,16 @@ import javax.xml.bind.Unmarshaller;
 
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.SBEMessageSchema;
-import com.github.bwsoft.iris.message.sbe.fixsbe.Choice;
-import com.github.bwsoft.iris.message.sbe.fixsbe.CompositeDataType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.EncodedDataType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.EnumType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.GroupType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.Message;
-import com.github.bwsoft.iris.message.sbe.fixsbe.MessageSchema;
-import com.github.bwsoft.iris.message.sbe.fixsbe.SetType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.ValidValue;
-import com.github.bwsoft.iris.message.sbe.fixsbe.MessageSchema.Types;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.Choice;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.CompositeDataType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.EncodedDataType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.EnumType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.GroupType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.Message;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.MessageSchema;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.SetType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.ValidValue;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc2.MessageSchema.Types;
 
 /**
  * A factory class to create a SBEMessageSchema.
@@ -135,7 +135,7 @@ public class SBESchemaLoader {
 		if( is == null )
 			throw new FileNotFoundException();
 		
-		JAXBContext context = JAXBContext.newInstance("com.github.bwsoft.iris.message.sbe.fixsbe");
+		JAXBContext context = JAXBContext.newInstance("com.github.bwsoft.iris.message.sbe.fixsbe.rc2");
 		Unmarshaller um = context.createUnmarshaller();
 		MessageSchema schema = (MessageSchema) um.unmarshal(is);
 		
@@ -395,8 +395,8 @@ public class SBESchemaLoader {
 	}
 	
 	private static void processFieldsOfAGroup(SBESchemaLoader schemaCache, SBEGroup group, String elementName, Object elementType) {
-		if( elementType instanceof com.github.bwsoft.iris.message.sbe.fixsbe.FieldType ) {
-			com.github.bwsoft.iris.message.sbe.fixsbe.FieldType fieldType = (com.github.bwsoft.iris.message.sbe.fixsbe.FieldType) elementType;
+		if( elementType instanceof com.github.bwsoft.iris.message.sbe.fixsbe.rc2.FieldType ) {
+			com.github.bwsoft.iris.message.sbe.fixsbe.rc2.FieldType fieldType = (com.github.bwsoft.iris.message.sbe.fixsbe.rc2.FieldType) elementType;
 
 			if( null != FieldType.getType(fieldType.getType()) ) {
 				// field of primitive type
@@ -453,8 +453,8 @@ public class SBESchemaLoader {
 		} else if( elementType instanceof GroupType ) {
 			GroupType groupType = (GroupType) elementType;
 			SBEGroup childGroup = (SBEGroup) group.addField((short)groupType.getId(),FieldType.GROUP, (short) 1).setName(groupType.getName());
-			List<com.github.bwsoft.iris.message.sbe.fixsbe.FieldType> childFieldList = groupType.getField();
-			for( com.github.bwsoft.iris.message.sbe.fixsbe.FieldType type : childFieldList ) {
+			List<com.github.bwsoft.iris.message.sbe.fixsbe.rc2.FieldType> childFieldList = groupType.getField();
+			for( com.github.bwsoft.iris.message.sbe.fixsbe.rc2.FieldType type : childFieldList ) {
 				processFieldsOfAGroup(schemaCache, childGroup, "field", type);
 			}
 			List<GroupType> childGroups = groupType.getGroup();

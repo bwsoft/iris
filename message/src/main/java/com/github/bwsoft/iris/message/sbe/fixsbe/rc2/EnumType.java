@@ -21,7 +21,7 @@
 //
 
 
-package com.github.bwsoft.iris.message.sbe.fixsbe;
+package com.github.bwsoft.iris.message.sbe.fixsbe.rc2;
 
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -39,19 +39,19 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * 
- *                 A multi value choice (bitset)
+ *                 An enumeration of valid values
  *             
  * 
- * <p>Java class for setType complex type.
+ * <p>Java class for enumType complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="setType">
+ * &lt;complexType name="enumType">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="choice" type="{http://www.fixprotocol.org/ns/simple/1.0}choice" maxOccurs="64"/>
+ *         &lt;element name="validValue" type="{http://www.fixprotocol.org/ns/simple/1.0}validValue" maxOccurs="unbounded"/>
  *       &lt;/sequence>
  *       &lt;attribute name="name" use="required" type="{http://www.fixprotocol.org/ns/simple/1.0}symbolicName_t" />
  *       &lt;attribute name="encodingType" use="required" type="{http://www.fixprotocol.org/ns/simple/1.0}symbolicName_t" />
@@ -65,12 +65,12 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "setType", propOrder = {
+@XmlType(name = "enumType", propOrder = {
     "content"
 })
-public class SetType {
+public class EnumType {
 
-    @XmlElementRef(name = "choice", type = JAXBElement.class)
+    @XmlElementRef(name = "validValue", type = JAXBElement.class)
     @XmlMixed
     protected List<Serializable> content;
     @XmlAttribute(name = "name", required = true)
@@ -85,7 +85,7 @@ public class SetType {
 
     /**
      * 
-     *                 A multi value choice (bitset)
+     *                 An enumeration of valid values
      *             Gets the value of the content property.
      * 
      * <p>
@@ -103,7 +103,7 @@ public class SetType {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link JAXBElement }{@code <}{@link Choice }{@code >}
+     * {@link JAXBElement }{@code <}{@link ValidValue }{@code >}
      * {@link String }
      * 
      * 

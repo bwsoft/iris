@@ -21,70 +21,52 @@
 //
 
 
-package com.github.bwsoft.iris.message.sbe.fixsbe;
+package com.github.bwsoft.iris.message.sbe.fixsbe.rc2;
 
-import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlElementRefs;
-import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.bind.annotation.XmlSchemaType;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 
 /**
  * 
- *                 A derived data type; composed of two or more types
+ *                 Valid value as a string
  *             
  * 
- * <p>Java class for compositeDataType complex type.
+ * <p>Java class for validValue complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="compositeDataType">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="type" type="{http://www.fixprotocol.org/ns/simple/1.0}encodedDataType" maxOccurs="unbounded" minOccurs="0"/>
- *         &lt;element name="composite" type="{http://www.fixprotocol.org/ns/simple/1.0}compositeDataType" maxOccurs="unbounded" minOccurs="0"/>
- *       &lt;/sequence>
- *       &lt;attGroup ref="{http://www.fixprotocol.org/ns/simple/1.0}fieldAttributes"/>
+ * &lt;complexType name="validValue">
+ *   &lt;simpleContent>
+ *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>token">
  *       &lt;attribute name="name" use="required" type="{http://www.fixprotocol.org/ns/simple/1.0}symbolicName_t" />
  *       &lt;attribute name="description" type="{http://www.w3.org/2001/XMLSchema}string" />
- *     &lt;/restriction>
- *   &lt;/complexContent>
+ *       &lt;attribute name="sinceVersion" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" default="0" />
+ *     &lt;/extension>
+ *   &lt;/simpleContent>
  * &lt;/complexType>
  * </pre>
  * 
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "compositeDataType", propOrder = {
-    "content"
+@XmlType(name = "validValue", propOrder = {
+    "value"
 })
-@XmlSeeAlso({
-    MessageHeaderType.class,
-    VarDataType.class,
-    GroupSizeType.class
-})
-public class CompositeDataType {
+public class ValidValue {
 
-    @XmlElementRefs({
-        @XmlElementRef(name = "type", type = JAXBElement.class, required = false),
-        @XmlElementRef(name = "composite", type = JAXBElement.class, required = false)
-    })
-    @XmlMixed
-    protected List<Serializable> content;
+    @XmlValue
+    @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
+    @XmlSchemaType(name = "token")
+    protected String value;
     @XmlAttribute(name = "name", required = true)
     protected String name;
     @XmlAttribute(name = "description")
@@ -92,41 +74,29 @@ public class CompositeDataType {
     @XmlAttribute(name = "sinceVersion")
     @XmlSchemaType(name = "nonNegativeInteger")
     protected BigInteger sinceVersion;
-    @XmlAttribute(name = "semanticType")
-    @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-    protected String semanticType;
 
     /**
+     * Gets the value of the value property.
      * 
-     *                 A derived data type; composed of two or more types
-     *             Gets the value of the content property.
-     * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the content property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getContent().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link JAXBElement }{@code <}{@link EncodedDataType }{@code >}
-     * {@link JAXBElement }{@code <}{@link CompositeDataType }{@code >}
-     * {@link String }
-     * 
-     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
      */
-    public List<Serializable> getContent() {
-        if (content == null) {
-            content = new ArrayList<Serializable>();
-        }
-        return this.content;
+    public String getValue() {
+        return value;
+    }
+
+    /**
+     * Sets the value of the value property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setValue(String value) {
+        this.value = value;
     }
 
     /**
@@ -203,30 +173,6 @@ public class CompositeDataType {
      */
     public void setSinceVersion(BigInteger value) {
         this.sinceVersion = value;
-    }
-
-    /**
-     * Gets the value of the semanticType property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getSemanticType() {
-        return semanticType;
-    }
-
-    /**
-     * Sets the value of the semanticType property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setSemanticType(String value) {
-        this.semanticType = value;
     }
 
 }

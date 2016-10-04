@@ -16,15 +16,46 @@
 package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 
 class SBEVarLengthFieldHeader implements FieldHeader {
 	private final short headerSize;
 	private final FieldType lengthType;
 	
-	SBEVarLengthFieldHeader(FieldType lengthType) {
+	/**
+	 * Get var length field header.
+	 * 
+	 * @param cache SBESchemaCache loaded from the xml.
+	 * @return
+	 */
+	static SBEVarLengthFieldHeader getVarLengthFieldHeader(SBESchemaFieldTypes cache) {
+		SBEVarLengthFieldHeader varHeader = null;
+		if( cache.getCompositeDataTypes().containsKey("varDataEncoding") ) {
+			List<Object> eTypes = cache.getCompositeDataTypes().get("varDataEncoding");
+			FieldType lengthType = FieldType.U8;
+			for( Object rawType : eTypes ) {
+				if( ! (rawType instanceof EncodedDataType) ) {
+					throw new IllegalArgumentException("Unsupported SBE type in groupSizeEncoding definition");
+				}
+				EncodedDataType type = (EncodedDataType) rawType;
+				if( "length".equals(type.getName()) )
+					lengthType = FieldType.getType(type.getPrimitiveType());
+			}
+			if( null == lengthType ) {
+				throw new IllegalArgumentException("unrecgnized primitive type in var length field header definition");					
+			}
+			varHeader = new SBEVarLengthFieldHeader(lengthType);
+		} else {
+			varHeader = new SBEVarLengthFieldHeader(FieldType.U8);
+		}
+		return varHeader;
+	}
+
+	private SBEVarLengthFieldHeader(FieldType lengthType) {
 		this.lengthType = lengthType;
 		headerSize = (short) this.lengthType.size();
 	}

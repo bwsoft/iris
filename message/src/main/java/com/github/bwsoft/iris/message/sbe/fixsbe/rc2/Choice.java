@@ -21,7 +21,7 @@
 //
 
 
-package com.github.bwsoft.iris.message.sbe.fixsbe;
+package com.github.bwsoft.iris.message.sbe.fixsbe.rc2;
 
 import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,23 +30,22 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
-import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 
 /**
  * 
- *                 Valid value as a string
+ *                 A choice within a multi value set Value is the
+ *                 position within a bitset (zero-based index).
  *             
  * 
- * <p>Java class for validValue complex type.
+ * <p>Java class for choice complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="validValue">
+ * &lt;complexType name="choice">
  *   &lt;simpleContent>
- *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>token">
+ *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>nonNegativeInteger">
  *       &lt;attribute name="name" use="required" type="{http://www.fixprotocol.org/ns/simple/1.0}symbolicName_t" />
  *       &lt;attribute name="description" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="sinceVersion" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" default="0" />
@@ -58,15 +57,14 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "validValue", propOrder = {
+@XmlType(name = "choice", propOrder = {
     "value"
 })
-public class ValidValue {
+public class Choice {
 
     @XmlValue
-    @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-    @XmlSchemaType(name = "token")
-    protected String value;
+    @XmlSchemaType(name = "nonNegativeInteger")
+    protected BigInteger value;
     @XmlAttribute(name = "name", required = true)
     protected String name;
     @XmlAttribute(name = "description")
@@ -80,10 +78,10 @@ public class ValidValue {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getValue() {
+    public BigInteger getValue() {
         return value;
     }
 
@@ -92,10 +90,10 @@ public class ValidValue {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setValue(String value) {
+    public void setValue(BigInteger value) {
         this.value = value;
     }
 

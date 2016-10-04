@@ -16,9 +16,12 @@
 package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 
 /**
  * This group header supports the header format that consists of 1 or 2 bytes of block size 
@@ -33,7 +36,40 @@ class SBEGroupHeader implements FieldHeader {
 	
 	private final short headerSize;
 	
-	public SBEGroupHeader(FieldType numInGroupType, FieldType blockSizeType) {
+	/**
+	 * Get group header definition.
+	 * 
+	 * @param cache SBE schema loaded from the xml file.
+	 * @return
+	 */
+	static SBEGroupHeader getGroupHeader(SBESchemaFieldTypes cache) {
+		SBEGroupHeader grpHeader = null;
+		if( cache.getCompositeDataTypes().containsKey("groupSizeEncoding") ) {
+			List<Object> eTypes = cache.getCompositeDataTypes().get("groupSizeEncoding");
+			FieldType numInGroupType = FieldType.U8;
+			FieldType blockSizeType = FieldType.U16;
+			for( Object rawType : eTypes ) {
+				if( ! (rawType instanceof EncodedDataType) ) {
+					throw new IllegalArgumentException("Unsupported SBE type in groupSizeEncoding definition");
+				}
+				EncodedDataType type = (EncodedDataType) rawType;
+				if( "blockLength".equals(type.getName()) )
+					blockSizeType = FieldType.getType(type.getPrimitiveType());
+				else if( "numInGroup".equals(type.getName()) )
+					numInGroupType = FieldType.getType(type.getPrimitiveType());
+			}
+			
+			if( null == numInGroupType || null == blockSizeType ) {
+				throw new IllegalArgumentException("unrecgnized primitive type in group header definition");	
+			}
+			grpHeader = new SBEGroupHeader(numInGroupType, blockSizeType);
+		} else {
+			grpHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
+		}
+		return grpHeader;
+	}
+	
+	private SBEGroupHeader(FieldType numInGroupType, FieldType blockSizeType) {
 		this.numInGroupType = numInGroupType;
 		this.blockSizeType = blockSizeType;
 		this.headerSize = (short) (this.numInGroupType.size() + this.blockSizeType.size());

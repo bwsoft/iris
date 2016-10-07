@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.sbe.SBESchemaFieldTypes.SBECompositeTypeElement;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 
 class SBEVarLengthFieldHeader implements FieldHeader {
@@ -35,13 +36,13 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 	static SBEVarLengthFieldHeader getVarLengthFieldHeader(SBESchemaFieldTypes cache) {
 		SBEVarLengthFieldHeader varHeader = null;
 		if( cache.getCompositeDataTypes().containsKey("varDataEncoding") ) {
-			List<Object> eTypes = cache.getCompositeDataTypes().get("varDataEncoding");
+			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get("varDataEncoding");
 			FieldType lengthType = FieldType.U8;
-			for( Object rawType : eTypes ) {
-				if( ! (rawType instanceof EncodedDataType) ) {
+			for( SBECompositeTypeElement rawType : eTypes ) {
+				if( ! (rawType.getType() instanceof EncodedDataType) ) {
 					throw new IllegalArgumentException("Unsupported SBE type in groupSizeEncoding definition");
 				}
-				EncodedDataType type = (EncodedDataType) rawType;
+				EncodedDataType type = (EncodedDataType) rawType.getType();
 				if( "length".equals(type.getName()) )
 					lengthType = FieldType.getType(type.getPrimitiveType());
 			}
@@ -55,7 +56,7 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 		return varHeader;
 	}
 
-	private SBEVarLengthFieldHeader(FieldType lengthType) {
+	SBEVarLengthFieldHeader(FieldType lengthType) {
 		this.lengthType = lengthType;
 		headerSize = (short) this.lengthType.size();
 	}

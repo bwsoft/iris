@@ -31,22 +31,22 @@ class SBESchemaFieldTypes {
 		return sbeTypes;
 	}
 
-	public HashMap<String, List<Object>> getCompositeDataTypes() {
+	public HashMap<String, List<SBECompositeTypeElement>> getCompositeDataTypes() {
 		return sbeComposites;
 	}
 
-	public HashMap<String, SBEEnum> getEnumTypes() {
+	public HashMap<String, SBEEnumType> getEnumTypes() {
 		return sbeEnums;
 	}
 
-	public HashMap<String, SBESet> getSetTypes() {
+	public HashMap<String, SBESetType> getSetTypes() {
 		return sbeChoices;
 	}
 
 	private HashMap<String, EncodedDataType> sbeTypes; // contains all the definitions of type in types
-	private HashMap<String, List<Object>> sbeComposites; // contains all the definition of composite in types
-	private HashMap<String, SBEEnum> sbeEnums; // contains all the map between enum name and its values
-	private HashMap<String, SBESet> sbeChoices; // contains all the map between a set/choice name and its corresponding bit set.
+	private HashMap<String, List<SBECompositeTypeElement>> sbeComposites; // contains all the definition of composite in types
+	private HashMap<String, SBEEnumType> sbeEnums; // contains all the map between enum name and its values
+	private HashMap<String, SBESetType> sbeChoices; // contains all the map between a set/choice name and its corresponding bit set.
 
 	static SBESchemaFieldTypes parseSchemaForFieldTypes(MessageSchema schema) {
 		SBESchemaFieldTypes types = new SBESchemaFieldTypes();
@@ -137,8 +137,8 @@ class SBESchemaFieldTypes {
 	/**
 	 * @param type a SetType node
 	 */
-	private SBESet addSetTypeNode(SetType type) {
-		SBESet sbeSet = new SBESet();
+	private SBESetType addSetTypeNode(SetType type) {
+		SBESetType sbeSet = new SBESetType();
 		sbeSet.primitiveType = FieldType.getType(type.getEncodingType());
 		sbeSet.name = type.getName();
 		if( null == sbeSet.primitiveType ) {
@@ -167,8 +167,8 @@ class SBESchemaFieldTypes {
 	/**
 	 * @param type a EnumType XML node
 	 */
-	private SBEEnum addEnumTypeNode(EnumType type) {
-		SBEEnum sbeEnum = new SBEEnum();
+	private SBEEnumType addEnumTypeNode(EnumType type) {
+		SBEEnumType sbeEnum = new SBEEnumType();
 		sbeEnum.primitiveType = FieldType.getType(type.getEncodingType());
 		sbeEnum.name = type.getName();
 		if( null == sbeEnum.primitiveType ) {
@@ -197,33 +197,40 @@ class SBESchemaFieldTypes {
 		List<Serializable> content = type.getContent();
 		
 		// create an array list to contain all types in the definition
-		ArrayList<Object> eTypes = new ArrayList<>();
+		ArrayList<SBECompositeTypeElement> eTypes = new ArrayList<>();
 		for( int j = 0; j < content.size(); j ++ ) {
 			if( content.get(j) instanceof JAXBElement ) {
 				JAXBElement<?> elm = (JAXBElement<?>) content.get(j);
 				Object eType = elm.getValue();
 				if( eType instanceof EncodedDataType ) {
-					eTypes.add(eType);
+					eTypes.add(new SBECompositeTypeElement(eType));
 				} else if( eType instanceof EnumType ) {
 					EnumType enumType = (EnumType) eType;
 
 					// redefine enum type name to make it unique
+					String simpleName = enumType.getName();
 					enumType.setName(type.getName()+"."+enumType.getName());
-					eTypes.add(enumType);
-					addEnumTypeNode(enumType).name = enumType.getName();
+					eTypes.add(new SBECompositeTypeElement(enumType));
+					addEnumTypeNode(enumType).name = simpleName;
 				} else if( eType instanceof SetType ) {
 					SetType setType = (SetType) eType;
 
 					// redefine set type name to make it unique
+					String simpleName = setType.getName();
 					setType.setName(type.getName()+"."+setType.getName());
-					eTypes.add(setType);
-					addSetTypeNode(setType).name = setType.getName();
+					eTypes.add(new SBECompositeTypeElement(setType));
+					addSetTypeNode(setType).name = simpleName;
 				} else if( eType instanceof RefType ) {
 					RefType rType = (RefType) eType;
 					if( sbeComposites.containsKey(rType.getType()) ) {
-						eTypes.addAll(sbeComposites.get(rType.getType()));
+						List<SBECompositeTypeElement> toBeAdded = sbeComposites.get(rType.getType());
+						for( int i = 0; i < toBeAdded.size(); i ++ ) {
+							SBECompositeTypeElement anElm = toBeAdded.get(i).clone();
+							anElm.name = rType.getName();
+							eTypes.add(anElm);
+						}
 					} else {
-						eTypes.add(eType);
+						eTypes.add(new SBECompositeTypeElement(eType));
 					}
 				}
 				else {
@@ -241,16 +248,21 @@ class SBESchemaFieldTypes {
 		int refCountDiscovered = 0;
 		int refCountPrevious = 0;
 		do {
-			for( List<Object> eTypeList : sbeComposites.values() ) {
+			for( List<SBECompositeTypeElement> eTypeList : sbeComposites.values() ) {
 				for( int i = 0; i < eTypeList.size(); i ++ ) {
 					Object eType = eTypeList.get(i);
 					if( eType instanceof RefType ) {
 						RefType rType = (RefType) eType;
 						if( sbeComposites.containsKey(rType.getType())) {
-							List<Object> toBeAdded = sbeComposites.get(rType.getType());
+							List<SBECompositeTypeElement> toBeAdded = sbeComposites.get(rType.getType());
 							eTypeList.remove(i);
-							eTypeList.add(i, toBeAdded);
-							i = i + toBeAdded.size() - 1;
+							i --;
+							for( int j = 0; j < toBeAdded.size(); j++) {
+								SBECompositeTypeElement anElm = toBeAdded.get(0).clone();
+								anElm.name = rType.getName();
+								i++;
+								eTypeList.add(i,anElm);
+							}
 							refCountDiscovered ++;
 						}
 						else {
@@ -268,23 +280,62 @@ class SBESchemaFieldTypes {
 		} while ( refCountPrevious != 0 );				
 	}
 
-	static class SBEEnum {
+	static class SBEEnumType {
 		private String name;
-		FieldType primitiveType;
+		private FieldType primitiveType;
 		HashMap<String, String> enumLookup = new HashMap<String, String>();
 		
 		String getName() {
 			return name;
 		}
+		
+		FieldType getPrimitiveType() {
+			return primitiveType;
+		}
 	}
 	
-	static class SBESet {
+	static class SBESetType {
 		private String name;
-		FieldType primitiveType;
+		private FieldType primitiveType;
 		HashMap<String, Integer> bitLookup = new HashMap<String, Integer>();
 
 		String getName() {
 			return name;
+		}
+		
+		FieldType getPrimitiveType() {
+			return primitiveType;
+		}
+	}
+	
+	static class SBECompositeTypeElement {
+		private String name;
+		private Object type;
+		
+		private SBECompositeTypeElement() {
+			this.name = null;
+			this.type = null;
+		}
+		
+		private SBECompositeTypeElement(Object type) {
+			this.type = type;
+			this.name = null;
+		}
+		
+		Object getType() {
+			return type;
+		}
+		
+		String getName() {
+			return name;
+		}
+		
+		@Override
+		public SBECompositeTypeElement clone() {
+			SBECompositeTypeElement newElm = new SBECompositeTypeElement();
+			newElm.name = name;
+			newElm.type = type;
+			return newElm;
 		}
 	}
 }

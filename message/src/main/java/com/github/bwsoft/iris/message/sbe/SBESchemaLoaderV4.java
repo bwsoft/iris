@@ -38,6 +38,7 @@ import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.CompositeDataType;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EnumType;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.GroupType;
+import com.github.bwsoft.iris.message.sbe.SBESchemaFieldTypes.SBECompositeTypeElement;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.BlockType;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.MessageSchema;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.SetType;
@@ -176,27 +177,37 @@ public class SBESchemaLoaderV4 {
 			addEncodedDataTypeField(group, fieldType, dataType);
 		} else if( types.getEnumTypes().containsKey(fieldType.getType())) {
 			// an enum type
-			SBESchemaFieldTypes.SBEEnum sbeEnum = types.getEnumTypes().get(fieldType.getType());
+			SBESchemaFieldTypes.SBEEnumType sbeEnum = types.getEnumTypes().get(fieldType.getType());
 			addEnumTypeField(group, fieldType, sbeEnum);
 		} else if( types.getSetTypes().containsKey(fieldType.getType())) {
 			// a set bit field
-			SBESchemaFieldTypes.SBESet sbeSet = types.getSetTypes().get(fieldType.getType());
+			SBESchemaFieldTypes.SBESetType sbeSet = types.getSetTypes().get(fieldType.getType());
 			addSetTypeField(group, fieldType, sbeSet);
 		} else if( types.getCompositeDataTypes().containsKey(fieldType.getType())) {
 			// composite field
 			SBECompositeField compositeField = (SBECompositeField) group.addField((short)fieldType.getId(),FieldType.COMPOSITE, (short) 1).setName(fieldType.getName());
-			List<Object> eTypes = types.getCompositeDataTypes().get(fieldType.getType());
-			for( Object rawType : eTypes ) {
-				if( rawType instanceof EncodedDataType ) {
-					addEncodedDataTypeField(compositeField, null, (EncodedDataType) rawType);
-				} else if( rawType instanceof EnumType ) {
-					EnumType enumType = (EnumType) rawType;
-					SBESchemaFieldTypes.SBEEnum sbeEnum = types.getEnumTypes().get(enumType.getName());
-					addEnumTypeField(group, null, sbeEnum);
-				} else if( rawType instanceof SetType ) {
-					SetType setType = (SetType) rawType;
-					SBESchemaFieldTypes.SBESet sbeSet = types.getSetTypes().get(setType.getName());
-					addSetTypeField(group, null, sbeSet);
+			List<SBECompositeTypeElement> eTypes = types.getCompositeDataTypes().get(fieldType.getType());
+			for( SBECompositeTypeElement rawType : eTypes ) {
+				if( rawType.getType() instanceof EncodedDataType ) {
+					EncodedDataType encodedType = (EncodedDataType) rawType.getType();
+					SBEField field = addEncodedDataTypeField(compositeField, null, encodedType);
+					if( null != rawType.getName() ) {
+						field.setName(rawType.getName()+"."+encodedType.getName());
+					}
+				} else if( rawType.getType() instanceof EnumType ) {
+					EnumType enumType = (EnumType) rawType.getType();
+					SBESchemaFieldTypes.SBEEnumType sbeEnum = types.getEnumTypes().get(enumType.getName());
+					SBEField field = addEnumTypeField(compositeField, null, sbeEnum);
+					if( null != rawType.getName() ) {
+						field.setName(rawType.getName()+"."+sbeEnum.getName());
+					}
+				} else if( rawType.getType() instanceof SetType ) {
+					SetType setType = (SetType) rawType.getType();
+					SBESchemaFieldTypes.SBESetType sbeSet = types.getSetTypes().get(setType.getName());
+					SBEField field = addSetTypeField(compositeField, null, sbeSet);
+					if( null != rawType.getName() ) {
+						field.setName(rawType.getName()+"."+sbeSet.getName());
+					}
 				} else {
 					throw new InternalError("unrecognized field type in the composite data type: "+fieldType.getName());
 				}
@@ -236,7 +247,7 @@ public class SBESchemaLoaderV4 {
 		group.addField((short)fieldType.getId(),FieldType.RAW, (short) 1).setName(fieldType.getName());		
 	}
 	
-	private static void addEncodedDataTypeField(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType, EncodedDataType dataType) {
+	private static SBEField addEncodedDataTypeField(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType, EncodedDataType dataType) {
 		if( null == dataType.getPresence() || ! "constant".equals(dataType.getPresence().toLowerCase())) {
 			// handle none constant simple field
 			FieldType primitiveType = FieldType.getType(dataType.getPrimitiveType());
@@ -244,30 +255,47 @@ public class SBESchemaLoaderV4 {
 				throw new IllegalArgumentException("unrecognized primitive type: "+dataType.getPrimitiveType());
 			}
 			if( null != fieldType )
-				group.addField((short)fieldType.getId(),primitiveType,dataType.getLength().shortValue()).setName(fieldType.getName());
+				return (SBEField) group.addField((short)fieldType.getId(),primitiveType,dataType.getLength().shortValue()).setName(fieldType.getName());
 			else
-				group.addField((short)0, primitiveType, dataType.getLength().shortValue()).setName(dataType.getName());
+				return (SBEField) group.addField((short)0, primitiveType, dataType.getLength().shortValue()).setName(dataType.getName());
 		} else {
 			// handle constant simple field
 			short id = null == fieldType ? (short) 0 : (short) fieldType.getId();
 			String name = null == fieldType ? dataType.getName() : fieldType.getName();
 			SBEField field = (SBEField) group.addField(id,FieldType.CONSTANT,dataType.getLength().shortValue()).setName(name);
 			field.setConstantValue(dataType.getValue()).setConstantType(FieldType.getType(dataType.getPrimitiveType()));
+			return field;
 		}		
 	}
 
-	private static void addEnumTypeField(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType, SBESchemaFieldTypes.SBEEnum sbeEnum) {
+	private static SBEField addEnumTypeField(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType, SBESchemaFieldTypes.SBEEnumType sbeEnum) {
 		short id = null == fieldType ? (short) 0 : (short) fieldType.getId();
 		String name = null == fieldType ? sbeEnum.getName() : fieldType.getName();
-		SBEField enumField = (SBEField) group.addField(id, sbeEnum.primitiveType, (short) 1).setName(name);
-		enumField.setEnumLookupTable(sbeEnum.enumLookup);
+		if( null == fieldType || null == fieldType.getPresence() || ! "constant".equals(fieldType.getPresence().toLowerCase()) ) {
+			SBEField enumField = (SBEField) group.addField(id, sbeEnum.getPrimitiveType(), (short) 1).setName(name);
+			enumField.setEnumLookupTable(sbeEnum.enumLookup);
+			return enumField;
+		} else {
+			// handle constant field 
+			SBEField enumField = (SBEField) group.addField(id, FieldType.CONSTANT, (short) 1).setName(name);
+			String valueRef = fieldType.getValueRef();
+			int indexOfSep = valueRef.indexOf('.');
+			if( indexOfSep > 0 ) {
+				enumField.setConstantValue(valueRef.substring(indexOfSep+1));
+			} else {
+				// This is a format error
+				throw new InternalError("invalid value reference in field: "+fieldType.getName());
+			}
+			return enumField;
+		}
 	}
 	
-	private static void addSetTypeField(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType, SBESchemaFieldTypes.SBESet sbeSet) {
+	private static SBEField addSetTypeField(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType, SBESchemaFieldTypes.SBESetType sbeSet) {
 		short id = null == fieldType ? (short) 0 : (short) fieldType.getId();
 		String name = null == fieldType ? sbeSet.getName() : fieldType.getName();
-		SBEField choiceField = (SBEField) group.addField(id, sbeSet.primitiveType, (short) 1).setName(name);
+		SBEField choiceField = (SBEField) group.addField(id, sbeSet.getPrimitiveType(), (short) 1).setName(name);
 		choiceField.setSetLookupTable(sbeSet.bitLookup);
+		return choiceField;
 	}
 
 	public static void main(String args[]) throws FileNotFoundException, JAXBException {

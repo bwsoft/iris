@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.sbe.SBESchemaFieldTypes.SBECompositeTypeElement;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 
 /**
@@ -45,14 +46,14 @@ class SBEGroupHeader implements FieldHeader {
 	static SBEGroupHeader getGroupHeader(SBESchemaFieldTypes cache) {
 		SBEGroupHeader grpHeader = null;
 		if( cache.getCompositeDataTypes().containsKey("groupSizeEncoding") ) {
-			List<Object> eTypes = cache.getCompositeDataTypes().get("groupSizeEncoding");
+			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get("groupSizeEncoding");
 			FieldType numInGroupType = FieldType.U8;
 			FieldType blockSizeType = FieldType.U16;
-			for( Object rawType : eTypes ) {
-				if( ! (rawType instanceof EncodedDataType) ) {
+			for( SBECompositeTypeElement rawType : eTypes ) {
+				if( ! (rawType.getType() instanceof EncodedDataType) ) {
 					throw new IllegalArgumentException("Unsupported SBE type in groupSizeEncoding definition");
 				}
-				EncodedDataType type = (EncodedDataType) rawType;
+				EncodedDataType type = (EncodedDataType) rawType.getType();
 				if( "blockLength".equals(type.getName()) )
 					blockSizeType = FieldType.getType(type.getPrimitiveType());
 				else if( "numInGroup".equals(type.getName()) )
@@ -69,7 +70,7 @@ class SBEGroupHeader implements FieldHeader {
 		return grpHeader;
 	}
 	
-	private SBEGroupHeader(FieldType numInGroupType, FieldType blockSizeType) {
+	SBEGroupHeader(FieldType numInGroupType, FieldType blockSizeType) {
 		this.numInGroupType = numInGroupType;
 		this.blockSizeType = blockSizeType;
 		this.headerSize = (short) (this.numInGroupType.size() + this.blockSizeType.size());

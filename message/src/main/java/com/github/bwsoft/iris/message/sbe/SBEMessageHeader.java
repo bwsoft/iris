@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.sbe.SBESchemaFieldTypes.SBECompositeTypeElement;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 
 /**
@@ -48,16 +49,16 @@ public class SBEMessageHeader implements FieldHeader {
 	static SBEMessageHeader getMessageHeader(SBESchemaFieldTypes cache) {
 		SBEMessageHeader msgHeader = null;
 		if( cache.getCompositeDataTypes().containsKey("messageHeader") ) {
-			List<Object> eTypes = cache.getCompositeDataTypes().get("messageHeader");
+			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get("messageHeader");
 			FieldType blockLength = FieldType.U16;
 			FieldType templateId = FieldType.U16;
 			FieldType schemaId = FieldType.U16;
 			FieldType version = FieldType.U16;
-			for( Object rawType : eTypes ) {
-				if( ! (rawType instanceof EncodedDataType) ) {
+			for( SBECompositeTypeElement rawType : eTypes ) {
+				if( ! (rawType.getType() instanceof EncodedDataType) ) {
 					throw new IllegalArgumentException("Unsupported SBE type in messageHeader definition");
 				}
-				EncodedDataType type = (EncodedDataType) rawType;
+				EncodedDataType type = (EncodedDataType) rawType.getType();
 				if( "blockLength".equals(type.getName()) )
 					blockLength = FieldType.getType(type.getPrimitiveType());
 				else if( "templateId".equals(type.getName()) )
@@ -79,7 +80,7 @@ public class SBEMessageHeader implements FieldHeader {
 		return msgHeader;
 	}
 	
-	private SBEMessageHeader(FieldType templateIdType, FieldType schemaIdType, FieldType blockSizeType, FieldType versionType) {
+	SBEMessageHeader(FieldType templateIdType, FieldType schemaIdType, FieldType blockSizeType, FieldType versionType) {
 		this.templateIdType = templateIdType;
 		this.schemaIdType = schemaIdType;
 		this.blockSizeType = blockSizeType;

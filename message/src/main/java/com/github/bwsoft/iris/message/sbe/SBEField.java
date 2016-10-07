@@ -168,7 +168,10 @@ public class SBEField implements Field {
 	public String getEnumName(String value) {
 		if( this.enumLookup == null ) 
 			throw new UnsupportedOperationException("no enum conversion for type: "+this.getType());
-		return this.enumLookup.get(value);
+		if( FieldType.CONSTANT != this.type )
+			return this.enumLookup.get(value);
+		else
+			return this.constValue;
 	}
 	
 	void setSetLookupTable(HashMap<String, Integer> lookupTable) {

@@ -224,11 +224,11 @@ class SBESchemaFieldTypes {
 					RefType rType = (RefType) eType;
 					if( sbeComposites.containsKey(rType.getType()) ) {
 						List<SBECompositeTypeElement> toBeAdded = sbeComposites.get(rType.getType());
-						for( int i = 0; i < toBeAdded.size(); i ++ ) {
-							SBECompositeTypeElement anElm = toBeAdded.get(i).clone();
+						toBeAdded.forEach(t -> {
+							SBECompositeTypeElement anElm = t.clone();
 							anElm.name = rType.getName();
-							eTypes.add(anElm);
-						}
+							eTypes.add(anElm);							
+						});
 					} else {
 						eTypes.add(new SBECompositeTypeElement(eType));
 					}
@@ -258,7 +258,7 @@ class SBESchemaFieldTypes {
 							eTypeList.remove(i);
 							i --;
 							for( int j = 0; j < toBeAdded.size(); j++) {
-								SBECompositeTypeElement anElm = toBeAdded.get(0).clone();
+								SBECompositeTypeElement anElm = toBeAdded.get(j).clone();
 								anElm.name = rType.getName();
 								i++;
 								eTypeList.add(i,anElm);

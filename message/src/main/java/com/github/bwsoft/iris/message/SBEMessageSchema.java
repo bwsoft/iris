@@ -16,11 +16,16 @@
 package com.github.bwsoft.iris.message;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.sbe.SBEMessage;
 import com.github.bwsoft.iris.message.sbe.SBEMessageHeader;
@@ -77,10 +82,12 @@ public class SBEMessageSchema {
 	 * 
 	 * @param xmlDefinition the SBE xml template filename. It can be in a classpath or filesystem
 	 * @return a SBEMessageSchema to parse or create SBE messages.
-	 * @throws FileNotFoundException if the SBE xml schema file cannot be found
 	 * @throws JAXBException if there is an error in parsing the SBE xml schema file
+	 * @throws SAXException 
+	 * @throws IOException 
+	 * @throws ParserConfigurationException 
 	 */
-	public static SBEMessageSchema createSBESchema(String xmlDefinition) throws FileNotFoundException, JAXBException {
+	public static SBEMessageSchema createSBESchema(String xmlDefinition) throws JAXBException, SAXException, ParserConfigurationException, IOException {
 		return SBESchemaLoader.loadSchema(xmlDefinition);
 	}
 	

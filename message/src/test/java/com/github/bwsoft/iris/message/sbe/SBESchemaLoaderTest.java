@@ -1,11 +1,15 @@
 package com.github.bwsoft.iris.message.sbe;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.SBEMessageSchema;
@@ -130,8 +134,8 @@ public class SBESchemaLoaderTest {
 	}
 
 	@Test
-	public void testSbeSchemaLoaderV4() throws FileNotFoundException, JAXBException {
-		SBEMessageSchema schema = SBESchemaLoaderV4.loadSchema("src/test/resources/example-schemav4.xml");
+	public void testSbeSchemaLoaderV4() throws JAXBException, SAXException, ParserConfigurationException, IOException {
+		SBEMessageSchema schema = SBESchemaLoader.loadSchema("src/test/resources/example-schemav4.xml");
 		SBEMessage message = schema.getMsgLookup().get(1);
 		System.out.println(MessageUtil.toJsonString(message));
 		System.out.println(convertExampleIntoJson());

@@ -25,7 +25,7 @@ import com.github.bwsoft.iris.message.SBEMessageSchema;
 import com.github.bwsoft.iris.util.MessageUtil;
 
 
-public class SBEMessageEncoderTest2 {
+public class SBEMessageEncoderRC4Test {
 
 	private static final String toBeCreated="{\"serialNumber\":1234567,\"modelYear\":2016,"+
 	"\"available\":TRUE,\"code\":C,\"someNumbers\":[1,2,10,4,5],\"vehicleCode\":\"mycode\","+

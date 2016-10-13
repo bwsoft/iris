@@ -1,10 +1,13 @@
 package com.github.bwsoft.iris.message.sbe;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -13,6 +16,7 @@ import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.Group;
@@ -38,7 +42,7 @@ public class SBEMessageAddDeleteGroupTest {
 	};
 
 	@BeforeClass
-	public static void initTest() throws FileNotFoundException, JAXBException {
+	public static void initTest() throws JAXBException, SAXException, ParserConfigurationException, IOException {
 		System.out.println("Description: Testing Add/Delete Group Rows");
 
 		//  Create SBEMessageSchema

@@ -20,5 +20,8 @@
 // Generated on: 2015.10.13 at 10:17:36 PM CDT 
 //
 
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.fixprotocol.org/ns/simple/1.0")
+@javax.xml.bind.annotation.XmlSchema(
+		namespace = "http://www.fixprotocol.org/ns/simple/1.0",
+		elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED
+)
 package com.github.bwsoft.iris.message.sbe.fixsbe.rc2;

@@ -23,6 +23,7 @@ import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.Group;
+import com.github.bwsoft.iris.message.MsgCodecRuntimeException;
 
 /**
  * Represents a composite field in SBE message. The subfield is retrieved by its 
@@ -73,11 +74,21 @@ class SBECompositeField extends SBEField implements Group {
 
 	@Override
 	public Field addField(short id, FieldType type, short arrayLength) {
+		return this.addField(id, null, type, null, arrayLength);
+	}
+
+	@Override
+	public Field addField(short id, FieldType type, Long position, short arrayLength) {
+		return this.addField(id, null, type, position, arrayLength);
+	}
+	
+	@Override
+	public Field addField(short id, FieldHeader header, FieldType type, Long position, short arrayLength) {
 		if( arrayLength < 1 ) {
 			throw new IllegalArgumentException("zero length is not allowed");
 		}
 		SBEField newField = null;
-		int currentOffset = header.getSize()+this.getRelativeOffset();
+		int currentOffset = this.header.getSize()+this.getRelativeOffset();
 		
 		switch( type ) {
 		case U8:
@@ -97,13 +108,25 @@ class SBECompositeField extends SBEField implements Group {
 				SBEField lastField = (SBEField) children.get(children.size()-1);
 				currentOffset = lastField.getBlockSize() + lastField.getRelativeOffset(); 
 			}
+			
+			int delta = 0;
+			if( null != position ) {
+				int calculatedOffset = currentOffset;
+				currentOffset = position.intValue() + this.header.getSize() + this.getRelativeOffset();
+				if( currentOffset < calculatedOffset ) {
+					throw new MsgCodecRuntimeException("the defined offset for field, "+id+
+								", is overlapping with its previous element in composite type, "+this.getName());
+				}
+				delta = currentOffset - calculatedOffset;
+			}
+			
 			newField = new SBEField(this, type, arrayLength).setRelativeOffset(currentOffset);
-			this.setBlockSize(this.getBlockSize()+newField.getBlockSize()*newField.length());
+			this.setBlockSize(this.getBlockSize()+newField.getBlockSize()*newField.length()+delta);
 			children.add(newField);
 			
 			// update the blocksize of its parent
 			SBEGroup grp = (SBEGroup) this.getParent();
-			grp.setBlockSize(grp.getBlockSize()+newField.getBlockSize()*newField.length());
+			grp.setBlockSize(grp.getBlockSize()+newField.getBlockSize()*newField.length()+delta);
 			break;
 		default:
 			throw new IllegalArgumentException("composite field does not accept the child field of type: "+type);

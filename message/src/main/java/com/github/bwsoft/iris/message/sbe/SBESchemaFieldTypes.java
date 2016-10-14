@@ -8,6 +8,7 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.MsgCodecRuntimeException;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.Choice;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.CompositeDataType;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
@@ -141,7 +142,6 @@ class SBESchemaFieldTypes {
 		SBESetType sbeSet = new SBESetType();
 		sbeSet.primitiveType = FieldType.getType(type.getEncodingType());
 		sbeSet.name = type.getName();
-		sbeSet.offset = type.getOffset();
 		if( null == sbeSet.primitiveType ) {
 			EncodedDataType eType = sbeTypes.get(type.getEncodingType());
 			if( null != eType ) {
@@ -172,7 +172,6 @@ class SBESchemaFieldTypes {
 		SBEEnumType sbeEnum = new SBEEnumType();
 		sbeEnum.primitiveType = FieldType.getType(type.getEncodingType());
 		sbeEnum.name = type.getName();
-		sbeEnum.offset = type.getOffset();
 		if( null == sbeEnum.primitiveType ) {
 			EncodedDataType eType = sbeTypes.get(type.getEncodingType());
 			if( null != eType ) {
@@ -205,35 +204,45 @@ class SBESchemaFieldTypes {
 				JAXBElement<?> elm = (JAXBElement<?>) content.get(j);
 				Object eType = elm.getValue();
 				if( eType instanceof EncodedDataType ) {
-					eTypes.add(new SBECompositeTypeElement(eType));
+					EncodedDataType encodedType = (EncodedDataType) eType;
+					SBECompositeTypeElement compElm = new SBECompositeTypeElement(eType);
+					compElm.offset = encodedType.getOffset();
+					eTypes.add(compElm);
+					FieldType primitiveType = FieldType.getType(encodedType.getPrimitiveType());
+					if( null == primitiveType ) {
+						throw new MsgCodecRuntimeException("unrecognized primitive type in the encoded type, "+encodedType.getName());
+					}
+					int dimension = encodedType.getLength().intValue();
+					compElm.size = dimension*primitiveType.size();
 				} else if( eType instanceof EnumType ) {
 					EnumType enumType = (EnumType) eType;
 
 					// redefine enum type name to make it unique
 					String simpleName = enumType.getName();
 					enumType.setName(type.getName()+"."+enumType.getName());
-					eTypes.add(new SBECompositeTypeElement(enumType));
-					addEnumTypeNode(enumType).name = simpleName;
+					SBECompositeTypeElement compElm = new SBECompositeTypeElement(enumType);
+					compElm.offset = enumType.getOffset();
+					eTypes.add(compElm);
+					SBEEnumType sbeEnumType = addEnumTypeNode(enumType);
+					sbeEnumType.name = simpleName;
+					compElm.size = sbeEnumType.getPrimitiveType().size();
 				} else if( eType instanceof SetType ) {
 					SetType setType = (SetType) eType;
 
 					// redefine set type name to make it unique
 					String simpleName = setType.getName();
 					setType.setName(type.getName()+"."+setType.getName());
+					SBECompositeTypeElement compElm = new SBECompositeTypeElement(setType);
+					compElm.offset = setType.getOffset();
 					eTypes.add(new SBECompositeTypeElement(setType));
-					addSetTypeNode(setType).name = simpleName;
+					SBESetType sbeSetType = addSetTypeNode(setType);
+					sbeSetType.name = simpleName;
+					compElm.size = sbeSetType.getPrimitiveType().size();
 				} else if( eType instanceof RefType ) {
 					RefType rType = (RefType) eType;
-					if( sbeComposites.containsKey(rType.getType()) ) {
-						List<SBECompositeTypeElement> toBeAdded = sbeComposites.get(rType.getType());
-						toBeAdded.forEach(t -> {
-							SBECompositeTypeElement anElm = t.clone();
-							anElm.name = rType.getName();
-							eTypes.add(anElm);							
-						});
-					} else {
-						eTypes.add(new SBECompositeTypeElement(eType));
-					}
+					SBECompositeTypeElement compElm = new SBECompositeTypeElement(eType);
+					compElm.offset = rType.getOffset();
+					eTypes.add(compElm);
 				}
 				else {
 					throw new UnsupportedOperationException("Unrecogined element in composite");
@@ -247,45 +256,46 @@ class SBESchemaFieldTypes {
 	 * loop through all SBE composite types to resovle all reftypes
 	 */
 	private void resolveRefType() {
-		int refCountDiscovered = 0;
-		int refCountPrevious = 0;
-		do {
-			for( List<SBECompositeTypeElement> eTypeList : sbeComposites.values() ) {
-				for( int i = 0; i < eTypeList.size(); i ++ ) {
-					Object eType = eTypeList.get(i);
-					if( eType instanceof RefType ) {
-						RefType rType = (RefType) eType;
-						if( sbeComposites.containsKey(rType.getType())) {
-							List<SBECompositeTypeElement> toBeAdded = sbeComposites.get(rType.getType());
-							eTypeList.remove(i);
-							i --;
-							for( int j = 0; j < toBeAdded.size(); j++) {
-								SBECompositeTypeElement anElm = toBeAdded.get(j).clone();
-								anElm.name = rType.getName();
-								i++;
-								eTypeList.add(i,anElm);
-							}
-							refCountDiscovered ++;
-						}
-						else {
-							throw new InternalError("Issue encountered in schema definition with unresolvable RefType: "+rType.getName());
-						}
-					}
+		for( List<SBECompositeTypeElement> eTypeList : sbeComposites.values() ) {
+			for( int i = 0; i < eTypeList.size(); i ++ ) {
+				SBECompositeTypeElement eType = eTypeList.get(i);
+				if( eType.getType() instanceof RefType ) {
+					RefType rType = (RefType) eType.getType();
+					SBECompositeTypeElement elm = this.resolveRefType(rType,0);
+					eTypeList.remove(i);
+					eTypeList.add(i,elm);
 				}
 			}
-			if( refCountPrevious == 0 || refCountPrevious >= refCountDiscovered ) {
-				refCountPrevious = refCountDiscovered;
-				refCountDiscovered = 0;
-			} else {
-				throw new InternalError("Issue encountered in schema definition with circular reference in RefType definitions.");				
+		}
+	}
+	
+	private SBECompositeTypeElement resolveRefType(RefType rType, int level) {
+		if( level > 10 ) {
+			throw new MsgCodecRuntimeException("the level of cross-reference in the composite type exceeds the limit of 10.");
+		}
+		if( sbeComposites.containsKey(rType.getType()) ) {
+			List<SBECompositeTypeElement> toBeAdded = sbeComposites.get(rType.getType());
+			for( int i = 0; i < toBeAdded.size(); i ++ ) {
+				SBECompositeTypeElement typeElement = toBeAdded.get(i);
+				if( typeElement.getType() instanceof RefType ) {
+					RefType newRefType = (RefType)typeElement.getType();
+					SBECompositeTypeElement replacement = resolveRefType(newRefType, level+1);
+					toBeAdded.remove(i);
+					toBeAdded.add(i,replacement);
+				}
 			}
-		} while ( refCountPrevious != 0 );				
+			SBECompositeTypeElement elm = new SBECompositeTypeElement(toBeAdded);
+			elm.name = rType.getName();
+			elm.offset = rType.getOffset();
+			return elm;
+		} else {
+			throw new MsgCodecRuntimeException("Issue encountered in schema definition with unresolvable RefType: "+rType.getName());			
+		}
 	}
 
 	static class SBEEnumType {
 		private String name;
 		private FieldType primitiveType;
-		private Long offset;
 		HashMap<String, String> enumLookup = new HashMap<String, String>();
 		
 		String getName() {
@@ -295,16 +305,11 @@ class SBESchemaFieldTypes {
 		FieldType getPrimitiveType() {
 			return primitiveType;
 		}
-		
-		Long getOffset() {
-			return offset;
-		}
 	}
 	
 	static class SBESetType {
 		private String name;
 		private FieldType primitiveType;
-		private Long offset;
 		HashMap<String, Integer> bitLookup = new HashMap<String, Integer>();
 
 		String getName() {
@@ -314,15 +319,13 @@ class SBESchemaFieldTypes {
 		FieldType getPrimitiveType() {
 			return primitiveType;
 		}
-		
-		Long getOffset() {
-			return offset;
-		}
 	}
 	
 	static class SBECompositeTypeElement {
 		private String name;
 		private Object type;
+		private Long offset;
+		private int size;
 		
 		private SBECompositeTypeElement() {
 			this.name = null;
@@ -340,6 +343,10 @@ class SBESchemaFieldTypes {
 		
 		String getName() {
 			return name;
+		}
+		
+		Long getOffset() {
+			return offset;
 		}
 		
 		@Override

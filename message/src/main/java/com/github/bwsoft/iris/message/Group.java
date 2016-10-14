@@ -54,6 +54,39 @@ public interface Group extends Field {
 	 * @return the newly created field
 	 */
 	public Field addField(short id, FieldType type, short arrayLength);	
+	/**
+	 * The factory class to add a field to this group. It returns the added Field object 
+	 * for the application to further modify its attributes.
+	 * 
+	 * id and name have to be unique among direct children of this group. The field is considered to be 
+	 * an array by default. If not, specify the arrayLength to be 1.
+	 * 
+	 * @param id the id of the field
+	 * @param type the type of this field. See available types in {@link FieldType}.
+	 * @param position the position to the beginning of the group. Provide null if positioned after the previous element.
+	 * @param arrayLength the array size of this field
+	 * @return the newly created field
+	 */
+	public default Field addField(short id, FieldType type, Long position, short arrayLength) {
+		throw new UnsupportedOperationException();
+	}
+	/**
+	 * The factory class to add a field to this group. It returns the added Field object 
+	 * for the application to further modify its attributes.
+	 * 
+	 * id and name have to be unique among direct children of this group. The field is considered to be 
+	 * an array by default. If not, specify the arrayLength to be 1.
+	 * 
+	 * @param id the id of the field
+	 * @param header the header of the field. Provide null if no header.
+	 * @param type the type of this field. See available types in {@link FieldType}.
+	 * @param position the position to the beginning of the group. Provide null if positioned after the previous element.
+	 * @param arrayLength the array size of this field
+	 * @return the newly created field
+	 */
+	public default Field addField(short id, FieldHeader header, FieldType type, Long position, short arrayLength) {
+		throw new UnsupportedOperationException();
+	}
 
 	/* (non-Javadoc)
 	 * @see com.github.bwsoft.iris.message.Field#length()

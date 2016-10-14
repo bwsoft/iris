@@ -23,6 +23,7 @@ import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.Group;
+import com.github.bwsoft.iris.message.MsgCodecRuntimeException;
 
 class SBEGroup extends SBEField implements Group {
 
@@ -84,9 +85,19 @@ class SBEGroup extends SBEField implements Group {
 	public Field getField(String name) {
 		return groupFieldLookupByName.get(name);
 	}
-	
+
 	@Override
 	public Field addField(short id, FieldType type, short arrayLength) {
+		return addField(id, null, type, null, arrayLength);
+	}
+
+	@Override
+	public Field addField(short id, FieldType type, Long position, short arrayLength) {
+		return addField(id, null, type, position, arrayLength);
+	}
+	
+	@Override
+	public Field addField(short id, FieldHeader header, FieldType type, Long position, short arrayLength) {
 		if( arrayLength < 1 ) {
 			throw new IllegalArgumentException("zero length is not allowed");
 		}
@@ -115,6 +126,17 @@ class SBEGroup extends SBEField implements Group {
 				SBEField lastField = (SBEField) getFields().get(groupFieldLookup.size()-1);
 				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 
 			}
+			
+			int delta = 0;
+			if( null != position ) {
+				int calculatedOffset = currentOffset;
+				currentOffset = position.intValue();
+				if( currentOffset < calculatedOffset ) {
+					throw new MsgCodecRuntimeException("the defined offset for field, "+id+
+								", is overlapping with its previous element in group type, "+this.getName());
+				}
+				delta = currentOffset - calculatedOffset;
+			}
 			newField = new SBEField(this, type, arrayLength).setRelativeOffset(currentOffset);
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
@@ -122,20 +144,36 @@ class SBEGroup extends SBEField implements Group {
 			
 			// update the block size of the group
 			int blockSize = this.getBlockSize();
-			this.setBlockSize(blockSize+newField.getBlockSize()*newField.length());
+			this.setBlockSize(blockSize+newField.getBlockSize()*newField.length()+delta);
 			break;
 		case COMPOSITE:
 			if( groupFieldLookup.size() > 0 ) {
 				SBEField lastField = (SBEField) getFields().get(groupFieldLookup.size()-1);
 				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 
 			}
+
+			delta = 0;
+			if( null != position ) {
+				int calculatedOffset = currentOffset;
+				currentOffset = position.intValue();
+				if( currentOffset < calculatedOffset ) {
+					throw new MsgCodecRuntimeException("the defined offset for field, "+id+
+								", is overlapping with its previous element in group type, "+this.getName());
+				}
+				delta = currentOffset - calculatedOffset;
+
+				// update the block size of the group
+				blockSize = this.getBlockSize();
+				this.setBlockSize(blockSize+delta);
+			}
+
 			newField = new SBECompositeField(this,arrayLength).setRelativeOffset(currentOffset);
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
 			numFixedSizeFields ++;
 			break;
 		case GROUP:
-			newField = new SBEGroup(this, getMessage().getGrpHeader(), FieldType.GROUP);
+			newField = new SBEGroup(this, null == header? getMessage().getGrpHeader() : header, FieldType.GROUP);
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
 			numGroupFields ++;

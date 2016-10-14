@@ -219,6 +219,9 @@ public class SBEField implements Field {
 
 	@Override
 	public Field setName(String name) {
+		if( null != name && name.equals(this.name) )
+			return this;
+		
 		this.name = name;
 		
 		// build name index

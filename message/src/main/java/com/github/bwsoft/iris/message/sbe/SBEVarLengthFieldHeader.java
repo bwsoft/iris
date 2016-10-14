@@ -33,7 +33,7 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 	 * @param cache SBESchemaCache loaded from the xml.
 	 * @return
 	 */
-	static SBEVarLengthFieldHeader getVarLengthFieldHeader(SBESchemaFieldTypes cache) {
+	static SBEVarLengthFieldHeader getDefaultVarLengthFieldHeader(SBESchemaFieldTypes cache) {
 		SBEVarLengthFieldHeader varHeader = null;
 		if( cache.getCompositeDataTypes().containsKey("varDataEncoding") ) {
 			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get("varDataEncoding");

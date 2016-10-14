@@ -43,7 +43,7 @@ class SBEGroupHeader implements FieldHeader {
 	 * @param cache SBE schema loaded from the xml file.
 	 * @return
 	 */
-	static SBEGroupHeader getGroupHeader(SBESchemaFieldTypes cache) {
+	static SBEGroupHeader getDefaultGroupHeader(SBESchemaFieldTypes cache) {
 		SBEGroupHeader grpHeader = null;
 		if( cache.getCompositeDataTypes().containsKey("groupSizeEncoding") ) {
 			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get("groupSizeEncoding");
@@ -70,6 +70,42 @@ class SBEGroupHeader implements FieldHeader {
 		return grpHeader;
 	}
 	
+	/**
+	 * Get group header definition.
+	 * 
+	 * @param cache SBE schema loaded from the xml file.
+	 * @return
+	 */
+	static SBEGroupHeader getGroupHeader(SBESchemaFieldTypes cache, String compositeTypeName) {
+		if("groupSizeEncoding".equals(compositeTypeName) )
+			return null;
+		
+		SBEGroupHeader grpHeader = null;
+		if( cache.getCompositeDataTypes().containsKey(compositeTypeName) ) {
+			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get(compositeTypeName);
+			FieldType numInGroupType = FieldType.U8;
+			FieldType blockSizeType = FieldType.U16;
+			for( SBECompositeTypeElement rawType : eTypes ) {
+				if( ! (rawType.getType() instanceof EncodedDataType) ) {
+					throw new IllegalArgumentException("Unsupported SBE type in "+compositeTypeName+" definition");
+				}
+				EncodedDataType type = (EncodedDataType) rawType.getType();
+				if( "blockLength".equals(type.getName()) )
+					blockSizeType = FieldType.getType(type.getPrimitiveType());
+				else if( "numInGroup".equals(type.getName()) )
+					numInGroupType = FieldType.getType(type.getPrimitiveType());
+			}
+			
+			if( null == numInGroupType || null == blockSizeType ) {
+				throw new IllegalArgumentException("unrecgnized primitive type in group header definition");	
+			}
+			grpHeader = new SBEGroupHeader(numInGroupType, blockSizeType);
+		} else {
+			grpHeader = new SBEGroupHeader(FieldType.U8, FieldType.U16);
+		}
+		return grpHeader;
+	}
+
 	SBEGroupHeader(FieldType numInGroupType, FieldType blockSizeType) {
 		this.numInGroupType = numInGroupType;
 		this.blockSizeType = blockSizeType;

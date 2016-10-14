@@ -7,6 +7,8 @@ import java.util.BitSet;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -51,7 +53,7 @@ public class SBEMessageEncoderTest2 {
 	}
 	
 	@Test
-	public void testCreateEmptyMessageWithByteArray() throws JAXBException, SAXException, ParserConfigurationException, IOException {
+	public void testCreateEmptyMessageWithByteArray() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
 		ByteBuffer buffer = ByteBuffer.allocate(1024);
 		int offset = 25;
 		
@@ -137,7 +139,7 @@ public class SBEMessageEncoderTest2 {
 	}
 
 	@Test
-	public void testCreateEmptyMessageWithDirectBuffer() throws JAXBException, SAXException, ParserConfigurationException, IOException {
+	public void testCreateEmptyMessageWithDirectBuffer() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
 		ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
 		int offset = 365;
 		

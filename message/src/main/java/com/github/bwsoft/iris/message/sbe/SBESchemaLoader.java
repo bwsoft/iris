@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -28,11 +29,14 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLStreamException;
 
 import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.Group;
+import com.github.bwsoft.iris.message.MsgCodecRuntimeException;
 import com.github.bwsoft.iris.message.SBEMessageSchema;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
 import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EnumType;
@@ -120,11 +124,13 @@ public class SBESchemaLoader {
 	 * @return the SBEMessageSchema to create SBE messages.
 	 * @throws FileNotFoundException 
 	 * @throws JAXBException if failed to parse the SBE xml schema
+	 * @throws FactoryConfigurationError 
+	 * @throws XMLStreamException 
 	 * @throws SAXException 
 	 * @throws ParserConfigurationException 
 	 * @throws IOException 
 	 */
-	public static SBEMessageSchema loadSchema(String schemaXML) throws FileNotFoundException, JAXBException {
+	public static SBEMessageSchema loadSchema(String schemaXML) throws FileNotFoundException, JAXBException, XMLStreamException, FactoryConfigurationError {
 		SBESchemaLoader schemaCache = new SBESchemaLoader();
 		
 		InputStream is = null;
@@ -159,24 +165,37 @@ public class SBESchemaLoader {
 		// parsing message
 		List<BlockType> messageList = schema.getMessage();
 		for( BlockType message : messageList ) {
-			schemaCache.processGroupTypeNode(null, message);
+			SBEGroup sbeMsg = (SBEGroup) schemaCache.processGroupTypeNode(null, message);
+			if( null != message.getBlockLength() ) {
+				int blockLength = message.getBlockLength().intValue();
+				int calculatedBlockLength = sbeMsg.getBlockSize();
+				if( blockLength >= calculatedBlockLength ) {
+					sbeMsg.setBlockSize(blockLength);
+				} else {
+					throw new MsgCodecRuntimeException("message blockLength defined in xml is less than required. "+
+							"Defined blockLength is "+blockLength+", but requires at least "+calculatedBlockLength+
+							" bytes for message, "+sbeMsg.getName());
+				}
+			}
 		}
 		
 		return new SBEMessageSchema(schemaCache.schemaHeader, schemaCache.msgHeader, schemaCache.grpHeader, schemaCache.varHeader, schemaCache.lookupTable);
 	}
 	
 	private void processFieldTypeNode(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType) {
+		Long offset = fieldType.getOffset();
+		SBEField sbeField = null;
 		if( null != FieldType.getType(fieldType.getType()) ) {
 			// field of primitive type
-			group.addField((short)fieldType.getId(), FieldType.getType(fieldType.getType()), (short)1).setName(fieldType.getName());
+			sbeField = (SBEField) group.addField((short)fieldType.getId(), FieldType.getType(fieldType.getType()), (short)1).setName(fieldType.getName());
 		} else if( types.getEncodedDataTypes().containsKey(fieldType.getType())) {
 			// a simple type
 			EncodedDataType dataType = types.getEncodedDataTypes().get(fieldType.getType());
-			addEncodedDataTypeField(group, fieldType, dataType);
+			sbeField = addEncodedDataTypeField(group, fieldType, dataType);
 		} else if( types.getEnumTypes().containsKey(fieldType.getType())) {
 			// an enum type
 			SBESchemaFieldTypes.SBEEnumType sbeEnum = types.getEnumTypes().get(fieldType.getType());
-			addEnumTypeField(group, fieldType, sbeEnum);
+			sbeField = addEnumTypeField(group, fieldType, sbeEnum);
 		} else if( types.getSetTypes().containsKey(fieldType.getType())) {
 			// a set bit field
 			SBESchemaFieldTypes.SBESetType sbeSet = types.getSetTypes().get(fieldType.getType());
@@ -184,6 +203,7 @@ public class SBESchemaLoader {
 		} else if( types.getCompositeDataTypes().containsKey(fieldType.getType())) {
 			// composite field
 			SBECompositeField compositeField = (SBECompositeField) group.addField((short)fieldType.getId(),FieldType.COMPOSITE, (short) 1).setName(fieldType.getName());
+			sbeField = compositeField;
 			List<SBECompositeTypeElement> eTypes = types.getCompositeDataTypes().get(fieldType.getType());
 			for( SBECompositeTypeElement rawType : eTypes ) {
 				if( rawType.getType() instanceof EncodedDataType ) {
@@ -212,10 +232,25 @@ public class SBESchemaLoader {
 			}
 		} else {
 			throw new InternalError("undefined type: "+fieldType.getType());				
-		}		
+		}
+		
+		// adjust offset if needed
+		if( null != offset ) {
+			int calculatedOffset = sbeField.getRelativeOffset();
+			if( offset > calculatedOffset ) {
+				int delta = offset.intValue() - calculatedOffset;
+				sbeField.setRelativeOffset(offset.intValue());
+				int blockSize = ((SBEGroup) group).getBlockSize();
+				((SBEGroup) group).setBlockSize(blockSize+delta);
+			} else if( offset < calculatedOffset ) {
+				throw new MsgCodecRuntimeException("offset defined in xml is smaller than required for field, "+
+						sbeField.getName()+". Required = "+ calculatedOffset + ", defined = "+offset);
+			}
+			
+		}
 	}
 
-	private void processGroupTypeNode(Group group, BlockType groupType) {
+	private Group processGroupTypeNode(Group group, BlockType groupType) {
 		SBEGroup childGroup = null;
 		if( null == group ) {
 			childGroup = new SBEMessage(schemaHeader, msgHeader, grpHeader, varHeader);
@@ -239,6 +274,7 @@ public class SBESchemaLoader {
 		for( com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType aData : dataList ) {
 			processVarFieldTypeNode(childGroup, aData);
 		}
+		return childGroup;
 	}
 	
 	private void processVarFieldTypeNode(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.rc4.FieldType fieldType) {

@@ -24,6 +24,8 @@ import java.util.HashMap;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLStreamException;
 
 import org.xml.sax.SAXException;
 
@@ -86,8 +88,10 @@ public class SBEMessageSchema {
 	 * @throws SAXException 
 	 * @throws IOException 
 	 * @throws ParserConfigurationException 
+	 * @throws FactoryConfigurationError 
+	 * @throws XMLStreamException 
 	 */
-	public static SBEMessageSchema createSBESchema(String xmlDefinition) throws JAXBException, SAXException, ParserConfigurationException, IOException {
+	public static SBEMessageSchema createSBESchema(String xmlDefinition) throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
 		return SBESchemaLoader.loadSchema(xmlDefinition);
 	}
 	

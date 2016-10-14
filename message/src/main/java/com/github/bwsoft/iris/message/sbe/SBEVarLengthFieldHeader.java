@@ -72,8 +72,10 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 			return buffer.get(startOffset);
 		case 2:
 			return buffer.getShort(startOffset);
+		case 4:
+			return buffer.getInt(startOffset);
 		default:
-			throw new IllegalArgumentException("SBE VAR field header size can only be 1 or 2 (default)");
+			throw new IllegalArgumentException("SBE VAR field header size can only be 1, 2, or 4 (default)");
 		}
 	}
 	
@@ -86,9 +88,13 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 		case 2:
 			buffer.putShort(startOffset, (short) value);
 			break;
+		
+		case 4:
+			buffer.putInt(startOffset, value);
+			break;
 			
 		default:
-			throw new IllegalArgumentException("SBE VAR field header size can only be 1 or 2 (default)");
+			throw new IllegalArgumentException("SBE VAR field header size can only be 1, 2, or 4 (default)");
 		}
 	}	
 }

@@ -8,6 +8,8 @@ import java.util.BitSet;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -42,7 +44,7 @@ public class SBEMessageAddDeleteGroupTest {
 	};
 
 	@BeforeClass
-	public static void initTest() throws JAXBException, SAXException, ParserConfigurationException, IOException {
+	public static void initTest() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
 		System.out.println("Description: Testing Add/Delete Group Rows");
 
 		//  Create SBEMessageSchema

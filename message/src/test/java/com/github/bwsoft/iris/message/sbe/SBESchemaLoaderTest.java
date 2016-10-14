@@ -6,12 +6,17 @@ import java.net.MalformedURLException;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.FieldType;
+import com.github.bwsoft.iris.message.MsgCodecRuntimeException;
 import com.github.bwsoft.iris.message.SBEMessageSchema;
 import com.github.bwsoft.iris.util.MessageUtil;
 
@@ -132,13 +137,33 @@ public class SBESchemaLoaderTest {
 		sb.append("}");
 		return sb.toString();
 	}
+	
+	@Rule
+	public final ExpectedException exception = ExpectedException.none();
 
 	@Test
-	public void testSbeSchemaLoaderV4() throws JAXBException, SAXException, ParserConfigurationException, IOException {
+	public void testSbeSchemaLoaderV4() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
 		SBEMessageSchema schema = SBESchemaLoader.loadSchema("src/test/resources/example-schemav4.xml");
 		SBEMessage message = schema.getMsgLookup().get(1);
 		System.out.println(MessageUtil.toJsonString(message));
 		System.out.println(convertExampleIntoJson());
+		Assert.assertEquals(64, message.getBlockSize());
 		Assert.assertEquals(convertExampleIntoJson(), MessageUtil.toJsonString(message));
+		
+		SBEGroup fuelFigures = (SBEGroup) message.getField("fuelFigures");
+		Assert.assertEquals(8, fuelFigures.getBlockSize());
+		
+		SBEGroup performanceFigures = (SBEGroup) message.getField("performanceFigures");
+		SBEGroup acceleration = (SBEGroup) performanceFigures.getField("acceleration");
+		Assert.assertEquals(8,acceleration.getBlockSize());
+		
+		SBEField engine = (SBEField) message.getField("engine");
+		Assert.assertEquals(8,engine.getBlockSize());
+	}
+	
+	@Test
+	public void testSbeSchemaLoaderV4withError() throws FileNotFoundException, JAXBException, XMLStreamException, FactoryConfigurationError {
+		exception.expect(MsgCodecRuntimeException.class);
+		SBESchemaLoader.loadSchema("src/test/resources/example-schemav4-with-error.xml");
 	}
 }

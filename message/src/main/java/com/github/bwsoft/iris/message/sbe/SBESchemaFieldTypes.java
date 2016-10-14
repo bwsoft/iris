@@ -141,6 +141,7 @@ class SBESchemaFieldTypes {
 		SBESetType sbeSet = new SBESetType();
 		sbeSet.primitiveType = FieldType.getType(type.getEncodingType());
 		sbeSet.name = type.getName();
+		sbeSet.offset = type.getOffset();
 		if( null == sbeSet.primitiveType ) {
 			EncodedDataType eType = sbeTypes.get(type.getEncodingType());
 			if( null != eType ) {
@@ -171,6 +172,7 @@ class SBESchemaFieldTypes {
 		SBEEnumType sbeEnum = new SBEEnumType();
 		sbeEnum.primitiveType = FieldType.getType(type.getEncodingType());
 		sbeEnum.name = type.getName();
+		sbeEnum.offset = type.getOffset();
 		if( null == sbeEnum.primitiveType ) {
 			EncodedDataType eType = sbeTypes.get(type.getEncodingType());
 			if( null != eType ) {
@@ -283,6 +285,7 @@ class SBESchemaFieldTypes {
 	static class SBEEnumType {
 		private String name;
 		private FieldType primitiveType;
+		private Long offset;
 		HashMap<String, String> enumLookup = new HashMap<String, String>();
 		
 		String getName() {
@@ -292,11 +295,16 @@ class SBESchemaFieldTypes {
 		FieldType getPrimitiveType() {
 			return primitiveType;
 		}
+		
+		Long getOffset() {
+			return offset;
+		}
 	}
 	
 	static class SBESetType {
 		private String name;
 		private FieldType primitiveType;
+		private Long offset;
 		HashMap<String, Integer> bitLookup = new HashMap<String, Integer>();
 
 		String getName() {
@@ -305,6 +313,10 @@ class SBESchemaFieldTypes {
 		
 		FieldType getPrimitiveType() {
 			return primitiveType;
+		}
+		
+		Long getOffset() {
+			return offset;
 		}
 	}
 	

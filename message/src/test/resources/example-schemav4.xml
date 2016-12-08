@@ -51,7 +51,7 @@
         <enum name="Model" encodingType="char">
             <validValue name="A">A</validValue>
             <validValue name="B">B</validValue>
-            <validValue name="C">C</validValue>
+            <validValue name="D">C</validValue>
         </enum>
         <set name="OptionalExtras" encodingType="uint8">
             <choice name="sunRoof">0</choice>

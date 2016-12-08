@@ -106,7 +106,7 @@ class SBECompositeField extends SBEField implements Group {
 		case CONSTANT:
 			if( children.size() > 0 ) {
 				SBEField lastField = (SBEField) children.get(children.size()-1);
-				currentOffset = lastField.getBlockSize() + lastField.getRelativeOffset(); 
+				currentOffset = lastField.getBlockSize()*lastField.length() + lastField.getRelativeOffset(); 
 			}
 			
 			int delta = 0;

@@ -1,8 +1,6 @@
 package com.github.bwsoft.iris.message.sbe;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 

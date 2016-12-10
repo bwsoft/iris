@@ -37,7 +37,7 @@ import com.github.bwsoft.iris.util.MessageUtil;
  * @author yzhou
  *
  */
-public class SBERC4SchemaLoaderTest {
+public class SBESchemaLoaderTest {
 	
 	/**
 	 * Manually convert the example-schemav4 into a JSON expression.

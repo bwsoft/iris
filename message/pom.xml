@@ -56,14 +56,6 @@
   </properties>
 
   <dependencies>
-	<!-- https://mvnrepository.com/artifact/org.agrona/Agrona -->
-	<dependency>
-	    <groupId>org.agrona</groupId>
-	    <artifactId>Agrona</artifactId>
-	    <version>0.5.3</version>
-	    <scope>test</scope>
-	</dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

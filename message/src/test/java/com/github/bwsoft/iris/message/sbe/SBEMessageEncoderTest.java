@@ -1,516 +1,618 @@
-/*******************************************************************************
- * Copyright 2016 bwsoft and others
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *******************************************************************************/
 package com.github.bwsoft.iris.message.sbe;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.BitSet;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.xml.sax.SAXException;
 
+import com.github.bwsoft.iris.message.Group;
 import com.github.bwsoft.iris.message.GroupObject;
 import com.github.bwsoft.iris.message.GroupObjectArray;
 import com.github.bwsoft.iris.message.SBEMessageSchema;
 import com.github.bwsoft.iris.util.MessageUtil;
 
-public class SBEMessageEncoderTest {
-	// a buffer that is populated with SBE message before all tests. 
-	private final static ByteBuffer sbeBuffer = ByteBuffer.allocateDirect(4096);
-	private final static int bufferOffset = 0;
-	private final static ByteBuffer newSbeBuffer1 = ByteBuffer.allocateDirect(4096);
-	private final static ByteBuffer newSbeBuffer2 = ByteBuffer.allocate(4096);
 
-	// create SBEMessageSchema based upon the schema.
-	private final static SBEMessageSchema factory;
-	static {
-		SBEMessageSchema schema = null;
-		try{
-			schema = SBEMessageSchema.createSBESchema("./src/test/resources/example-schema.xml");
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
-		factory = schema;
-	};
+/**
+ * This tests the creation of a SBE message based upon RC4 spec.
+ *   1.) Test the creation of a constant field with an enum type and a valueRef to an enum value.
+ *   2.) Test the creation of a composite that includes a ref to another composite type.
+ *   3.) Test the creation of a repeating group that contains variable length field in the first row but not 
+ *   in the second row.
+ *   4.) Test the recognition of an offset attribute on a field in a nested repeating group. 
+ *   5.) Test the creation based upon the byte array and direct buffer.
+ *   6.) Test the throw of an exception if the underneath buffer size is insufficient. 
+ *   7.) Test the out of sequence creation of a row in the repeating group. 
+ *   The second row of fuelFigures is not added until after the creation of the performance figure.
+ *   8.) Add additional rows to the non-empty repeating groups including nested 
+ *   repeating groups.  
+ *   9.) Add additional rows to groups that do not contain any row initially. Groups
+ *   include also the nested empty groups. 
+ *   10.) Add/remove variable length field in the repeating group
+ *   
+ * @author yzhou
+ *
+ */
+public class SBEMessageEncoderTest {
+	
+	private static SBEMessageSchema schema;
+	private static ByteBuffer sbeBuffer = ByteBuffer.allocate(1024);
+	private static int sbeOffset = 25;
+
+	private static String toBeCreated;
+	
+	@BeforeClass
+	public static void createInitMessage() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+		// build JSON expression of the init message
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		addUnquotedField(sb, "serialNumber", "1234567").append(",");
+		addUnquotedField(sb, "modelYear", "2016").append(",");
+		addUnquotedField(sb, "available", "T").append(",");
+		addUnquotedField(sb, "code", "D").append(",");
+		addUnquotedField(sb, "someNumbers", "[1,2,10,4,5]").append(",");
+		addQuotedField(sb,"vehicleCode","mycode").append(",");
+		addUnquotedField(sb, "extras", "5").append(",");
+		addUnquotedField(sb, "discountedModel", "C").append(",");
+		
+		// engine
+		sb.append("\"").append("engine").append("\":{");
+		addUnquotedField(sb, "capacity", "1500").append(",");
+		addUnquotedField(sb, "numCylinders", "6").append(",");
+		addUnquotedField(sb, "maxRpm", "9000").append(",");
+		addQuotedField(sb, "manufacturerCode", "VTI").append(",");
+		addQuotedField(sb, "fuel", "Petrol").append(",");
+		addUnquotedField(sb, "booster.BoostType", "SUPERCHARGER").append(",");
+		addUnquotedField(sb, "booster.horsePower", "3");
+		sb.append("}").append(",");
+		
+		// fuel figures
+		sb.append("\"").append("fuelFigures").append("\":[");
+		sb.append("{");
+		addUnquotedField(sb, "speed", "40").append(",");
+		addUnquotedField(sb, "mpg", "25.5").append(",");
+		addQuotedField(sb, "usageDescription", "this is a description of the usage");
+		sb.append("},");
+		sb.append("{");
+		addUnquotedField(sb, "speed", "60").append(",");
+		addUnquotedField(sb, "mpg", "30.0").append(",");
+		addUnquotedField(sb, "usageDescription", "null");
+		sb.append("}");
+		sb.append("]").append(",");
+		
+		// performance figure
+		sb.append("\"").append("performanceFigures").append("\":");
+		sb.append("{");
+		addUnquotedField(sb, "octaneRating", "89").append(",");
+		
+		// acceleration
+		sb.append("\"").append("acceleration").append("\":");
+		sb.append("{");
+		addUnquotedField(sb, "mph", "60").append(",");
+		addUnquotedField(sb, "seconds", "2.5");
+		sb.append("}");
+		
+		sb.append("}").append(",");
+		
+		addQuotedField(sb, "make", "Honda").append(",");
+		addQuotedField(sb, "model", "Accord").append(",");
+		addQuotedField(sb, "activationCode", "deadbeef");
+		
+		sb.append("}");
+		toBeCreated = sb.toString();
+
+		//  Create init message
+		schema = SBEMessageSchema.createSBESchema("src/test/resources/example-schemav4.xml");
+		
+		// create the SBE message for Car
+		GroupObject msgObj = schema.createSbeBuffer(1, sbeBuffer, sbeOffset);
+		
+		createEmptyMessage(msgObj);
+	}
+	
+	private static StringBuilder addUnquotedField(StringBuilder sb, String fieldName, String value) {
+		sb.append("\"").append(fieldName).append("\":").append(value);
+		return sb;
+	}
+
+	private static StringBuilder addQuotedField(StringBuilder sb, String fieldName, String value) {
+		sb.append("\"").append(fieldName).append("\":").append("\"").append(value).append("\"");
+		return sb;
+	}
 
 	@Rule
 	public TestRule watcher = new TestWatcher() {
+		@Override
 		protected void starting(Description description) {
-			System.out.format("\nStarting test: %s", description.getMethodName());
+			System.out.format("\nCase: %s ...... started\n", description.getMethodName());
+		}
+		
+		@Override
+		protected void succeeded(Description description) {
+			System.out.format("Case: %s ...... passed\n", description.getMethodName());
+		}
+
+		@Override
+		protected void failed(Throwable e, Description description) {
+			System.out.format("Case: %s ...... failed!!!!!!\n", description.getMethodName());
 		}
 	};
+
+	@Rule 
+	public ExpectedException exception = ExpectedException.none();
 	
 	/**
-	 * Use RL SBE encoder to create a SBE message and store it in sbeBuffer
+	 * Test a message creation based upon a byte array.
+	 * 
+	 * @throws JAXBException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 * @throws IOException
+	 * @throws XMLStreamException
+	 * @throws FactoryConfigurationError
 	 */
-	@BeforeClass
-	public static void createSBEMessage() {
-		System.out.println("Description: testing encoder by modifying SBE messages created from RL SBE encoder");
-		SBEMessageTestUtil.createSBEMessageUsingRLEncoder(sbeBuffer, bufferOffset);
+	@Test
+	public void testCreateEmptyMessageWithByteArray() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+		ByteBuffer buffer = ByteBuffer.allocate(1024);
+		int offset = 25;
+		
+		//  Create SBEMessageSchema
+		SBEMessageSchema schema = SBEMessageSchema.createSBESchema("src/test/resources/example-schemav4.xml");
+		
+		// create the SBE message for Car
+		GroupObject msgObj = schema.createSbeBuffer(1, buffer, offset);
+		
+		createEmptyMessage(msgObj);
+		Assert.assertEquals(toBeCreated, MessageUtil.toJsonString(msgObj));		
+	}
+
+	/**
+	 * Test a message creation based upon a direct buffer.
+	 * 
+	 * @throws JAXBException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 * @throws IOException
+	 * @throws XMLStreamException
+	 * @throws FactoryConfigurationError
+	 */
+	@Test
+	public void testCreateEmptyMessageWithDirectBuffer() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+		ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+		int offset = 365;
+		
+		//  Create SBEMessageSchema
+		SBEMessageSchema schema = SBEMessageSchema.createSBESchema("src/test/resources/example-schemav4.xml");
+		
+		// create the SBE message for Car
+		GroupObject msgObj = schema.createSbeBuffer(1, buffer, offset);
+		
+		createEmptyMessage(msgObj);
+		Assert.assertEquals(toBeCreated, MessageUtil.toJsonString(msgObj));		
 	}
 	
+	/**
+	 * Test the throw of an exception upon insufficient buffer size.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateEmptyMessageWithInsufficientBuffer() throws Exception {
+		exception.expect(BufferOverflowException.class);
+		
+		ByteBuffer buffer = ByteBuffer.allocateDirect(210);
+		int offset = 60;
+		
+		//  Create SBEMessageSchema
+		SBEMessageSchema schema = SBEMessageSchema.createSBESchema("src/test/resources/example-schemav4.xml");
+		
+		// create the SBE message for Car
+		GroupObject msgObj = schema.createSbeBuffer(1, buffer, offset);
+		
+		try {
+			createEmptyMessage(msgObj);
+			throw new Exception("error in creating an element with insufficient space");
+		} catch( BufferOverflowException e ) {
+			System.out.println("BufferOverflowException is thrown.");
+			throw e;
+		}
+	}
+
+	/**
+	 * 8.) Add additional rows to the non-empty repeating groups including nested 
+	 * repeating groups.
+	 *   
+	 * @throws UnsupportedEncodingException
+	 */
 	@Test
 	public void alterExistingSbeMessageByAddingRowsToNoneEmptyRepeatingGroup() throws UnsupportedEncodingException {
-		// copy the first sbe message to a new buffer
+		// copy the sbe message to a new buffer
+		ByteBuffer buffer = ByteBuffer.allocate(1024);
 		int offset = 34;
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer1, offset, factory);
+		MessageUtil.messageCopy(sbeBuffer, sbeOffset, 0, buffer, offset, schema);
 		
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
-		String expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":[{\"speed\":30,\"mpg\":35.9},{\"speed\":55,\"mpg\":49.0},"+
-				"{\"speed\":75,\"mpg\":40.0}],\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},"+
-				"{\"mph\":100,\"seconds\":12.2}]},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		GroupObject msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(toBeCreated, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
 		
 		// insert a new row for fuel figure
 		int sizeBefore = msgObj.getSize();
-		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField((short) 9));
+		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField("fuelFigures"));
 		GroupObject newFuelFigure = fuelFigures.addGroupObject();
-		newFuelFigure.setNumber(newFuelFigure.getField((short) 10), (short) 100);
-		newFuelFigure.setNumber(newFuelFigure.getField((short) 11), 35.0);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":[{\"speed\":30,\"mpg\":35.9},{\"speed\":55,\"mpg\":49.0},"+
-				"{\"speed\":75,\"mpg\":40.0},{\"speed\":100,\"mpg\":35.0}],\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},"+
-				"{\"mph\":100,\"seconds\":12.2}]},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		newFuelFigure.setNumber(newFuelFigure.getField("speed"), (short) 100);
+		newFuelFigure.setNumber(newFuelFigure.getField("mpg"), 35.0);
 		
 		// verify the size change is correct
 		Assert.assertEquals(sizeBefore+newFuelFigure.getSize(), msgObj.getSize());
 
 		// re-warp message to verify the re-wrap produces the same result
-		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
-		Assert.assertEquals(unparsedMsg, msgObj.toString());
+		String unparsedMsg = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(unparsedMsg, MessageUtil.toJsonString(msgObj));
 		
-		// add a row to the accleration group of the second row of the performanceFigure group
-		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField((short) 12)); 
-		Assert.assertEquals(2, performanceFigures.getNumOfGroups()); // two rows originally
+		// add a row to the accleration group to the first row of the performanceFigure group
+		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		Assert.assertEquals(1, performanceFigures.getNumOfGroups()); // two rows originally
 		
-		GroupObject performanceFigure2 = performanceFigures.getGroupObject((short) 1);
-		GroupObjectArray accleration = performanceFigure2.getGroupArray(performanceFigure2.getField((short) 14));
+		GroupObject performanceFigure_0 = performanceFigures.getGroupObject((short) 0);
+		GroupObjectArray accleration = performanceFigure_0.getGroupArray(performanceFigure_0.getField("acceleration"));
 		int originalDimmension = accleration.getNumOfGroups();
-		Assert.assertEquals(3, originalDimmension);
+		Assert.assertEquals(1, originalDimmension);
 		
-		int originalPerformanceFigureSize = performanceFigure2.getSize();
+		int originalPerformanceFigureSize = performanceFigure_0.getSize();
 		sizeBefore = msgObj.getSize();
 		GroupObject newAccleration = accleration.addGroupObject();
-		newAccleration.setNumber(newAccleration.getField((short) 15), 120);
-		newAccleration.setNumber(newAccleration.getField((short) 16), 14.1);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":[{\"speed\":30,\"mpg\":35.9},{\"speed\":55,\"mpg\":49.0},"+
-				"{\"speed\":75,\"mpg\":40.0},{\"speed\":100,\"mpg\":35.0}],\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},"+
-				"{\"mph\":100,\"seconds\":12.2}]},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8},{\"mph\":120,\"seconds\":14.1}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		Assert.assertEquals(originalPerformanceFigureSize+newAccleration.getSize(), performanceFigure2.getSize());
+		newAccleration.setNumber(newAccleration.getField("mph"), 120);
+		newAccleration.setNumber(newAccleration.getField("seconds"), 14.1);
+		Assert.assertEquals(originalPerformanceFigureSize+newAccleration.getSize(), performanceFigure_0.getSize());
 		Assert.assertEquals(sizeBefore+newAccleration.getSize(), msgObj.getSize());		
 
 		// re-warp message to verify the re-wrap produces the same result
-		unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
-		Assert.assertEquals(unparsedMsg, msgObj.toString());
-		System.out.println(" ...... passed");
+		unparsedMsg = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(unparsedMsg, MessageUtil.toJsonString(msgObj));
 	}	
-	
+
 	/**
-	 * Add a group row to a group without any row initially
+	 * 9.) Add additional rows to groups that do not contain any row initially. Groups
+	 * include also the nested empty groups.
+	 *  
 	 * @throws UnsupportedEncodingException 
 	 */
 	@Test
 	public void alterExistingSbeMessageByAddingRowsToGroupsThatDoNotHaveAnyRowBefore() throws UnsupportedEncodingException {
+		ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
 		int offset = 632;
+		
 		// copy the second new SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer2, offset, factory);
+		MessageUtil.messageCopy(sbeBuffer, sbeOffset, 0, buffer, offset, schema);
 		
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
-		String expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		GroupObject msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(toBeCreated, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+
+		// remove all of the rows in the fuelFigures repeating group
+		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField("fuelFigures"));
+		int nGroups = fuelFigures.getNumOfGroups();
+		for( int i = 0; i < nGroups; i ++ )
+			fuelFigures.deleteGroupObject(0);
+		
+		// rewrap message 
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(0, msgObj.getGroupArray(msgObj.getField("fuelFigures")).getNumOfGroups());
 
 		int sizeBefore = msgObj.getSize();
 		
 		// add row
-		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField((short) 9));
+		fuelFigures = msgObj.getGroupArray(msgObj.getField("fuelFigures"));
 		GroupObject newFuelFigure = fuelFigures.addGroupObject();
-		newFuelFigure.setNumber(newFuelFigure.getField((short) 10), (short) 30);
-		newFuelFigure.setNumber(newFuelFigure.getField((short) 11), 35.9);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":{\"speed\":30,\"mpg\":35.9},\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		newFuelFigure.setNumber(newFuelFigure.getField("speed"), (short) 30);
+		newFuelFigure.setNumber(newFuelFigure.getField("mpg"), 35.9);
 		Assert.assertEquals(sizeBefore+newFuelFigure.getSize(), msgObj.getSize());
-		Assert.assertEquals(6, newFuelFigure.getSize());
+		Assert.assertEquals(12, newFuelFigure.getSize());
 		
 		// re-warp message to verify the re-wrap produces the same result
-		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
-		Assert.assertEquals(unparsedMsg, msgObj.toString());
+		String unparsedMsg = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(unparsedMsg, MessageUtil.toJsonString(msgObj));
+		fuelFigures = msgObj.getGroupArray(msgObj.getField("fuelFigures"));
+		newFuelFigure = fuelFigures.getGroupObject(0);
+		Assert.assertEquals(30, newFuelFigure.getNumber(newFuelFigure.getField("speed")));
+		Assert.assertEquals(35.9f, newFuelFigure.getNumber(newFuelFigure.getField("mpg")));
 		
 		// add another row
 		newFuelFigure = fuelFigures.addGroupObject();
-		newFuelFigure.setNumber(newFuelFigure.getField((short) 10), (short) 55);
-		newFuelFigure.setNumber(newFuelFigure.getField((short) 11), 49.0);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":[{\"speed\":30,\"mpg\":35.9},{\"speed\":55,\"mpg\":49.0}],\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		newFuelFigure.setNumber(newFuelFigure.getField("speed"), (short) 55);
+		newFuelFigure.setNumber(newFuelFigure.getField("mpg"), 49.0);
 		Assert.assertEquals(sizeBefore+2*newFuelFigure.getSize(), msgObj.getSize());
-		Assert.assertEquals(6, newFuelFigure.getSize());
+		Assert.assertEquals(12, newFuelFigure.getSize());
 		
 		// add a row to the accleration group of the second row of the performanceFigure group
 		// it is empty initially
-		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField((short) 12)); 
+		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		performanceFigures.addGroupObject();
 		Assert.assertEquals(2, performanceFigures.getNumOfGroups()); // two rows originally
 		
-		GroupObject performanceFigure2 = performanceFigures.getGroupObject((short) 1);
-		GroupObjectArray accleration = performanceFigure2.getGroupArray(performanceFigure2.getField((short) 14));
+		GroupObject performanceFigure_2 = performanceFigures.getGroupObject((short) 1);
+		GroupObjectArray accleration = performanceFigure_2.getGroupArray(performanceFigure_2.getField("acceleration"));
 		int originalDimmension = accleration.getNumOfGroups();
 		Assert.assertEquals(0, originalDimmension);
 		sizeBefore = msgObj.getSize();
-		int performanceFigure2Size = performanceFigure2.getSize();
+		int performanceFigure2Size = performanceFigure_2.getSize();
 		GroupObject newAccleration = accleration.addGroupObject();
-		newAccleration.setNumber(newAccleration.getField((short) 15), 120);
-		newAccleration.setNumber(newAccleration.getField((short) 16), 14.1);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":[{\"speed\":30,\"mpg\":35.9},{\"speed\":55,\"mpg\":49.0}],\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":{\"mph\":120,\"seconds\":14.1}}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		newAccleration.setNumber(newAccleration.getField("mph"), 120);
+		newAccleration.setNumber(newAccleration.getField("seconds"), 14.1);
 		Assert.assertEquals(sizeBefore+newAccleration.getSize(), msgObj.getSize());
-		Assert.assertEquals(performanceFigure2Size+newAccleration.getSize(), performanceFigure2.getSize());
+		Assert.assertEquals(performanceFigure2Size+newAccleration.getSize(), performanceFigure_2.getSize());
 
 		// re-warp message to verify the re-wrap produces the same result
-		unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
-		Assert.assertEquals(unparsedMsg, msgObj.toString());
-		System.out.println(" ...... passed");
+		unparsedMsg = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(unparsedMsg, MessageUtil.toJsonString(msgObj));
+
+		performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		performanceFigure_2 = performanceFigures.getGroupObject((short) 1);
+		accleration = performanceFigure_2.getGroupArray(performanceFigure_2.getField("acceleration"));
+		newAccleration = accleration.getGroupObject(0);
+		Assert.assertEquals(120, newAccleration.getNumber(newAccleration.getField("mph")));
+		Assert.assertEquals(14.1f, newAccleration.getNumber(newAccleration.getField("seconds")));
 	}	
-	
+
 	/**
 	 * Add a row to a group that contains another group
 	 * @throws UnsupportedEncodingException 
 	 */
 	@Test
 	public void alterExistingSbeMessageByAddingARowToARepeatingGroupThatContainsANestedRepeatingGroup() throws UnsupportedEncodingException {
+		ByteBuffer buffer = ByteBuffer.allocate(1024);
+		
 		// copy the second new SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer1, 0, factory);
+		MessageUtil.messageCopy(sbeBuffer, sbeOffset, 0, buffer, 0, schema);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer1, 0);
-		String expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		int sizeBefore = msgObj.getSize();
+		GroupObject msgObj = schema.wrapSbeBuffer(buffer, 0);
+		Assert.assertEquals(toBeCreated, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
 		
 		// add a row to the performance figures
-		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField((short) 12)); 
+		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		performanceFigures.addGroupObject();
 		Assert.assertEquals(2, performanceFigures.getNumOfGroups()); // two rows originally
+		int sizeBefore = msgObj.getSize();
+
 		GroupObject newPerformanceFigure = performanceFigures.addGroupObject();
-		newPerformanceFigure.setNumber(newPerformanceFigure.getField((short) 13), 89);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null},{\"octaneRating\":89,\"acceleration\":null}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		newPerformanceFigure.setNumber(newPerformanceFigure.getField("octaneRating"), 89);
 		Assert.assertEquals(sizeBefore+newPerformanceFigure.getSize(), msgObj.getSize());
 
 		// re-warp message to verify the re-wrap produces the same result
-		String unparsedMsg = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, 0);
-		Assert.assertEquals(unparsedMsg, msgObj.toString());
+		String unparsedMsg = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, 0);
+		Assert.assertEquals(unparsedMsg, MessageUtil.toJsonString(msgObj));
 
 		// populate the nested subgroup
-		GroupObjectArray acclerations = newPerformanceFigure.getGroupArray(newPerformanceFigure.getField((short) 14));
+		performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		newPerformanceFigure = performanceFigures.getGroupObject(2);
+		GroupObjectArray acclerations = newPerformanceFigure.getGroupArray(newPerformanceFigure.getField("acceleration"));
 		GroupObject newAccleration = acclerations.addGroupObject();
-		newAccleration.setNumber(newAccleration.getField((short) 15), 120);
-		newAccleration.setNumber(newAccleration.getField((short) 16), 14.1);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null},{\"octaneRating\":89,\"acceleration\":{\"mph\":120,\"seconds\":14.1}}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		newAccleration.setNumber(newAccleration.getField("mph"), 120);
+		newAccleration.setNumber(newAccleration.getField("seconds"), 14.1);
 
 		// re-warp message to verify the re-wrap produces the same result
-		String originalMsg = msgObj.toString();
-		Assert.assertEquals(originalMsg, factory.wrapSbeBuffer(newSbeBuffer1, 0).toString());
-		System.out.println(" ...... passed");
-	}	
-	
-	@Test
-	public void deleteExistingSbeGroup() throws UnsupportedEncodingException {
-		int offset = 127;
-		
-		// copy the first SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 0, newSbeBuffer1, offset, factory);
+		unparsedMsg = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, 0);
+		Assert.assertEquals(unparsedMsg, MessageUtil.toJsonString(msgObj));
 
-		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
-		String expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":[{\"speed\":30,\"mpg\":35.9},{\"speed\":55,\"mpg\":49.0},"+
-				"{\"speed\":75,\"mpg\":40.0}],\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},"+
-				"{\"mph\":100,\"seconds\":12.2}]},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		int sizeBefore = msgObj.getSize();
-		
-		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField((short) 9));
-		Assert.assertEquals(3, fuelFigures.getNumOfGroups());
-		fuelFigures.deleteGroupObject(1);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":[{\"speed\":30,\"mpg\":35.9},"+
-				"{\"speed\":75,\"mpg\":40.0}],\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},"+
-				"{\"mph\":100,\"seconds\":12.2}]},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		fuelFigures = msgObj.getGroupArray(msgObj.getField((short) 9));
-		String beforeWrap = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
-		Assert.assertEquals(beforeWrap, msgObj.toString());
-		Assert.assertEquals(sizeBefore-6, msgObj.getSize());
-		
-		// delete all
-		fuelFigures.deleteGroupObject(1);
-		fuelFigures.deleteGroupObject(0);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":null,"+
-				"\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},"+
-				"{\"mph\":100,\"seconds\":12.2}]},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		
-		// delete the nested repeating group
-		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField((short) 12)); 
-		Assert.assertEquals(2, performanceFigures.getNumOfGroups()); // two rows originally
-		GroupObject performanceFigure = performanceFigures.getGroupObject(0);
-		GroupObjectArray acclerations = performanceFigure.getGroupArray(performanceFigure.getField((short) 14));
-		acclerations.deleteGroupObject(1);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":null,"+
-				"\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},"+
-				"{\"mph\":100,\"seconds\":12.2}]},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-
-		GroupObject accleration = acclerations.getGroupObject(1);
-		Assert.assertEquals(100, accleration.getNumber(accleration.getField((short) 15)).intValue());
-		Assert.assertEquals(12.2, accleration.getNumber(accleration.getField((short) 16)).floatValue(), 0.01);
-		acclerations.deleteGroupObject(0);
-		acclerations.deleteGroupObject(0);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":null,"+
-				"\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":null},{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		beforeWrap = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
-		Assert.assertEquals(beforeWrap, msgObj.toString());
-		
-		// delete the performance figure 
-		performanceFigures.deleteGroupObject(0);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":null,"+
-				"\"performanceFigures\":{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]},\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		
-		// add a new performance figure
-		GroupObject newPerformanceFigure = performanceFigures.addGroupObject();
-		newPerformanceFigure.setNumber(newPerformanceFigure.getField((short) 13), 89);
-		expectedMsg = "{" +
-				"\"serialNumber\":1234,\"modelYear\":2013,\"available\":TRUE,\"code\":A," +
-				"\"someNumbers\":[0,1,2,3,4],\"vehicleCode\":\"abcdef\",\"extras\":6,"+
-				"\"engine\":{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,"+
-				"\"manufacturerCode\":\"123\",\"fuel\":\"Petrol\"},"+
-				"\"fuelFigures\":null,"+
-				"\"performanceFigures\":[{\"octaneRating\":99,\"acceleration\":"+
-				"[{\"mph\":30,\"seconds\":3.8},{\"mph\":60,\"seconds\":7.1},"+
-				"{\"mph\":100,\"seconds\":11.8}]},{\"octaneRating\":89,\"acceleration\":null}],\"make\":\"Honda\",\"model\":\"Civic VTi\","+
-				"\"activationCode\":\"deadbeef\"}";
-
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		beforeWrap = msgObj.toString();
-		msgObj = factory.wrapSbeBuffer(newSbeBuffer1, offset);
-		Assert.assertEquals(beforeWrap, msgObj.toString());
-		System.out.println(" ...... passed");
+		// verify the newly added value
+		performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		newPerformanceFigure = performanceFigures.getGroupObject(2);
+		acclerations = newPerformanceFigure.getGroupArray(newPerformanceFigure.getField("acceleration"));
+		newAccleration = acclerations.getGroupObject(0);
+		Assert.assertEquals(120, newAccleration.getNumber(newAccleration.getField("mph")));
+		Assert.assertEquals(14.1f, newAccleration.getNumber(newAccleration.getField("seconds")));
 	}
 	
 	@Test
+	public void deleteExistingSbeGroup() throws UnsupportedEncodingException {
+		ByteBuffer buffer = ByteBuffer.allocate(1024);
+		int offset = 127;
+		
+		// copy the first SBE message to the buffer
+		MessageUtil.messageCopy(sbeBuffer, sbeOffset, 0, buffer, offset, schema);
+
+		// wrap the copied message
+		GroupObject msgObj = schema.wrapSbeBuffer(buffer, offset);
+		int sizeBefore = msgObj.getSize();
+		
+		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField("fuelFigures"));
+		Assert.assertEquals(2, fuelFigures.getNumOfGroups());
+		fuelFigures.deleteGroupObject(1);
+
+		String beforeWrap = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(beforeWrap, MessageUtil.toJsonString(msgObj));
+		Assert.assertEquals(sizeBefore-12, msgObj.getSize());
+		
+		// delete all
+		fuelFigures.deleteGroupObject(0);
+		Assert.assertEquals(0, fuelFigures.getNumOfGroups());
+		
+		// delete the nested repeating group
+		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		performanceFigures.addGroupObject();
+		Assert.assertEquals(2, performanceFigures.getNumOfGroups()); // two rows originally
+		GroupObject performanceFigure = performanceFigures.getGroupObject(0);
+		GroupObjectArray acclerations = performanceFigure.getGroupArray(performanceFigure.getField("acceleration"));
+		GroupObject newAccleration = acclerations.addGroupObject();
+		newAccleration.setNumber(newAccleration.getField("mph"), 120);
+		newAccleration.setNumber(newAccleration.getField("seconds"), 14.1);
+		Assert.assertEquals(2, acclerations.getNumOfGroups());
+		
+		acclerations.deleteGroupObject(0);
+
+		GroupObject accleration = acclerations.getGroupObject(0);
+		Assert.assertEquals(120, accleration.getNumber(accleration.getField("mph")).intValue());
+		Assert.assertEquals(14.1, accleration.getNumber(accleration.getField("seconds")).floatValue(), 0.01);
+		acclerations.deleteGroupObject(0);
+
+		beforeWrap = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(beforeWrap, MessageUtil.toJsonString(msgObj));
+		
+		// delete the performance figure 
+		performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures")); 
+		performanceFigures.deleteGroupObject(0);
+		
+		// add a new performance figure
+		GroupObject newPerformanceFigure = performanceFigures.addGroupObject();
+		newPerformanceFigure.setNumber(newPerformanceFigure.getField("octaneRating"), 89);
+		beforeWrap = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(beforeWrap, MessageUtil.toJsonString(msgObj));
+	}
+
+	@Test
 	public void addRemoveRawField() throws UnsupportedEncodingException {
+		ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
 		int offset = 672;
 		
 		// copy the 2nd SBE message to the buffer
-		MessageUtil.messageCopy(sbeBuffer, bufferOffset, 1, newSbeBuffer2, offset, factory);
+		MessageUtil.messageCopy(sbeBuffer, sbeOffset, 0, buffer, offset, schema);
 
 		// wrap the copied message
-		GroupObject msgObj = factory.wrapSbeBuffer(newSbeBuffer2, offset);
-		String expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":\"Honda\",\"model\":null,\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		GroupObject msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(toBeCreated, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
 		
 		byte[] newModel = "Honda Accord".getBytes();
-		msgObj.setBytes(msgObj.getField((short) 18), newModel, 0, newModel.length);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":\"Honda\",\"model\":\"Honda Accord\",\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		msgObj.setBytes(msgObj.getField("model"), newModel, 0, newModel.length);
+		Assert.assertEquals("Honda Accord", msgObj.getString(msgObj.getField("model")));
+		Assert.assertEquals("deadbeef", msgObj.getString(msgObj.getField("activationCode")));
 
 		newModel = "Accord".getBytes();
-		msgObj.setBytes(msgObj.getField((short) 18), newModel, 0, newModel.length);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":\"Honda\",\"model\":\"Accord\",\"activationCode\":"+
-				"\"deadbeef\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		msgObj.setBytes(msgObj.getField("model"), newModel, 0, newModel.length);
+		Assert.assertEquals("Accord", msgObj.getString(msgObj.getField("model")));
+		Assert.assertEquals("deadbeef", msgObj.getString(msgObj.getField("activationCode")));
 
 		// delete all var fields
-		msgObj.setBytes(msgObj.getField((short) 17), newModel, 0, 0);
-		msgObj.setBytes(msgObj.getField((short) 18), newModel, 0, 0);
-		msgObj.setBytes(msgObj.getField((short) 19), newModel, 0, 0);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":null,\"model\":null,\"activationCode\":null}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
+		msgObj.setBytes(msgObj.getField("make"), newModel, 0, 0);
+		msgObj.setBytes(msgObj.getField("model"), newModel, 0, 0);
+		msgObj.setBytes(msgObj.getField("activationCode"), newModel, 0, 0);
+		Assert.assertNull(msgObj.getString(msgObj.getField("model")));
+		Assert.assertNull(msgObj.getString(msgObj.getField("activationCode")));
 
-		newModel = "cafe".getBytes();
-		msgObj.setBytes(msgObj.getField((short) 19), newModel, 0, newModel.length);
-		expectedMsg = "{\"serialNumber\":1235,\"modelYear\":2014,\"available\":FALSE,\"code\":B,"+
-				"\"someNumbers\":[0,3,6,9,12],\"vehicleCode\":\"abcdef\",\"extras\":5,\"engine\":"+
-				"{\"capacity\":2000,\"numCylinders\":4,\"maxRpm\":9000,\"manufacturerCode\":\"123\","+
-				"\"fuel\":\"Petrol\"},\"fuelFigures\":null,\"performanceFigures\":[{\"octaneRating\":95,"+
-				"\"acceleration\":[{\"mph\":30,\"seconds\":4.0},{\"mph\":60,\"seconds\":7.5},{\"mph\":100,\"seconds\":12.2}]},"+
-			    "{\"octaneRating\":99,\"acceleration\":null}],\"make\":null,\"model\":null,\"activationCode\":\"cafe\"}";
-		Assert.assertEquals(expectedMsg, MessageUtil.toJsonString(msgObj, Charset.defaultCharset().name()));
-		String beforeWrap = msgObj.toString();
-		Assert.assertEquals(beforeWrap, factory.wrapSbeBuffer(newSbeBuffer2, offset).toString());
-		System.out.println(" ...... passed");
+		String beforeWrap = MessageUtil.toJsonString(msgObj);
+		msgObj = schema.wrapSbeBuffer(buffer, offset);
+		Assert.assertEquals(beforeWrap, MessageUtil.toJsonString(msgObj));
+		
+		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField("fuelFigures"));
+		GroupObject fuelFigure = fuelFigures.getGroupObject(1);
+		Assert.assertNull(fuelFigure.getString(fuelFigure.getField("usageDescription")));
+		fuelFigure.setBytes(fuelFigure.getField("usageDescription"), "Value now".getBytes(), 0, 9);
+		fuelFigure = fuelFigures.getGroupObject(0);
+		Assert.assertEquals("this is a description of the usage", fuelFigure.getString(fuelFigure.getField("usageDescription")));
+		fuelFigure.setBytes(fuelFigure.getField("usageDescription"), null, 0, 0);
+		fuelFigure = fuelFigures.getGroupObject(1);
+		Assert.assertEquals("Value now", fuelFigure.getString(fuelFigure.getField("usageDescription")));		
+	}
+	
+	/**
+	 * Build a message based upon the provided GroupObject. The GroupObject can be based upon a ByteArray or a direct buffer.
+	 * 
+	 * @param msgObj
+	 * @throws UnsupportedEncodingException
+	 */
+	public static void createEmptyMessage(GroupObject msgObj) throws UnsupportedEncodingException {
+		// Field: serialNumber - set up a number field of uint64
+		msgObj.setNumber(msgObj.getField("serialNumber"), 1234567); 
+
+		// Field: modelYear - set up a number field of unit16
+		msgObj.setNumber(msgObj.getField("modelYear"), 2016); 
+
+		// Field: available - set up an enum of type uint8
+		msgObj.setNumber(msgObj.getField("available"), 1); 
+
+		// Field: code - set up an enum of type char.
+		msgObj.setChar(msgObj.getField("code"),'C'); 
+
+		// Field: somenumber - set up a number array of type int[5]
+		Integer[] someNumbers = {1,2,10,4,5};
+		msgObj.setNumbers(msgObj.getField("someNumbers"), someNumbers, 0, 5); 
+
+		// Field: vehicleCode - set up a char array of char[6].
+		char[] vehicleCode = {'m','y','c','o','d','e'}; 
+		msgObj.setChars(msgObj.getField("vehicleCode"), vehicleCode, 0, 6); 
+		
+		// Field: extra - set up a bitset of uint8
+		BitSet bitSet = new BitSet();
+		bitSet.set(0);
+		bitSet.set(2);
+		byte value = bitSet.toByteArray()[0];
+		msgObj.setByte(msgObj.getField("extras"), value);
+		
+		// Field: engine - set up a composite field. Ignore all constant fields.
+		Group engine = (Group) msgObj.getField("engine");
+		msgObj.setNumber(engine.getField("capacity"), 1500); // Field: capacity - the first field in the composite field 
+		msgObj.setNumber(engine.getField("numCylinders"), 6); // Field: numCylinders - the second field in the composite
+		// Jump to the 3rd field to skip the constant field. 
+		char[] manufactureCode = {'V','T','I'};
+		msgObj.setChars(engine.getField("manufacturerCode"), manufactureCode, 0, 3); // Field: manufactureCode - the third field in the composite.
+		msgObj.setChar(engine.getField("booster.BoostType"), 'S');
+		msgObj.setNumber(engine.getField("booster.horsePower"), 3);
+		
+		// Field: fuelFigures - set up a group
+		GroupObjectArray fuelFigures = msgObj.getGroupArray(msgObj.getField("fuelFigures"));
+		GroupObject fuelFigure = fuelFigures.addGroupObject(); // add a row to the group
+		fuelFigure.setNumber(fuelFigure.getField("speed"), 40); // Field: speed 
+		fuelFigure.setNumber(fuelFigure.getField("mpg"), 25.5); // Field: mpg
+		String usageDescription = "this is a description of the usage";
+		fuelFigure.setBytes(fuelFigure.getField("usageDescription"), usageDescription.getBytes("utf-8"), 0, usageDescription.length());
+		
+		// Field: performanceFigures - set up a group
+		GroupObjectArray performanceFigures = msgObj.getGroupArray(msgObj.getField("performanceFigures"));
+		GroupObject performanceFigure = performanceFigures.addGroupObject(); // add a row to the group
+		performanceFigure.setNumber(performanceFigure.getField("octaneRating"), 89); // Field: octaneRating
+		
+		// Field: acclerations - set up a group within another group
+		GroupObjectArray acclerations = performanceFigure.getGroupArray(performanceFigure.getField("acceleration"));
+		GroupObject accleration = acclerations.addGroupObject();
+		accleration.setNumber(accleration.getField("mph"), 60);
+		accleration.setNumber(accleration.getField("seconds"), 2.5);
+		
+		// Field: fuelFigures - to add another row in the previous repeating group.
+		// It is a good practice to add fields in sequence. But not necessary.
+		fuelFigure = fuelFigures.addGroupObject(); // add a row to the group
+		fuelFigure.setNumber(fuelFigure.getField("speed"), 60); // Field: speed 
+		fuelFigure.setNumber(fuelFigure.getField("mpg"), 30); // Field: mpg
+		
+		// Field: model - set up a raw field. It is good to follow the order of a raw field. 
+		// But not necessary.
+		byte[] model = "Accord".getBytes();
+		msgObj.setBytes(msgObj.getField("model"), model, 0, model.length);
+
+		// Field: make - set up a raw field
+		byte[] make = "Honda".getBytes();
+		msgObj.setBytes(msgObj.getField("make"), make, 0, make.length);
+		
+		// Field: activationCode - set up a raw field
+		byte[] activationCode = "deadbeef".getBytes();
+		msgObj.setBytes(msgObj.getField("activationCode"), activationCode, 0, activationCode.length);
+		
+		System.out.println("Actual  : "+MessageUtil.toJsonString(msgObj));
+		System.out.println("Expected: "+toBeCreated);
 	}
 }

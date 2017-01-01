@@ -21,7 +21,7 @@ import java.util.List;
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.sbe.SBESchemaFieldTypes.SBECompositeTypeElement;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.EncodedDataType;
 
 /**
  * Header for the SBE message.

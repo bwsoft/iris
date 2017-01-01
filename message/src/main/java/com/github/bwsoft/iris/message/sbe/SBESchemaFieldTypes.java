@@ -9,15 +9,15 @@ import javax.xml.bind.JAXBElement;
 
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.MsgCodecRuntimeException;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.Choice;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.CompositeDataType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EnumType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.MessageSchema;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.RefType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.SetType;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.ValidValue;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.MessageSchema.Types;
+import com.github.bwsoft.iris.message.sbe.fixsbe.Choice;
+import com.github.bwsoft.iris.message.sbe.fixsbe.CompositeDataType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.EncodedDataType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.EnumType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.MessageSchema;
+import com.github.bwsoft.iris.message.sbe.fixsbe.RefType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.SetType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.ValidValue;
+import com.github.bwsoft.iris.message.sbe.fixsbe.MessageSchema.Types;
 
 /**
  * @author yzhou

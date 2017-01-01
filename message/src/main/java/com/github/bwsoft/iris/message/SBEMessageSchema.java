@@ -15,9 +15,7 @@
  *******************************************************************************/
 package com.github.bwsoft.iris.message;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;

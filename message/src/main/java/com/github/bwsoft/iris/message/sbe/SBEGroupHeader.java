@@ -16,13 +16,12 @@
 package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.List;
 
 import com.github.bwsoft.iris.message.FieldHeader;
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.sbe.SBESchemaFieldTypes.SBECompositeTypeElement;
-import com.github.bwsoft.iris.message.sbe.fixsbe.rc4.EncodedDataType;
+import com.github.bwsoft.iris.message.sbe.fixsbe.EncodedDataType;
 
 /**
  * This group header supports the header format that consists of 1 or 2 bytes of block size 

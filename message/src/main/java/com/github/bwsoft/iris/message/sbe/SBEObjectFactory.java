@@ -15,8 +15,6 @@
  *******************************************************************************/
 package com.github.bwsoft.iris.message.sbe;
 
-import java.nio.ByteOrder;
-
 /**
  * This factory class is to recycle all SBEObject created to reduce the chance of GC collection.
  * It assumes that objects are leased one by one. And all leased objects are returned at the 

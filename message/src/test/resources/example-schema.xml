@@ -15,7 +15,7 @@
      limitations under the License.
  -->
 
-<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/sbe/rc4"
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
                    package="baseline"
                    id="1"
                    version="0"

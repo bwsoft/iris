@@ -33,14 +33,14 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 	 * @param cache SBESchemaCache loaded from the xml.
 	 * @return
 	 */
-	static SBEVarLengthFieldHeader getDefaultVarLengthFieldHeader(SBESchemaFieldTypes cache) {
+	static SBEVarLengthFieldHeader getDefaultVarLengthFieldHeader(SBESchemaFieldTypes cache, String varTypeName) {
 		SBEVarLengthFieldHeader varHeader = null;
-		if( cache.getCompositeDataTypes().containsKey("varDataEncoding") ) {
-			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get("varDataEncoding");
+		if( cache.getCompositeDataTypes().containsKey(varTypeName) ) {
+			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get(varTypeName);
 			FieldType lengthType = FieldType.U8;
 			for( SBECompositeTypeElement rawType : eTypes ) {
 				if( ! (rawType.getType() instanceof EncodedDataType) ) {
-					throw new IllegalArgumentException("Unsupported SBE type in groupSizeEncoding definition");
+					throw new IllegalArgumentException("Unsupported SBE type in variable length field header definition");
 				}
 				EncodedDataType type = (EncodedDataType) rawType.getType();
 				if( "length".equals(type.getName()) )
@@ -51,7 +51,7 @@ class SBEVarLengthFieldHeader implements FieldHeader {
 			}
 			varHeader = new SBEVarLengthFieldHeader(lengthType);
 		} else {
-			varHeader = new SBEVarLengthFieldHeader(FieldType.U8);
+			throw new IllegalArgumentException("The type for the variable length field, "+varTypeName+" is unrecognized");
 		}
 		return varHeader;
 	}

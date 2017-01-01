@@ -46,10 +46,10 @@ public class SBEMessageHeader implements FieldHeader {
 	 * @param cache the loaded schema.
 	 * @return
 	 */
-	static SBEMessageHeader getMessageHeader(SBESchemaFieldTypes cache) {
+	static SBEMessageHeader getMessageHeader(String messageHeaderTypeName, SBESchemaFieldTypes cache) {
 		SBEMessageHeader msgHeader = null;
-		if( cache.getCompositeDataTypes().containsKey("messageHeader") ) {
-			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get("messageHeader");
+		if( cache.getCompositeDataTypes().containsKey(messageHeaderTypeName) ) {
+			List<SBECompositeTypeElement> eTypes = cache.getCompositeDataTypes().get(messageHeaderTypeName);
 			FieldType blockLength = FieldType.U16;
 			FieldType templateId = FieldType.U16;
 			FieldType schemaId = FieldType.U16;

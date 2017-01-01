@@ -38,6 +38,8 @@ class SBEGroup extends SBEField implements Group {
 	private short numGroupFields;
 	private short numRawFields;
 
+	private Integer sizeOfGroupAndVariableFieldHeaders;
+
 	SBEGroup(SBEGroup parent, FieldHeader header, FieldType type) {
 		super(parent, type,(short) 1);
 		if( type != FieldType.GROUP && type != FieldType.MESSAGE ) {
@@ -45,6 +47,7 @@ class SBEGroup extends SBEField implements Group {
 		}
 		
 		this.header = header;
+		this.sizeOfGroupAndVariableFieldHeaders = null;
 	}
 	
 	short getNumFixedSizeFields() {
@@ -64,6 +67,24 @@ class SBEGroup extends SBEField implements Group {
 			throw new IllegalArgumentException("cannot have fields of the same name in a group");
 		}
 		this.groupFieldLookupByName.put(name, field);
+	}
+	
+	int getSizeOfGroupAndVariableFieldHeaders() {
+		if( null != sizeOfGroupAndVariableFieldHeaders ) {
+			return sizeOfGroupAndVariableFieldHeaders;
+		}
+		
+		int nsize = 0;
+		List<Field> fields = this.getFields();
+		for( Field field : fields ) {
+			if( field.getType() == FieldType.GROUP ) {
+				nsize += ((SBEGroup) field).getHeader().getSize();
+			} else if ( field.getType() == FieldType.RAW ) {
+				nsize += ((SBEVarLengthField) field).getHeader().getSize();
+			}
+		}
+		sizeOfGroupAndVariableFieldHeaders = nsize;
+		return nsize;
 	}
 	
 	@Override
@@ -173,13 +194,13 @@ class SBEGroup extends SBEField implements Group {
 			numFixedSizeFields ++;
 			break;
 		case GROUP:
-			newField = new SBEGroup(this, null == header? getMessage().getGrpHeader() : header, FieldType.GROUP);
+			newField = new SBEGroup(this, header, FieldType.GROUP);
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
 			numGroupFields ++;
 			break;
 		case RAW:
-			newField = new SBEVarLengthField(this, getMessage().getVarLengthFieldHeader());
+			newField = new SBEVarLengthField(this, header);
 			newField.setID(id);
 			this.groupFieldLookup.put(id, newField);
 			numRawFields ++;

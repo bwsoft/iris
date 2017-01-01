@@ -67,8 +67,6 @@ public class SBESchemaLoader {
 	
 	private SBESchemaFieldTypes types = null;
 	private SBEMessageHeader msgHeader = null;
-	private SBEGroupHeader grpHeader = null;
-	private SBEVarLengthFieldHeader varHeader = null;
 	private SBEMessageSchemaHeader schemaHeader = null;
 	
 	// contains the map between the template id and the message definition
@@ -153,13 +151,7 @@ public class SBESchemaLoader {
 		schemaCache.types = SBESchemaFieldTypes.parseSchemaForFieldTypes(schema);
 		
 		// create message header
-		schemaCache.msgHeader = SBEMessageHeader.getMessageHeader(schemaCache.types);
-
-		// create group header
-		schemaCache.grpHeader = SBEGroupHeader.getDefaultGroupHeader(schemaCache.types);
-		
-		// create var length field header
-		schemaCache.varHeader = SBEVarLengthFieldHeader.getDefaultVarLengthFieldHeader(schemaCache.types);
+		schemaCache.msgHeader = SBEMessageHeader.getMessageHeader(schema.getHeaderType(), schemaCache.types);
 
 		// parsing message
 		List<BlockType> messageList = schema.getMessage();
@@ -178,7 +170,7 @@ public class SBESchemaLoader {
 			}
 		}
 		
-		return new SBEMessageSchema(schemaCache.schemaHeader, schemaCache.msgHeader, schemaCache.grpHeader, schemaCache.varHeader, schemaCache.lookupTable);
+		return new SBEMessageSchema(schemaCache.schemaHeader, schemaCache.msgHeader, schemaCache.lookupTable);
 	}
 	
 	private void processFieldTypeNode(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.FieldType fieldType) {
@@ -211,7 +203,7 @@ public class SBESchemaLoader {
 	private Group processGroupTypeNode(Group group, BlockType groupType) {
 		SBEGroup childGroup = null;
 		if( null == group ) {
-			childGroup = new SBEMessage(schemaHeader, msgHeader, grpHeader, varHeader);
+			childGroup = new SBEMessage(schemaHeader, msgHeader);
 			childGroup.setID((short) groupType.getId()).setName(groupType.getName());
 			lookupTable.put(groupType.getId(), (SBEMessage) childGroup);
 		} else {
@@ -238,7 +230,8 @@ public class SBESchemaLoader {
 	}
 	
 	private void processVarFieldTypeNode(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.FieldType fieldType) {
-		group.addField((short)fieldType.getId(),FieldType.RAW, null, (short) 1).setName(fieldType.getName());		
+		SBEVarLengthFieldHeader header = SBEVarLengthFieldHeader.getDefaultVarLengthFieldHeader(types, fieldType.getType());
+		group.addField((short)fieldType.getId(), header, FieldType.RAW, null, (short) 1).setName(fieldType.getName());		
 	}
 	
 	private static SBEField addEncodedDataTypeField(Group group, com.github.bwsoft.iris.message.sbe.fixsbe.FieldType fieldType, EncodedDataType dataType, Long offset) {

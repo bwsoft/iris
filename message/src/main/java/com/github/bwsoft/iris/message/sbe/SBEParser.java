@@ -30,8 +30,6 @@ class SBEParser {
 	private final ByteOrder order;
 	
 	private int messageHeaderSize;
-	private int groupHeaderSize;
-	private int varFieldHeaderSize;
 	
 	SBEParser(SBEMessage message) {
 		this.message = message;
@@ -40,8 +38,6 @@ class SBEParser {
 		sbeObjFactory = new SBEObjectFactory();
 		
 		messageHeaderSize = message.getHeader().getSize();
-		groupHeaderSize = message.getGrpHeader().getSize();
-		varFieldHeaderSize = message.getVarLengthFieldHeader().getSize();
 	}
 	
 	ByteBuffer getBuffer() {
@@ -59,8 +55,7 @@ class SBEParser {
 		this.buffer.order(order);
 
 		// minimal size of group and raw fields area
-		int nsize = this.message.getNumGroupFields()*this.message.getGrpHeader().getSize() 
-				+ this.message.getNumRawFields()*this.message.getVarLengthFieldHeader().getSize();
+		int nsize = this.message.getSizeOfGroupAndVariableFieldHeaders();
 
 		// create message header
 		writeMessageHeader(offset);
@@ -121,7 +116,7 @@ class SBEParser {
 		SBEGroupHeader header = (SBEGroupHeader) field.getHeader();
 		int numRows = header.getNumRows(buffer, offset);
 		int blockSize = header.getBlockSize(buffer, offset);
-		int size = groupHeaderSize; 
+		int size = field.getHeader().getSize(); 
 
 		SBEObjectArray rowObj = sbeObjFactory.get();
 		rowObj.setDefinition(field);
@@ -170,12 +165,12 @@ class SBEParser {
 		sbeObj.setParentRow((short) parentIndex);
 		SBEObject attr = sbeObj.addObject((short) 0);
 		attr.setOffset(offset);
-		attr.setValueOffset(offset+varFieldHeaderSize);
+		attr.setValueOffset(offset+header.getSize());
 		attr.setSize(blockSize);
 		attr.setBlockSize(blockSize);
 		parent.addObject((short) parentIndex).addChildObject(field.getID(),sbeObj);
 		
-		return attr.getSize()+varFieldHeaderSize;
+		return attr.getSize()+header.getSize();
 	}	
 
 	void wrapGroupObject(SBEObject rowAttr, SBEGroup field, SBEObjectArray parent, int parentIndex) {	
@@ -200,12 +195,12 @@ class SBEParser {
 				sbeObj.setParentRow((short) parentIndex);
 				SBEObject attr = sbeObj.addObject((short) 0);
 				attr.setOffset(currentOffset);
-				attr.setValueOffset(currentOffset+varFieldHeaderSize);
+				attr.setValueOffset(currentOffset+subfield.getHeader().getSize());
 				attr.setSize(0);
 				attr.setBlockSize(0);
 				rowAttr.addChildObject(subfield.getID(), sbeObj);
 
-				currentOffset += varFieldHeaderSize;
+				currentOffset += subfield.getHeader().getSize();
 			}
 		}
 	}

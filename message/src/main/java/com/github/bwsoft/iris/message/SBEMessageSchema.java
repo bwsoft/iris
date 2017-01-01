@@ -68,8 +68,6 @@ import com.github.bwsoft.iris.message.sbe.SBESchemaLoader;
 public class SBEMessageSchema {
 	private final SBEMessageSchemaHeader schemaHeader;
 	private final SBEMessageHeader msgHeader;
-	private final FieldHeader grpHeader;
-	private final FieldHeader varHeader;
 	private final ByteOrder order;
 	private final int schemaId;
 	private final int version;
@@ -147,13 +145,9 @@ public class SBEMessageSchema {
 	 */
 	public SBEMessageSchema(SBEMessageSchemaHeader schemaHeader,
 			SBEMessageHeader msgHeader,
-			FieldHeader grpHeader,
-			FieldHeader varHeader,
 			HashMap<Integer, SBEMessage> lookupTable) {
 		this.schemaHeader = schemaHeader;
 		this.msgHeader = msgHeader;
-		this.grpHeader = grpHeader;
-		this.varHeader = varHeader;
 		this.order = this.schemaHeader.getOrder();
 		this.schemaId = this.schemaHeader.getId();
 		this.version = this.schemaHeader.getVersion();

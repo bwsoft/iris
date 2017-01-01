@@ -28,6 +28,9 @@ class SBEVarLengthField extends SBEField {
 	
 	SBEVarLengthField(Group parent, FieldHeader header) {
 		super(parent, FieldType.RAW, (short) 1);
+		if( null == header ) {
+			throw new IllegalArgumentException("SBE variable length field has to have header");
+		}
 		this.header = header;
 	}
 	

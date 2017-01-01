@@ -17,7 +17,9 @@ package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.List;
 
+import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.GroupObject;
 import com.github.bwsoft.iris.message.Message;
@@ -40,8 +42,6 @@ public class SBEMessage extends SBEGroup implements Message {
 	
 	private final SBEMessageSchemaHeader schema;
 	private final SBEMessageHeader msgHeader;
-	private final SBEGroupHeader grpHeader;
-	private final SBEVarLengthFieldHeader varLengthFieldHeader;
 	
 	private final boolean safeMode;
 
@@ -52,13 +52,11 @@ public class SBEMessage extends SBEGroup implements Message {
 		}
 	};
 	
-	SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header, SBEGroupHeader grpHeader, SBEVarLengthFieldHeader vHeader) {
+	SBEMessage(SBEMessageSchemaHeader schema, SBEMessageHeader header) {
 		super(null, header, FieldType.MESSAGE);
 		
 		this.schema = schema;
 		this.msgHeader = header;
-		this.grpHeader = grpHeader;
-		this.varLengthFieldHeader = vHeader;
 		this.safeMode = Boolean.valueOf(SBESchemaLoader.properties.getProperty(SBESchemaLoader.SAFE_MODE));
 	}
 
@@ -74,14 +72,6 @@ public class SBEMessage extends SBEGroup implements Message {
 		return schema;
 	}
 	
-	SBEGroupHeader getGrpHeader() {
-		return grpHeader;
-	}
-
-	SBEVarLengthFieldHeader getVarLengthFieldHeader() {
-		return varLengthFieldHeader;
-	}
-
 	ByteOrder getByteOrder() {
 		return schema.getOrder();
 	}

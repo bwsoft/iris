@@ -166,9 +166,7 @@ class SBEObjectArray implements GroupObjectArray {
 		SBEGroup grp = (SBEGroup) definition;
 		
 		// get size of an empty row
-		int nsize = grp.getBlockSize() 
-				+ grp.getNumGroupFields()*grp.getHeader().getSize() 
-				+ grp.getNumRawFields()*grp.getMessage().getVarLengthFieldHeader().getSize();
+		int nsize = grp.getBlockSize() + grp.getSizeOfGroupAndVariableFieldHeaders();
 		
 		// add attr
 		int blockSize = 0;
@@ -223,9 +221,7 @@ class SBEObjectArray implements GroupObjectArray {
 		SBEGroup grp = (SBEGroup) definition;
 		
 		// get size of an empty row
-		int nsize = grp.getBlockSize() 
-				+ grp.getNumGroupFields()*grp.getHeader().getSize() 
-				+ grp.getNumRawFields()*grp.getMessage().getVarLengthFieldHeader().getSize();
+		int nsize = grp.getBlockSize() + grp.getSizeOfGroupAndVariableFieldHeaders();
 		
 		// add attr
 		SBEObject nextObj = attrs[n];

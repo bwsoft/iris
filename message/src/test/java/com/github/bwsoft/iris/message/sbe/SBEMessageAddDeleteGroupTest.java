@@ -1,14 +1,8 @@
 package com.github.bwsoft.iris.message.sbe;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.FactoryConfigurationError;
-import javax.xml.stream.XMLStreamException;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -17,7 +11,6 @@ import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.Group;
@@ -164,7 +157,7 @@ public class SBEMessageAddDeleteGroupTest {
 	}
 
 	@BeforeClass
-	public static void initTest() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+	public static void initTest() throws Exception {
 		//  Create SBEMessageSchema
 		schema = SBEMessageSchema.createSBESchema("src/test/resources/example-schemav4.xml");
 		

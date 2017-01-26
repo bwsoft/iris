@@ -15,17 +15,9 @@
  *******************************************************************************/
 package com.github.bwsoft.iris.message;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.FactoryConfigurationError;
-import javax.xml.stream.XMLStreamException;
-
-import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.sbe.SBEMessage;
 import com.github.bwsoft.iris.message.sbe.SBEMessageHeader;
@@ -80,14 +72,9 @@ public class SBEMessageSchema {
 	 * 
 	 * @param xmlDefinition the SBE xml template filename. It can be in a classpath or filesystem
 	 * @return a SBEMessageSchema to parse or create SBE messages.
-	 * @throws JAXBException if there is an error in parsing the SBE xml schema file
-	 * @throws SAXException 
-	 * @throws IOException 
-	 * @throws ParserConfigurationException 
-	 * @throws FactoryConfigurationError 
-	 * @throws XMLStreamException 
+	 * @throws Exception if cannot load or parse the schema file 
 	 */
-	public static SBEMessageSchema createSBESchema(String xmlDefinition) throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+	public static SBEMessageSchema createSBESchema(String xmlDefinition) throws Exception {
 		return SBESchemaLoader.loadSchema(xmlDefinition);
 	}
 	
@@ -139,8 +126,6 @@ public class SBEMessageSchema {
 	 * 
 	 * @param schemaHeader the schema header
 	 * @param msgHeader the message header
-	 * @param grpHeader the group header
-	 * @param varHeader the variable length field header
 	 * @param lookupTable a lookup table contains all messages defined in this schema
 	 */
 	public SBEMessageSchema(SBEMessageSchemaHeader schemaHeader,

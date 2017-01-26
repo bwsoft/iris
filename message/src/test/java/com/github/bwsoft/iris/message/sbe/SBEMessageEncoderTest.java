@@ -13,7 +13,6 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLStreamException;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,7 +58,7 @@ public class SBEMessageEncoderTest {
 	private static String toBeCreated;
 	
 	@BeforeClass
-	public static void createInitMessage() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+	public static void createInitMessage() throws Exception {
 		// build JSON expression of the init message
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");
@@ -169,7 +168,7 @@ public class SBEMessageEncoderTest {
 	 * @throws FactoryConfigurationError
 	 */
 	@Test
-	public void testCreateEmptyMessageWithByteArray() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+	public void testCreateEmptyMessageWithByteArray() throws Exception {
 		ByteBuffer buffer = ByteBuffer.allocate(1024);
 		int offset = 25;
 		
@@ -194,7 +193,7 @@ public class SBEMessageEncoderTest {
 	 * @throws FactoryConfigurationError
 	 */
 	@Test
-	public void testCreateEmptyMessageWithDirectBuffer() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+	public void testCreateEmptyMessageWithDirectBuffer() throws Exception {
 		ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
 		int offset = 365;
 		

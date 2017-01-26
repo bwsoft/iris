@@ -17,9 +17,7 @@ package com.github.bwsoft.iris.message.sbe;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.List;
 
-import com.github.bwsoft.iris.message.Field;
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.GroupObject;
 import com.github.bwsoft.iris.message.Message;

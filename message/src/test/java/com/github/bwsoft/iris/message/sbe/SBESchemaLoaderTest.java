@@ -185,7 +185,7 @@ public class SBESchemaLoaderTest {
 	 * @throws FactoryConfigurationError
 	 */
 	@Test
-	public void testSbeSchemaLoaderV4() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+	public void testSbeSchemaLoaderV4() throws Exception {
 		SBEMessageSchema schema = SBESchemaLoader.loadSchema("src/test/resources/example-schemav4.xml");
 		SBEMessage message = schema.getMsgLookup().get(1);
 		System.out.println(MessageUtil.toJsonString(message));
@@ -227,7 +227,7 @@ public class SBESchemaLoaderTest {
 	 * @throws FactoryConfigurationError
 	 */
 	@Test
-	public void testSbeSchemaLoaderV4withError() throws FileNotFoundException, JAXBException, XMLStreamException, FactoryConfigurationError {
+	public void testSbeSchemaLoaderV4withError() throws Exception {
 		exception.expect(MsgCodecRuntimeException.class);
 		// 6.) Verify the loader detects the wrong specified block size that is smaller than required.  
 		SBESchemaLoader.loadSchema("src/test/resources/example-schemav4-with-error.xml");

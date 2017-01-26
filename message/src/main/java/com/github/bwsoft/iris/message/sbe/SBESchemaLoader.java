@@ -18,20 +18,13 @@ package com.github.bwsoft.iris.message.sbe;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.FactoryConfigurationError;
-import javax.xml.stream.XMLStreamException;
-
-import org.xml.sax.SAXException;
 
 import com.github.bwsoft.iris.message.FieldType;
 import com.github.bwsoft.iris.message.Group;
@@ -119,21 +112,16 @@ public class SBESchemaLoader {
 	 *  
 	 * @param schemaXML the SBE XML message template in the classpath or in the file system.
 	 * @return the SBEMessageSchema to create SBE messages.
-	 * @throws FileNotFoundException 
-	 * @throws JAXBException if failed to parse the SBE xml schema
-	 * @throws FactoryConfigurationError 
-	 * @throws XMLStreamException 
-	 * @throws SAXException 
-	 * @throws ParserConfigurationException 
-	 * @throws IOException 
+	 * @throws Exception if failed to process the schema file. 
+	 * @throws FileNotFoundException if the schema file cannot be found in the file path or classpath.
 	 */
-	public static SBEMessageSchema loadSchema(String schemaXML) throws FileNotFoundException, JAXBException, XMLStreamException, FactoryConfigurationError {
+	public static SBEMessageSchema loadSchema(String schemaXML) throws Exception, FileNotFoundException {
 		SBESchemaLoader schemaCache = new SBESchemaLoader();
 		
 		InputStream is = null;
 		File file = new File(schemaXML);
 		if( ! file.exists() || ! file.isFile() ) {
-			is = schemaCache.getClass().getResourceAsStream(schemaXML);
+			is = SBESchemaLoader.class.getClassLoader().getResourceAsStream(schemaXML);
 		} else {
 			is = new FileInputStream(file);
 		}

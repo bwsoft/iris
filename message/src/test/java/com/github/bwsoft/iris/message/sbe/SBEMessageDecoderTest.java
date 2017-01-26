@@ -97,7 +97,7 @@ public class SBEMessageDecoderTest {
 	 * @throws FactoryConfigurationError
 	 */
 	@BeforeClass
-	public static void createSBEMessage() throws JAXBException, SAXException, ParserConfigurationException, IOException, XMLStreamException, FactoryConfigurationError {
+	public static void createSBEMessage() throws Exception {
 		//  Create SBEMessageSchema
 		factory = SBEMessageSchema.createSBESchema("src/test/resources/example-schemav4.xml");
 		bufferOffset[0] = 231;
